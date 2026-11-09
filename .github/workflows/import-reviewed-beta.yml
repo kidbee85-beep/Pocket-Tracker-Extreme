@@ -1,0 +1,66 @@
+name: Import reviewed public beta
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify the initial repository before adding reviewed files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = '4fccd28913ff56f9d8e5b8958bfa5d39014b8830'
+          python3 - <<'PY'
+          import subprocess
+          tracked = set(subprocess.check_output(['git','ls-files','-z']).decode().split('\0')) - {''}
+          assert tracked == {'README.md', '.github/workflows/import-reviewed-beta.yml'}
+          PY
+      - name: Add the SHA-256 verified corresponding source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag='v0.2.0-beta.1'
+          source_name='Pocket-Tracker-Extreme-0.2.0-beta.1-Source.zip'
+          release_id="$(gh api "repos/$GH_REPO/releases" --jq ".[] | select(.tag_name == \"$tag\" and .draft == true) | .id")"
+          test -n "$release_id"
+          asset_id="$(gh api "repos/$GH_REPO/releases/$release_id/assets" --jq ".[] | select(.name == \"$source_name\") | .id")"
+          test -n "$asset_id"
+          archive="$RUNNER_TEMP/$source_name"
+          gh api "repos/$GH_REPO/releases/assets/$asset_id" -H 'Accept: application/octet-stream' > "$archive"
+          echo "346e772dc0a7eedcdc1df7a30de5feac201c388153712cddce05cf28f7077ac9  $archive" | sha256sum --check
+          python3 - "$archive" "$GITHUB_WORKSPACE" <<'PY'
+          import pathlib, sys, zipfile
+          archive, destination = sys.argv[1], pathlib.Path(sys.argv[2])
+          prefix = 'Pocket-Tracker-Extreme-0.2.0-beta.1/'
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None
+              entries = [i for i in z.infolist() if not i.is_dir()]
+              assert len(entries) == 7734
+              for item in entries:
+                  assert item.filename.startswith(prefix)
+                  relative = pathlib.PurePosixPath(item.filename[len(prefix):])
+                  assert not relative.is_absolute() and '..' not in relative.parts
+                  assert not any(p in {'.git','.gradle','.cxx','.kotlin','build'} for p in relative.parts)
+                  target = destination.joinpath(*relative.parts)
+                  if target.exists():
+                      assert relative.as_posix() == 'README.md'
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(z.read(item))
+                  target.chmod((item.external_attr >> 16) & 0o777)
+          PY
+          git config user.name 'Kid Bunka'
+          git config user.email '338288444+kidbee85-beep@users.noreply.github.com'
+          git add -A
+          test "$(git ls-files -z | tr -cd '\0' | wc -c)" -eq 7735
+          test -z "$(git diff --cached --diff-filter=D --name-only)"
+          git commit -m 'Add verified Pocket Tracker Extreme 0.2.0-beta.1 corresponding source'
+          git push origin HEAD:main
