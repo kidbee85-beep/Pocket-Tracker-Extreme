@@ -1,0 +1,56 @@
+name: Beta software checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android developer build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+      - name: Install documented Android build dependencies
+        run: sdkmanager "platforms;android-36" "ndk;28.2.13676358" "cmake;3.22.1"
+      - name: Build developer APK and software tests
+        run: ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon --max-workers=3
+      - name: Check binary ABI and license payload
+        run: python3 tools/release/check_apk.py app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-developer-build-not-public-release
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+  native:
+    name: Native development and launcher checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install SDL development dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake libsdl2-dev
+      - name: Build shared native engine and checks
+        run: |
+          cmake -S shell -B build/host -DCMAKE_BUILD_TYPE=Release -DPT_STUDIO_CHECK=ON
+          cmake --build build/host -j3
+      - name: Verify independent Brick launcher
+        run: python3 tests/brick-launcher/check_launcher.py
+      - name: Check core workflows
+        run: |
+          set -eu
+          for name in ptstudio-check ptsample-editor-check ptsample-tools-check ptcapture-check ptdrumlab-check ptsource-sampler-check ptsource-integration-check ptsource-query-check ptstudio-access-check ptlive-dsp-check ptstudio-live-check ptinstrument-load-check ptm8-import-check; do
+            "build/host/native/$name" "$RUNNER_TEMP/$name"
+          done
