@@ -6,7 +6,7 @@ Public beta candidate **0.2.0-beta.1**, by **Kid Bunka** and contributors.
 
 Pocket Tracker Extreme is an independent fork of [PocketTracker by conanizer and contributors](https://github.com/conanizer/pockettracker), with an expanded synthesis studio, punch-in performance effects, detailed sample editing, groove generation, mastering, and online digging. The original authors and all third-party copyright notices remain credited in [CREDITS.md](CREDITS.md).
 
-[Illustrated website](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/) · [English tutorial](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html) · [Offline website source](docs/site/index.html) · [Community & press](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/community/) · [Showcase film](https://youtu.be/eWSW_xNtZVI) · [License](LICENSE) · [Third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md) · [Build instructions](docs/building.md)
+[Illustrated website](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/) · [English tutorial](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html) · [Offline website source](docs/site/index.html) · [Community & press](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/community/) · [License](LICENSE) · [Third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md) · [Build instructions](docs/building.md)
 
 ## Make music with your hands
 
