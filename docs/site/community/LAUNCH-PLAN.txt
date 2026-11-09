@@ -5,7 +5,8 @@ These are recommendations, not claims of acceptance or endorsement.
 
 Project: https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/
 Source: https://github.com/kidbee85-beep/Pocket-Tracker-Extreme
-Film: updated feature film in production; public link after review.
+Approved beta.2 film: https://youtu.be/wkLc71fsNU0
+Crate Conversations uses genuine native app UI/DSP in an illustrated purple Brick frame, not physical camera footage. Original AI-assisted arrangement; authorized Kid Bunka drums; Morton (1924) historical piano (Archive item marked Public Domain Mark 1.0), passage 00:04–00:18. The project and private drum library are not public assets. Mint Afterhours remains the separate editable CC BY 4.0 demo.
 
 1. Renoise / Other Trackers
 https://forum.renoise.com/c/other-trackers/26

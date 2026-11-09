@@ -16,14 +16,18 @@ render an authorized excerpt into a local sample for editing.
 
 There is an Android 8+ APK with ARM64, ARM32 and x86_64 builds, plus a standalone
 TrimUI Brick/KNULLI package. An R36S Linux ZIP is a separate community test.
-The Brick musical workflows have had encouraging user tests; wider Android and
-R36S device reports, Direct iPhone-to-Brick USB capture failed in the current user hardware test; separate interface routes still need testing.
+The preceding private Brick build had encouraging user tests. Beta.2 has software
+and emulator checks; physical acceptance and wider Android/R36S reports remain open.
+Direct iPhone-to-Brick USB capture failed in the current user hardware test;
+separate interface routes still need testing.
 M8 import supports a sampler/arrangement subset, not every M8 synth or effect.
 
 Everything is free, including the source and features. The English illustrated
 guide walks through setup, sounds, sampling and saving a first project:
 https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/
 https://github.com/kidbee85-beep/Pocket-Tracker-Extreme
+Approved beta.2 feature film (real native app capture, illustrated device frame):
+https://youtu.be/wkLc71fsNU0
 
 I'd especially appreciate reports of your device/firmware, button mapping,
 sample loading, audio and saving/reopening a project. There is a structured

@@ -22,6 +22,8 @@ Project and guide:
 https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/
 Source and downloads:
 https://github.com/kidbee85-beep/Pocket-Tracker-Extreme
+Approved beta.2 feature film (real native app capture, illustrated device frame):
+https://youtu.be/wkLc71fsNU0
 
 The app and all features are free; support is voluntary. I'd be happy to answer
 questions or help reproduce a workflow. There is no expectation of coverage.
