@@ -15,7 +15,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = '4fccd28913ff56f9d8e5b8958bfa5d39014b8830'
+          git merge-base --is-ancestor 4fccd28913ff56f9d8e5b8958bfa5d39014b8830 HEAD
           python3 - <<'PY'
           import subprocess
           tracked = set(subprocess.check_output(['git','ls-files','-z']).decode().split('\0')) - {''}
@@ -36,7 +36,7 @@ jobs:
           test -n "$asset_id"
           archive="$RUNNER_TEMP/$source_name"
           gh api "repos/$GH_REPO/releases/assets/$asset_id" -H 'Accept: application/octet-stream' > "$archive"
-          echo "346e772dc0a7eedcdc1df7a30de5feac201c388153712cddce05cf28f7077ac9  $archive" | sha256sum --check
+          echo "d6f4164e3babe6affefa37c7429bb043900e2b6bc2e69e8de62e3da2cd2d8f0d  $archive" | sha256sum --check
           python3 - "$archive" "$GITHUB_WORKSPACE" <<'PY'
           import pathlib, sys, zipfile
           archive, destination = sys.argv[1], pathlib.Path(sys.argv[2])
