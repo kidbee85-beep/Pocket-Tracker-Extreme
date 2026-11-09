@@ -30,6 +30,10 @@ bool InputDispatcher::defer_a_to_release() const {
     // ⚠️ Opens nothing, but deferred too: row 11's A under MANUAL is held for the tap, the drag and the
     // delete.
     if (on_slice_tap_cell()) return true;
+    // RECORD opens an overlay focused on Start. Defer the opener so the same
+    // physical A release cannot also start recording on the destination page.
+    if(s_.currentScreen==ScreenType::SAMPLE_EDITOR&&s_.sampleEditor.cursorRow==19&&
+       s_.sampleEditor.cursorCol==(s_.sampleEditor.sliceMethod==SampleEditorModule::SLICE_OFF?3:4))return true;
 
     switch (s_.currentScreen) {
         case ScreenType::INSTRUMENT:

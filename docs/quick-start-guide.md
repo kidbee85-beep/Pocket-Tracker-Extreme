@@ -1,6 +1,6 @@
 # Pocket Tracker Extreme — Quick Start
 
-Version 0.2.0-beta.1. Use the [illustrated English tutorial](site/guide.html) for the complete workflow.
+Version 0.2.0-beta.2. Use the [illustrated English tutorial](site/guide.html) for the complete workflow.
 
 ## Start and choose storage
 
@@ -33,8 +33,12 @@ Source availability can change. Use material you are authorized to download and 
 
 ## Record an input
 
-Choose an available input and record a short test before starting an important session. Input recordings are stored under `Samples/Recordings`. Android microphone and USB-audio paths are implemented; compatibility with individual interfaces remains a hardware test. Direct iPhone input on Brick failed in the user's repeated hardware test with the current setup. Both ports were reported to charge only; iPhone model/cable are unspecified. The experimental helper remains included, but direct capture is not working in this tested setup. A class-compliant interface remains a separate, pending hardware test.
+Open **INSTRUMENT → RECORD** or **RECORD** in the Sample Editor. This opens the recorder with Start focused; press A on START RECORDING to capture. Choose an available input and record a short test before starting an important session. Waiting for audio and receiving frames are distinct states. Stop keeps a separate WAV; Use Take opens Edit & Slice in a free instrument and protects unsaved edits. There is no software input monitoring. Input recordings are stored under `Samples/Recordings`. Android microphone and USB-audio paths are implemented; compatibility with individual interfaces remains a hardware test. Direct iPhone input on Brick failed in the user's repeated hardware test with the current setup. Both ports were reported to charge only; iPhone model/cable are unspecified. The experimental helper remains included, but direct capture is not working in this tested setup. A class-compliant interface remains a separate, pending hardware test.
 
 ## Back up
 
 Copy the entire selected media folder, including Projects, Samples and Presets. Keep a project's original sample paths intact. Android content-URI references do not automatically transfer to Linux; reassign media after moving a project if needed.
+
+## New in beta.2
+
+L + SELECT opens the 64-gesture Punch deck from musical tracker screens. L/R changes the eight-pad bank; D-pad selects and A is a momentary hold. Release A to restore the mix. Style now has 32 palettes and 12 materials, appended after existing IDs. The original STUDIO/OCTA default and saved custom controls remain intact. Use the program-only Brick updater for an existing installation; see `docs/brick/UPDATE-EXISTING-INSTALL.txt`.

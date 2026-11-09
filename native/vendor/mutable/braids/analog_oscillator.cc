@@ -179,7 +179,9 @@ void AnalogOscillator::RenderCSaw(
     next_sample += phase_ < pw
         ? discontinuity_depth_
         : phase_ >> 18;
-    *buffer++ = (this_sample - 8192) << 1;
+    // The centered BLEP sample can be negative. Multiplication retains the
+    // original fixed-point scaling without C++'s negative signed-shift UB.
+    *buffer++ = (this_sample - 8192) * 2;
   }
   next_sample_ = next_sample;
   END_INTERPOLATE_PHASE_INCREMENT
@@ -265,7 +267,7 @@ void AnalogOscillator::RenderSquare(
     }
     
     next_sample += phase_ < pw ? 0 : 32767;
-    *buffer++ = (this_sample - 16384) << 1;
+    *buffer++ = (this_sample - 16384) * 2;
   }
   next_sample_ = next_sample;
   END_INTERPOLATE_PHASE_INCREMENT
@@ -328,7 +330,7 @@ void AnalogOscillator::RenderSaw(
     }
     
     next_sample += phase_ >> 17;
-    *buffer++ = (this_sample - 16384) << 1;
+    *buffer++ = (this_sample - 16384) * 2;
   }
   next_sample_ = next_sample;
   END_INTERPOLATE_PHASE_INCREMENT
@@ -415,7 +417,7 @@ void AnalogOscillator::RenderVariableSaw(
     
     next_sample += phase_ >> 18;
     next_sample += (phase_ - pw) >> 18;
-    *buffer++ = (this_sample - 16384) << 1;
+    *buffer++ = (this_sample - 16384) * 2;
   }
   next_sample_ = next_sample;
   END_INTERPOLATE_PHASE_INCREMENT

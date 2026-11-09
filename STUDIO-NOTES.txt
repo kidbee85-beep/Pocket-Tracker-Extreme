@@ -1,4 +1,4 @@
-POCKET TRACKER EXTREME — PUBLIC BETA 0.2.0-beta.1
+POCKET TRACKER EXTREME — PUBLIC BETA 0.2.0-beta.2
 Kid Bunka · Independent PocketTracker fork
 
 CURRENT USER GUIDES
@@ -34,3 +34,17 @@ avoids that first-launch file work; see the Brick first-start guide.
 Android's public application ID and release key differ from the earlier
 private .debug test app. Back up media and settings before changing builds.
 Read README.md for the precise beta feature and validation limits.
+
+BETA.2 ADDITIONS
+Visible RECORD on Instrument and Sample Editor, source/frame/level diagnostics,
+Stop/Keep and Use Take into Edit & Slice. Direct iPhone capture remains failed
+in the current user setup; this update does not claim that route is fixed.
+
+L + SELECT opens Punch directly: eight banks of eight momentary gestures.
+L/R selects the bank, D-pad selects a pad and A holds it; releasing A restores
+the mix. Style now offers 32 palettes and 12 materials without resetting the
+previous IDs, defaults, custom colors or controller configuration.
+
+The program-only Brick kit replaces one executable and provides backup/rollback.
+The matching Android update preserves its package/signature pair. Do not
+uninstall, reset storage, reflash KNULLI or replace a whole working app folder.

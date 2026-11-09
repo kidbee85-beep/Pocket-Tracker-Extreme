@@ -344,6 +344,22 @@ void InputDispatcher::on_l_r() {
 
 void InputDispatcher::on_select_a() { route(Gesture::SELECT_A); }
 void InputDispatcher::on_select_b() { route(Gesture::SELECT_B); }
+void InputDispatcher::on_select_l() {
+    if (top_layer()) return;
+    switch (s_.currentScreen) {
+        case ScreenType::SONG: case ScreenType::CHAIN: case ScreenType::PHRASE:
+        case ScreenType::INSTRUMENT: case ScreenType::TABLE: case ScreenType::INST_POOL:
+        case ScreenType::MODS: case ScreenType::GROOVE: case ScreenType::SCALE:
+        case ScreenType::MIXER: case ScreenType::EFFECTS: case ScreenType::PROJECT:
+            s_.studioOpen=true;s_.studioTab=3;s_.studioRow=0;s_.studioHelp=false;
+            s_.studioAUsed=false;s_.studioBUsed=false;s_.studioConfirm=false;
+            s_.studioMessage.clear();s_.studioShortcutRelease=true;
+            s_.helpOpen=false;s_.helpFull=false;
+            return;
+        default: return;
+    }
+}
+
 void InputDispatcher::on_select_r() {
     on_r_combo_press();
     // A dialog/editor owns its full keyboard; never open a hidden instrument behind it.

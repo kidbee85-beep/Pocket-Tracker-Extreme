@@ -131,9 +131,11 @@ bool InputDispatcher::instrument_open_at_cursor(bool peek) {
     if (peek) {
         return cell == InstrumentCell::SOURCE_LOAD || cell == InstrumentCell::SOURCE_EDIT ||
                cell == InstrumentCell::PRESET_SAVE || cell == InstrumentCell::PRESET_LOAD ||
-               cell == InstrumentCell::STUDIO;
+               cell == InstrumentCell::STUDIO || cell == InstrumentCell::RECORD;
     }
     switch (cell) {
+        case InstrumentCell::RECORD:
+            host_.stop_preview();open_studio_capture(s_);return true;
         case InstrumentCell::STUDIO:
             open_studio_synth(s_,ins);
             return true;

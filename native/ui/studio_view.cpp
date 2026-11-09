@@ -2,6 +2,7 @@
 #include "ui/premium.h"
 #include "studio/synth.h"
 #include "studio/rack.h"
+#include "studio/punch.h"
 #include "ui/modules/theme_editor.h"
 #include "ui/modules/oscilloscope.h"
 #include <cmath>
@@ -68,8 +69,13 @@ void heading(Canvas& c,const AppState& s){
  c.draw_label("Pocket Tracker",18,14,t.textValue,18);
  c.draw_label("Extreme",147,14,t.rowCursor,18);
  const bool audition=s.studioTab==0&&s.studioAuditionHeld;
- chip(c,audition?"AUDITION":s.isPlaying?"PLAYING":"STUDIO",530,14,94,t,s.isPlaying||audition);
+ chip(c,s.studioTab==3?(s.studioAUsed?"PUNCH ON":"PUNCH DECK"):audition?"AUDITION":s.isPlaying?"PLAYING":"STUDIO",530,14,94,t,s.isPlaying||audition||s.studioAUsed);
  c.fill_rect(18,47,606,1,with_alpha(t.textParam,.2f));
+ if(s.studioTab==3){
+  const char* banks[]={"RHYTHM","TAPE","FILTER","DUB","GLITCH","GRAIN","MOD","DAMAGE"};
+  for(int i=0;i<studio::kPunchBanks;++i)chip(c,banks[i],16+i*77,60,72,t,i==studio::punch_bank(s.studioPunch));
+  return;
+ }
  const char* tabs[]={"Synth","FX Rack","Master","Punch","Input","Drumlab","Style","Digging"};
  for(int i=0;i<8;++i)chip(c,tabs[i],16+i*77,60,72,t,i==s.studioTab);
 }
@@ -155,43 +161,106 @@ void synth_page(Canvas& c,const AppState& s){
 }
 void input_page(Canvas& c,const AppState& s){
  const auto& t=s.theme;const auto& v=s.capture;
+ const CaptureInput* selected=v.inputs.empty()?nullptr:&v.inputs[std::clamp(v.selected,0,int(v.inputs.size())-1)];
+ const bool phone=selected&&selected->kind.rfind("iphone",0)==0;
  studio_card(c,16,102,608,70,t);
- c.draw_label(v.active()?"Recording input":"Sample recorder",30,114,t.textValue,18);
- label(c,s.captureBackend?(v.routedName.empty()?"Select microphone or USB audio input":v.routedName):"Recording unavailable",30,145,t.textParam,445);
+ c.draw_label("RECORD / Sample recorder",30,113,t.textValue,18);
+ label(c,s.captureBackend?"Microphone / USB interface / experimental iPhone":"Recording unavailable on this platform",30,145,t.textParam,477);
  char time[32];std::snprintf(time,sizeof(time),"%02lld:%02lld",static_cast<long long>(v.frames/std::max(v.actualRate,1)/60),static_cast<long long>(v.frames/std::max(v.actualRate,1)%60));
- c.draw_text(time,531,119,v.active()?t.meterHigh:t.textValue,1,3);
- const auto input=v.inputs.empty()?"Refresh inputs":v.inputs[std::clamp(v.selected,0,int(v.inputs.size())-1)].name;
- const std::string names[]={"Input device","Channels","Sample rate","Target instrument","Recording","Use take","Devices"};
- const std::string values[]={input,v.channels==1?"Mono":"Stereo",std::to_string(v.rate)+" Hz / 16 bit",songcore::hex2(s.currentInstrument),v.active()?"Stop & save":"Start recording",v.path.empty()?"No take yet":"Import into instrument","Refresh inputs"};
- for(int i=0;i<7;++i)row(c,16,184+i*31,390,names[i],values[i],t,s.studioRow==i);
- studio_card(c,416,184,208,214,t);c.draw_label("Input level",430,196,t.textParam);
- meter(c,430,226,180,13,v.peakL,t);meter(c,430,250,180,13,v.peakR,t);
- c.draw_label("-60",430,270,t.textEmpty);c.draw_label("0 dBFS",568,270,t.textEmpty);
- label(c,v.active()?"REC":v.state,430,307,v.active()?t.meterHigh:t.rowCursor,175,18);
- label(c,v.message.empty()?"Stop before importing":v.message,430,339,t.textParam,176);
- c.draw_label("Software monitoring off",430,374,t.textEmpty);
+ c.draw_text(time,531,119,v.receiving()?t.meterHigh:t.textValue,1,3);
+ const auto input=selected?selected->name:"No input - Refresh";
+ const bool empty=v.targetInstrument>=0&&s.project&&songcore::instrument_is_free(s.project->instruments[std::clamp(v.targetInstrument,0,127)]);
+ const std::string names[]={"Source  < / >","Channels  < / >","Sample rate  < / >","New take slot  < / >"};
+ const std::string values[]={input,v.channels==1?"Mono":"Stereo",std::to_string(v.rate)+" Hz / 16 bit",v.targetInstrument<0?"Auto: first empty slot":songcore::hex2(v.targetInstrument)+(empty?" / empty":" / occupied - protected")};
+ for(int i=0;i<4;++i)row(c,16,184+i*31,390,names[i],values[i],t,s.studioRow==i);
+ studio_card(c,16,312,390,40,t,s.studioRow==4);
+ label(c,v.active()?"A  STOP & KEEP TAKE":"A  START RECORDING",31,323,s.studioRow==4?t.rowCursor:t.textValue,359,18);
+ studio_card(c,16,358,390,35,t,s.studioRow==5);
+ label(c,v.path.empty()?"USE TAKE  / record first":"A  USE TAKE > EDIT & SLICE",31,368,s.studioRow==5?t.rowCursor:t.textValue,359,16);
+ studio_card(c,16,399,390,20,t,s.studioRow==6);
+ label(c,"A  REFRESH INPUTS / reconnect devices",31,402,s.studioRow==6?t.rowCursor:t.textParam,359,12);
+ studio_card(c,416,184,208,235,t);c.draw_label("Actual input level",430,196,t.textParam);
+ meter(c,430,221,180,12,v.receiving()?v.peakL:0.f,t);meter(c,430,242,180,12,v.receiving()?v.peakR:0.f,t);
+ label(c,studio_capture_status(v),430,266,v.receiving()?t.meterHigh:t.rowCursor,180,14);
+ std::string detail=v.inputError;
+ if(detail.empty()&&phone){
+  const bool current=v.requestedId==selected->id&&v.state!="idle";
+  detail=(v.receiving()?"Receiving audio. ":v.phoneTrusted&&current?"Trust verified; waiting for audio. ":selected->connected?"Phone detected; audio not verified. ":"No phone detected. ");
+  detail+=current&&!v.message.empty()?v.message:selected->detail;
+  detail+=" Unlock iPhone; allow Trust if asked. Charging alone is not audio. Experimental.";
+ }else if(detail.empty())detail=v.message.empty()?"Choose a source, then Start. USB charging alone is not audio. Software monitoring is off.":v.message;
+ // Keep real backend errors readable rather than silently clipping to one line.
+ size_t offset=0;for(int line=0;line<8&&offset<detail.size();++line){
+  size_t end=std::min(detail.size(),offset+26);
+  if(end<detail.size()){const auto space=detail.rfind(' ',end);if(space!=std::string::npos&&space>offset)end=space;}
+  label(c,detail.substr(offset,end-offset),430,291+line*15,t.textParam,180,12);
+  offset=end;while(offset<detail.size()&&detail[offset]==' ')++offset;
+ }
 }
+
 void style_page(Canvas& c,const AppState& s){
  const auto& t=s.theme;
  studio_card(c,16,102,608,68,t,s.studioRow==0);c.draw_label("Design collection",30,113,t.textParam);
- c.draw_label(t.name,30,137,t.textValue,18);label(c,"24 designs",503,140,t.textParam,100);
+ c.draw_label(t.name,30,137,t.textValue,18);label(c,std::to_string(theme_builtins().size())+" designs",503,140,t.textParam,100);
  studio_card(c,16,180,608,47,t,s.studioRow==1);c.draw_label("Material",30,195,t.textParam);
  label(c,surface_style_name(t.surfaceStyle),145,192,t.rowCursor,460,18);
- studio_card(c,16,240,608,168,t);c.draw_label("Your workspace",32,254,t.textParam);
+ studio_card(c,16,240,608,168,t);c.draw_label("Workspace preview",32,254,t.textParam);
  for(int i=0;i<3;++i){int x=32+i*194;c.panel_rect(x,282,182,106,t.background,with_alpha(t.textParam,.22f),6);
   c.draw_label(i==0?"Sound":i==1?"Sequence":"Mix",x+14,296,t.textValue,18);
-  for(int k=0;k<5;++k)c.fill_rect(x+14,331+k*8,154-k*21,3,k%2?t.rowCursor:t.textTitle);
+  if(i==0){
+   knob(c,x+51,347,155,t,true,17);knob(c,x+127,347,89,t,false,17);
+   label(c,"SHAPE",x+31,374,t.rowCursor,60);label(c,"TONE",x+111,374,t.textParam,60);
+  }else if(i==1){
+   const char* notes[]={"00 C-4 01","01 --- --","02 G-4 03"};
+   for(int k=0;k<3;++k){
+    c.fill_rect(x+11,327+k*18,160,17,k==0?darken(t.rowCursor,.22f):t.rowEvery4th);
+    c.draw_text(notes[k],x+18,329+k*18,k==0?t.rowCursor:k==1?t.textEmpty:t.textValue,1,2);
+   }
+  }else{
+   for(int k=0;k<3;++k){
+    label(c,k==0?"DRUMS":k==1?"BASS":"SYNTH",x+13,329+k*18,t.textParam,49);
+    meter(c,x+66,331+k*18,100,8,k==0?.43f:k==1?.2f:.11f,t);
+   }
+  }
+ }
+}
+void punch_icon(Canvas& c,int bank,int x,int y,Argb ink){
+ const auto faint=with_alpha(ink,.25f);
+ for(int i=0;i<4;++i){
+  const int xx=x+i*12;
+  if(bank==0||bank==4){c.fill_rect(xx,y+2+(i%2)*4,7,bank==4?5:14-(i%2)*4,ink);}
+  else if(bank==1){c.line(xx,y+15,xx+5,y+2,ink);c.line(xx+5,y+2,xx+10,y+15,faint);}
+  else if(bank==2){c.line(xx,y+13-i*3,xx+12,y+10-i*3,ink);}
+  else if(bank==3){c.panel_rect(xx,y+2+i,9,14-i*3,0x00000000u,with_alpha(ink,1-i*.19f),3);}
+  else if(bank==5){c.fill_rect(xx+(i*5)%9,y+3+(i*7)%10,3+i%3,3,ink);c.fill_rect(xx+7,y+12-i*2,2,2,faint);}
+  else if(bank==6){c.line(xx,y+10,xx+6,y+2,ink);c.line(xx+6,y+2,xx+12,y+10,faint);}
+  else{c.line(xx,y+3,xx+3,y+15,ink);c.line(xx+3,y+15,xx+7,y+3,ink);c.line(xx+7,y+3,xx+11,y+10,faint);}
  }
 }
 void punch_page(Canvas& c,const AppState& s){
- const auto& t=s.theme;studio_card(c,16,102,608,88,t,s.studioRow==0);
- c.draw_label("Performance effect",32,115,t.textParam);
- label(c,studio_value(s,0),32,145,t.textValue,560,18);
- studio_card(c,16,204,608,204,t,s.studioRow==1);
- c.draw_label(s.studioAUsed?"PERFORMING":"Hold A to perform",32,222,s.studioAUsed?t.rowCursor:t.textValue,18);
- scope(c,33,260,574,85,s.waveform,WAVEFORM_SIZE,t);
- c.draw_label("Release A to return to the mix",32,375,t.textParam);
+ const auto& t=s.theme;const int bank=studio::punch_bank(s.studioPunch),pad=studio::punch_pad(s.studioPunch);
+ studio_card(c,16,102,608,51,t);
+ c.draw_label(studio::punch_bank_name(bank),31,113,t.textValue,18);
+ label(c,"8 pads / bank   /   64 gestures",31,136,t.textParam,420);
+ chip(c,std::to_string(bank+1)+" / 8",535,115,73,t);
+ for(int i=0;i<studio::kPunchPads;++i){
+  const int x=16+(i%4)*154,y=166+(i/4)*92,id=studio::punch_id(bank,i);
+  const bool selected=i==pad,active=selected&&s.studioAUsed;
+  studio_card(c,x,y,146,81,t,selected);
+  if(selected)c.fill_rect(x+1,y+9,3,63,active?t.rowCursor:with_alpha(t.rowCursor,.65f));
+  label(c,std::to_string(i+1),x+12,y+10,t.textParam,20);
+  if(active)chip(c,"ON",x+102,y+7,32,t,true);
+  else if(selected)label(c,"READY",x+93,y+12,t.rowCursor,43);
+  if(active)scope(c,x+38,y+11,49,21,s.waveform,WAVEFORM_SIZE,t);
+  else punch_icon(c,bank,x+38,y+12,selected?t.rowCursor:with_alpha(t.textTitle,.48f));
+  label(c,studio::punch_name(id),x+12,y+48,selected?t.textValue:t.textParam,124);
+  c.fill_rect(x+12,y+69,122,1,with_alpha(selected?t.rowCursor:t.textParam,selected?.32f:.12f));
+ }
+ studio_card(c,16,363,608,45,t);
+ label(c,studio::punch_detail(s.studioPunch),30,372,t.textValue,572);
+ label(c,s.studioAUsed?"MOMENTARY / Release A to restore the mix":"D-pad selects a pad. Hold A to perform. The mix returns on release.",30,392,s.studioAUsed?t.rowCursor:t.textParam,572);
 }
+
 } // namespace
 void draw_studio(Canvas& c,const AppState& s){
  c.set_surface_style(s.theme.surfaceStyle);heading(c,s);const auto& t=s.theme;
@@ -206,6 +275,25 @@ void draw_studio(Canvas& c,const AppState& s){
     "R + Left / Right: parameter pages. B + Left / Right: Studio pages.",
     "Select closes help; B returns to the page."};
    for(int i=0;i<6;++i)label(c,lines[i],32,180+i*32,t.textParam,570);
+  }else if(s.studioTab==3){
+   c.draw_label("Punch Deck / momentary performance",32,124,t.textValue,18);
+   const char* lines[]={"L + Select opens Punch directly from the tracker.",
+    "D-pad selects pads in the 4 x 2 grid. L / R changes the category.",
+    "Hold A to hear the selected effect. Release A to restore the mix.",
+    "Move the D-pad while holding A to change the active gesture.",
+    "Changing bank, opening help or leaving the page releases effects.",
+    "A never opens hold-help here. Select: Help. B: Back."};
+   for(int i=0;i<6;++i)label(c,lines[i],32,177+i*32,t.textParam,570);
+  }else if(s.studioTab==4){
+   c.draw_label("Record / keep / edit",32,124,t.textValue,18);
+   const char* lines[]={"Record is also on Instrument and in the Sample Editor file row.",
+    "Up / Down selects; Left / Right changes source or format. A starts/stops.",
+    "REC and meters appear only when actual audio frames arrive.",
+    "Stop keeps the WAV. Use Take loads an empty slot and opens the editor.",
+    "Unsaved sample edits are protected; B returns so you can save them.",
+    "iPhone: experimental. USB HOST, unlock, Trust if asked; then start audio.",
+    "Charging is not audio. Refresh after reconnecting. Monitoring stays off."};
+   for(int i=0;i<7;++i)label(c,lines[i],32,174+i*31,t.textParam,570);
   }else{
   const char* help[]={"Choose an engine, shape its macros, then load the instrument.","Process the mix through Mutable effects. Presets apply with A.","Shape dynamics, saturation, stereo width and output level.","Hold A for the selected performance effect. Release to return.","Choose a microphone or USB input. Stop, then import the WAV.","Assign samples, generate a groove, preview, then apply.","Choose a complete design and its background material."};
   label(c,help[std::clamp(s.studioTab,0,6)],32,124,t.textValue,570,18);
@@ -221,9 +309,9 @@ void draw_studio(Canvas& c,const AppState& s){
  else if(s.studioTab==7){source_sampler_draw(c,s.sourceSampler,t,*s.project);return;}
  // Drumlab draws its own grid between the shared heading and footer.
  c.fill_rect(18,424,606,1,with_alpha(t.textParam,.2f));
- const std::string hint=s.studioTab==0?"B + Left / Right: Studio pages     Select: Help":"B + Left / Right: Page     A + D-pad: Edit     Select: Help";
+ const std::string hint=s.studioTab==3?"L / R: Category     D-pad: Select pad     Select: Help":s.studioTab==0?"B + Left / Right: Studio pages     Select: Help":s.studioTab==4?"B + Left / Right: Studio pages    Select: Recording help":"B + Left / Right: Page     A + D-pad: Edit     Select: Help";
  label(c,s.studioMessage.empty()?hint:s.studioMessage,22,435,s.studioMessage.empty()?t.textParam:t.rowCursor,590);
- const auto controls=s.studioTab==0?"A + arrows: Edit     Hold L: Audition     Start: Playback     B: Back":s.studioTab==4?"A: Record / Stop / Import     B: Back":"A: Apply     Start: Playback     B: Back";
+ const auto controls=s.studioTab==3?"Hold A: Punch    Release A: Restore    Start: Play / Stop    B: Back":s.studioTab==0?"A + arrows: Edit     Hold L: Audition     Start: Playback     B: Back":s.studioTab==4?"Up / Down: Select    Left / Right: Change    A: Action    B: Back":"A: Apply     Start: Playback     B: Back";
  label(c,controls,22,458,t.textEmpty,590);
 }
 } // namespace pt::ui

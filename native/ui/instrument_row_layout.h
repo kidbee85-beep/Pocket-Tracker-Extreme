@@ -29,7 +29,7 @@ enum class InstrumentCell {
     SLICE, LOOP, START, LOOP_START, END, LOOP_END, REVERSE,
     // EXTERNAL
     MIDI_CHANNEL, MIDI_BANK, MIDI_PROGRAM, MIDI_LENGTH, CC_NUMBER, CC_VALUE, MIDI_BEND,
-    STUDIO,
+    STUDIO, RECORD,
 };
 
 struct InstrumentRow {
@@ -54,7 +54,7 @@ inline constexpr InstrumentRow SAMPLER[] = {
     {K::TRIPLE, C::VOL, C::TSP, C::PAN},                 //  3
     {K::SINGLE, C::STUDIO},                              //  4
     {K::SOURCE, C::PRESET_SAVE, C::PRESET_LOAD},         //  5
-    {K::SPACER},                                         //  6
+    {K::SINGLE, C::RECORD},                              //  6
     {K::DUAL, C::DRIVE, C::FILTER},                      //  7
     {K::DUAL, C::CRUSH, C::FREQ},                        //  8
     {K::DUAL, C::DOWNSAMPLE, C::RES},                    //  9
@@ -75,7 +75,7 @@ inline constexpr InstrumentRow SOUNDFONT[] = {
     {K::SINGLE, C::STUDIO},                              //  4
     {K::SOURCE, C::PRESET_SAVE, C::PRESET_LOAD},         //  5
     {K::SINGLE, C::PATCH},                               //  6
-    {K::SPACER},                                         //  7
+    {K::SINGLE, C::RECORD},                              //  7
     {K::DUAL, C::DRIVE, C::FILTER},                      //  8
     {K::DUAL, C::CRUSH, C::FREQ},                        //  9
     {K::DUAL, C::DOWNSAMPLE, C::RES},                    // 10
@@ -93,7 +93,7 @@ inline constexpr InstrumentRow EXTERNAL[] = {
     {K::DUAL, C::MIDI_PROGRAM, C::MIDI_LENGTH},          //  3
     {K::SINGLE, C::STUDIO},                              //  4
     {K::SOURCE, C::PRESET_SAVE, C::PRESET_LOAD},         //  5
-    {K::SPACER},                                         //  6
+    {K::SINGLE, C::RECORD},                              //  6
     {K::DUAL, C::VOL, C::PAN},                           //  7
     {K::DUAL, C::TSP, C::TIC},                           //  8
     {K::DUAL, C::CC_NUMBER, C::CC_VALUE, C::NONE, 0},    //  9

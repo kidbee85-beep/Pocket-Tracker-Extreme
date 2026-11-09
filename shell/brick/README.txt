@@ -1,5 +1,5 @@
 POCKET TRACKER EXTREME — FIRST START ON TRIMUI BRICK
-Public beta 0.2.0-beta.1 · Kid Bunka
+Public beta 0.2.0-beta.2 · Kid Bunka
 
 ALREADY RUNNING KNULLI?
 Start at step 3. Do not reflash or format a working card just to install the tracker.
@@ -40,7 +40,7 @@ https://knulli.org/play/add-games/accessing-sd-card/
 https://knulli.org/play/add-games/game-storage/
 
 3. INSTALL POCKET TRACKER
-Unzip Pocket-Tracker-Extreme-0.2.0-beta.1-Brick.zip into:
+Unzip Pocket-Tracker-Extreme-0.2.0-beta.2-Brick.zip into:
 SHARE/roms/ports/
 
 After extracting, you should have:
@@ -95,9 +95,6 @@ https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html
 
 This is beta software. Musical workflows have been user-tested on a Brick with
 no errors reported so far; the full test workbook is still in progress. USB
-interfaces require separate hardware tests. Direct iPhone-to-Brick recording
-failed in the user's repeated hardware test with the current setup. Both ports
-were reported to charge only; the iPhone model and cable were not specified.
-The experimental helper is included, but direct capture is not working in this
-tested setup. Start with a short known WAV and save a test project before an important
+interfaces and the experimental direct iPhone input require separate hardware
+tests. Start with a short known WAV and save a test project before an important
 session. Back up your data folder regularly.

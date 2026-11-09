@@ -8,6 +8,9 @@ namespace pt::ui {
 void draw_studio(Canvas&,const AppState&);
 bool studio_poll_capture(AppState&,uint64_t now);
 void studio_capture_refresh(AppState&);
+void open_studio_capture(AppState&);
+void studio_capture_edit(AppState&,int direction);
+std::string studio_capture_status(const CaptureView&);
 void studio_capture_action(AppState&,songcore::SongcoreHost&,AudioEngine&,FileSystem&);
 bool studio_import_take(AppState&,songcore::SongcoreHost&,AudioEngine&,FileSystem&,
                         const std::string& sourcePath,std::string& importedPath,

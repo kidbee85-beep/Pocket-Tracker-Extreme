@@ -1,0 +1,65 @@
+POCKET TRACKER EXTREME — UPDATE AN EXISTING INSTALLATION
+Public beta 0.2.0-beta.2 · Kid Bunka
+
+TRIMUI BRICK: KEEP YOUR WORKING CARD AND ITS SETTINGS
+Use Pocket-Tracker-Extreme-0.2.0-beta.2-Brick-Program-Update.zip.
+This kit replaces only pockettracker_extreme.aarch64, the program itself.
+It leaves the working launcher, helpers, fonts, samples, projects, presets,
+recordings, themes, controller configuration, settings and pairing files in place.
+Do not flash KNULLI again, reformat the card or replace the entire app folder.
+The complete Brick ZIP is primarily for a fresh installation.
+
+1. Save your song and shut down the Brick fully. Insert the card into your
+   computer. Wait for any sample-copy operation to finish.
+2. Unzip the Program Update kit into a folder on the computer. Keep its files
+   together. Your computer needs Python 3 for the verified automatic updater.
+3. Select the EXISTING pockettracker_extreme folder containing the program and
+   its data folder. The updater refuses a new/missing installation or a symlink.
+4. macOS example (adjust the SHARE volume name if necessary):
+   python3 "/path/to/unpacked/update_brick.py" --target "/Volumes/SHARE/roms/ports/pockettracker_extreme"
+   Windows example (adjust E: to your SHARE drive):
+   py "C:\path\to\unpacked\update_brick.py" --target "E:\roms\ports\pockettracker_extreme"
+   Linux: use python3 with the same --target option and your mounted app folder.
+5. The updater verifies the new program, saves the previous one under
+   .pte-program-backups/<previous-SHA256>.aarch64, and atomically replaces the
+   program. Read the result. It prints the previous SHA256 for rollback.
+6. Eject the card safely, insert it into the powered-off Brick and start the
+   existing Pocket Tracker Extreme entry. No sample rescan or settings reset is
+   needed. Check the app version; the retained launcher's log header can keep
+   its earlier launcher version.
+
+Rollback, with the card in the computer:
+python3 update_brick.py --target "/Volumes/SHARE/roms/ports/pockettracker_extreme" --rollback <previous-SHA256>
+Use the full 64-character SHA256 printed by the update or shown in the backup
+filename. Windows uses py instead of python3. The updater verifies the backup
+and keeps the currently installed program as another backup before restoring it.
+Never remove your data folder as a troubleshooting step. A power failure or a
+storage-device failure is not covered by an atomic file rename; eject safely.
+
+Without Python, first make a verified computer backup of the existing program,
+then copy ONLY the new pockettracker_extreme.aarch64 from the kit into the app
+folder. Keep its filename unchanged. The automatic updater is preferable because
+it checks hashes, installation location, backup and the completed copy.
+
+ANDROID: INSTALL THE MATCHING SIGNED UPDATE OVER THE EXISTING APP
+The public Android APK updates the public 0.2.0-beta.1 package in place. Keep the
+same app and choose Update/Install; do not uninstall or clear app storage.
+Your media-folder grants and settings belong to the package/signature pair.
+An earlier private .studio.debug test app has a different identity. Its owner
+needs the separately supplied, matching-key private update; the public APK
+installs alongside it. Do not uninstall a private test app to force a migration.
+
+NEW IN BETA.2
+- Visible RECORD entry on Instrument and Sample Editor screens.
+- Recorder source/level/frame diagnostics, Stop/Keep and Use Take > Edit & Slice.
+- 64 momentary Punch gestures in eight banks; L+SELECT opens Punch directly.
+- 32 palettes and 12 surface materials; existing IDs/defaults/settings retained.
+- A defined-arithmetic Braids fix preserves the original integer PCM output.
+
+Direct iPhone-to-Brick recording FAILED in the user's repeated test with the
+current setup. This update improves access and diagnosis; it does not claim
+that route now works. Class-compliant audio interfaces remain a separate,
+pending physical test. There is no software input monitoring.
+
+Illustrated English guide:
+https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html

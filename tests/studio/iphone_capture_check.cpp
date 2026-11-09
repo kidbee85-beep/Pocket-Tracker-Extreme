@@ -68,7 +68,11 @@ Json observedInputs(ptshell::IphoneSampleRecorder& recorder, size_t count) {
     const auto deadline = Clock::now() + std::chrono::seconds(6); Json rows;
     do {
         rows = Json::parse(recorder.inputs_json());
-        if (rows.size() == count && rows.front().value("kind", "") == "iphone") return rows;
+        if (rows.size() == count && rows.front().value("kind", "") == "iphone") {
+            require(rows.front().value("connected", false), "Detected phone was not marked connected");
+            require(!rows.front().value("detail", "").empty(), "Discovery diagnostics were hidden");
+            return rows;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     } while (Clock::now() < deadline);
     throw std::runtime_error("Phone discovery did not complete: " + rows.dump());
@@ -171,6 +175,8 @@ int main(int argc, char** argv) {
             Fixture f(base, ++n, binary); f.pairing(binary);
             ptshell::IphoneSampleRecorder recorder(f.app.string()); require(recorder.start(ACTION, 2, 48000), "Paired capture refused");
             validTake(finished(recorder), f);
+            const auto verified=Json::parse(recorder.state_json());
+            require(verified.value("phoneDetected",false)&&verified.value("phoneTrusted",false), "Verified Trust status was not exposed separately from audio frames");
             const auto mux = f.calls("mux"); require(mux.size() == 1 && f.calls("pair").size() == 1, "Pairing sequence skipped");
             const fs::path socket = mux[0]["socket"].get<std::string>();
             require(!fs::exists(socket.parent_path()), "Private runtime session was not removed");
@@ -213,6 +219,19 @@ int main(int argc, char** argv) {
             Fixture f(base, ++n, binary); fs::remove(f.tools / "pte-iphone-usb");
             ptshell::IphoneSampleRecorder recorder(f.app.string()); require(!recorder.start(ACTION, 2, 48000), "Missing helper accepted");
             require(Json::parse(recorder.state_json()).value("message", "").find("missing") != std::string::npos, "Missing helper error unclear");
+            // Discovery errors must remain visible before Record is pressed,
+            // including when the router's active backend is still SDL.
+            ptshell::CaptureRouter router(f.app.string());const auto began=Clock::now();bool visible=false;
+            while(Clock::now()-began<std::chrono::seconds(2)){
+                const auto rows=Json::parse(router.inputs_json());
+                for(const auto& row:rows)if(row.value("kind","")=="iphone-action"){
+                    require(!row.value("connected",true),"Missing helper claimed a connected phone");
+                    visible=row.value("detail","").find("missing")!=std::string::npos;
+                }
+                if(visible)break;std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            }
+            require(visible,"Router hid asynchronous iPhone helper discovery failure");
+            require(f.calls("record").empty(),"Discovery implicitly activated iPhone audio");
         }
         {
             Fixture f(base, ++n, binary); f.config["record"] = "hold"; f.save();

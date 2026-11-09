@@ -62,7 +62,7 @@ class Launcher(unittest.TestCase):
   s=self.snap();self.assertEqual(s['cwd'],str(self.app));self.assertEqual(s['argv'],['song $literal ; `x`.ptp','media folder'])
   self.assertEqual(s['env']['POCKETTRACKER_HOME'],str(self.data));self.assertEqual((self.data/'own.ptp').read_text(),'KEEP')
   self.assertEqual(s['env']['POCKETTRACKER_VIDEO'],'renderer');self.assertEqual(s['env']['POCKETTRACKER_SYNC_STARTUP'],'1');self.assertEqual(s['env']['POCKETTRACKER_AUDIO_FRAMES'],'512');self.assertEqual(s['env']['POCKETTRACKER_FULLSCREEN'],'1')
-  self.assertTrue(self.log.read_text().startswith('\n=== Pocket Tracker Extreme 0.2.0-beta.1-R36S-Community-Test: shell entered'))
+  self.assertTrue(self.log.read_text().startswith('\n=== Pocket Tracker Extreme 0.2.0-beta.2-R36S-Community-Test: shell entered'))
   self.assertFalse(list(self.app.glob('.pte-startup-ready.*')))
  def test_first_marker_is_visible_before_external_work(self):
   fake=self.root/'early-tools';fake.mkdir();stub=fake/'wc'

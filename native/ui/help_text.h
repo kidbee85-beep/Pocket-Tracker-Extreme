@@ -349,6 +349,7 @@ enum class HelpTopic {
     MIDI_SYNC_IN,
     PROJECT_COLLECT,
     INST_STUDIO,
+    RECORD_INPUT,
 
     COUNT
 };
@@ -2449,6 +2450,18 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
      {"A opens Studio",
       "R+SELECT opens it from a tracker",
       "screen without leaving the song"}},
+    /* RECORD_INPUT */
+    {"RECORD: capture new audio", "Mic, USB interface or an", "experimental iPhone USB source.",
+     {"A opens the recorder on START.",
+      "D-pad up/down selects a row.",
+      "Left/right changes the source.",
+      "Stop keeps a separate WAV.",
+      "Use Take opens EDIT in a free",
+      "slot. Your old sound is kept."},
+     {"B returns to your current edit.",
+      "Save unsaved edits before using",
+      "the new take. USB charging alone",
+      "does not mean audio is arriving."}},
 };
 
 // ─── Rules 2 and 3, as compile errors — at runtime they fail silently ────────────────────────────
@@ -2597,6 +2610,7 @@ inline HelpTopic instrument_topic(songcore::InstrumentType type, int row, int co
         case Cell::PRESET_SAVE:  return HelpTopic::INST_PRESET_SAVE;
         case Cell::PRESET_LOAD:  return HelpTopic::INST_PRESET_LOAD;
         case Cell::STUDIO:       return HelpTopic::INST_STUDIO;
+        case Cell::RECORD:       return HelpTopic::RECORD_INPUT;
         case Cell::VOL:          return HelpTopic::INST_VOLUME;
         case Cell::PAN:          return HelpTopic::INST_PAN;
         case Cell::TSP:          return HelpTopic::INST_TRANSPOSE;
@@ -2908,6 +2922,7 @@ inline HelpTopic sample_editor_cell_topic(int row, int column, int slice_method)
 
         case 18: return HelpTopic::SE_NAME;
         case 19:
+            if(column==(slice_method==SampleEditorModule::SLICE_OFF?3:4))return HelpTopic::RECORD_INPUT;
             if (column == 0) return HelpTopic::SE_LOAD;
             if (column == 1) return HelpTopic::SE_SAVE;
             if (column == 2) return HelpTopic::SE_OVERWRITE;

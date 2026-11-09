@@ -14,11 +14,11 @@ import zipfile
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-VERSION = "0.2.0-beta.1"
+VERSION = "0.2.0-beta.2"
 NAME = f"Pocket-Tracker-Extreme-{VERSION}-R36S-Community-Test"
 LAUNCHER = "Pocket Tracker Extreme.sh"
 APP = "pockettracker_extreme"
-ELF_SHA = "39f35ea40318fc77dc651aec5f89157d7f854e91802a470fb4e0b13661833fb4"
+ELF_SHA = "2871bd74a460d57fd173be67bd25306b7daa9d27ea28085a870898813acea891"
 DB_SHA = "4ef169fcee14ef9563e36ebf731dc6950494e553bf8b56b5fc8aa70181f0d25c"
 LICENSE_SHA = "97f35b302b361680ec1e891e95d2d52097bb95abff361434916d99dc1305f127"
 ZIP_TIME = (2026, 11, 9, 0, 0, 0)
@@ -92,7 +92,7 @@ def build(stage: Path, output: Path, cpu_validation: Path | None) -> Path:
         shutil.copytree(stage / APP, app)
         # Only target-specific documents and metadata change; executable bytes do not.
         for path in list(app.iterdir()):
-            if path.name.startswith("KNULLI-Official-") or path.name == "HOW-TO-FIRST-START.txt":
+            if path.name.startswith("KNULLI-Official-") or path.name in {"HOW-TO-FIRST-START.txt", "UPDATE-EXISTING-INSTALL.txt"}:
                 require(path.is_file(), "Unexpected OS shortcut directory")
                 path.unlink()
         shutil.copyfile(HERE / LAUNCHER, root / LAUNCHER)
@@ -122,7 +122,7 @@ def build(stage: Path, output: Path, cpu_validation: Path | None) -> Path:
             "controllerdb_policy": "Fallback only when SDL_GAMECONTROLLERCONFIG_FILE is unset; preserve explicit empty and frontend inline mappings",
             "OS_image_included": False, "system_libraries_replaced": False,
             "USB_iPhone_R36S_validation": "pending physical hardware testing",
-            "source": "Matching Pocket Tracker Extreme 0.2.0-beta.1 public source bundle; shell/r36s/package.py",
+            "source": "Matching Pocket Tracker Extreme 0.2.0-beta.2 public source bundle; shell/r36s/package.py",
         }
         write_json(app / "community-test.json", metadata)
         write_json(app / "port.json", {

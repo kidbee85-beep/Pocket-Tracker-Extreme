@@ -13,7 +13,7 @@ From this directory, run `python3 -m http.server 8765`, then open
 
 1. Publish the approved source and release artifacts in
    `kidbee85-beep/Pocket-Tracker-Extreme`.
-2. Use release tag `v0.2.0-beta.1` and the exact filenames in the download links.
+2. Use release tag `v0.2.0-beta.2` and the exact filenames in the download links.
 3. In repository Settings → Pages, choose **GitHub Actions**.
 4. Run the **Publish approved website** workflow manually. It publishes only
    `docs/site`, not the full source tree or private production files.

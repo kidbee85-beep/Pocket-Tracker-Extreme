@@ -158,7 +158,7 @@
       "sha256": "fbd085f801d7d9cf44e327bfbb60ba93d704be741c3f6510f7a85ee812cf2848"
     },
     "android.png": {
-      "kind": "actual signed0.2.0-beta.1 APK running in Android emulator",
+      "kind": "actual signed0.2.0-beta.2 APK running in Android emulator",
       "physical_device_capture": false,
       "sha256": "a8a8c43a0a7e89653243f3ba24047659ce39b61968cc5da580a9f602511f4b63"
     },
@@ -199,7 +199,7 @@
     }
   },
   "android_beta_capture": {
-    "kind": "actual signed0.2.0-beta.1 APK running in Android emulator",
+    "kind": "actual signed0.2.0-beta.2 APK running in Android emulator",
     "physical_device_capture": false,
     "sha256": "a8a8c43a0a7e89653243f3ba24047659ce39b61968cc5da580a9f602511f4b63"
   }

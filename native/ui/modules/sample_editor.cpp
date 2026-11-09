@@ -134,7 +134,7 @@ int SampleEditorModule::max_col_for_row(int row, int slice_method) {
     if (row == 15) return 2;
     if (row == 16) return 2;                     // TYPE / VALUE / APPLY
     if (row == 18) return 0;                     // NAME — the whole row is one cell
-    if (row == 19) return (slice_method == SLICE_OFF) ? 2 : 3;   // CHOP only exists with slices
+    if (row == 19) return (slice_method == SLICE_OFF) ? 3 : 4;   // RECORD after the existing file actions
     return 0;
 }
 
@@ -490,8 +490,8 @@ void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& 
     c.draw_text(filename, x + 93, y + content_y(18) + 5,
                 s.cursorRow == 18 ? cursor_cell_ink(t) : t.textValue, 1, 2);
     if (s.isModified) c.draw_text("*", x + 607, y + content_y(18) + 3, s.cursorRow == 18 ? cursor_cell_ink(t) : t.rowCursor, 1, 2);
-    const int count = s.sliceMethod == SLICE_OFF ? 3 : 4;
-    const std::string fileOps[] = {"LOAD", "SAVE", "OVERWRITE", "CHOP"};
+    const int count = s.sliceMethod == SLICE_OFF ? 4 : 5;
+    const std::string fileOps[] = {"LOAD", "SAVE", "OVERWRITE", s.sliceMethod == SLICE_OFF ? "RECORD" : "CHOP", "RECORD"};
     for (int i = 0; i < count; ++i) {
         const int left = 85 + i * 540 / count;
         const int right = 85 + (i + 1) * 540 / count;

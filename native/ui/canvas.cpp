@@ -66,6 +66,20 @@ int material_delta(int style, int x, int y) {
             return distance * distance * 4 / 4096 - 2;
         }
         case 7: return 0;
+        case 8: // Ceramic glaze: quiet, broad relief over microscopic pores.
+            return grain(x / 2,y / 2) + ((x / 120 + y / 90) % 3 == 0 ? 1 : 0);
+        case 9: { // Punched metal, staggered ventilation perforations.
+            const int xx=(x+(y/8%2)*4)%8,yy=y%8;
+            return (xx==3||xx==4)&&(yy==3||yy==4)?-3:(xx==3&&yy==5?1:0);
+        }
+        case 10: { // Very fine contour engraving; no animation or bitmap assets.
+            const int xx=x%160-80,yy=y%120-60;
+            const int ring=(xx*xx+yy*yy)/180;
+            return ring%9==0?2:0;
+        }
+        case 11: // Anodized satin with a fine cross-grain.
+            return (x%5==0?-1:0)+(y%7==0?1:0)+grain(x/7,y/3);
+
         default: return grain(x, y);
     }
 }
@@ -160,7 +174,7 @@ void Canvas::fill_rect(int x, int y, int w, int h, Argb color) {
 }
 
 void Canvas::set_surface_style(int style) {
-    surfaceStyle_ = std::clamp(style, 0, 7);
+    surfaceStyle_ = std::clamp(style, 0, kSurfaceStyleCount-1);
 }
 
 void Canvas::surface_rect(int x, int y, int w, int h, Argb base) {

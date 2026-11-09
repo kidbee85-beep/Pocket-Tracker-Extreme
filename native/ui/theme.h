@@ -65,10 +65,12 @@ struct Theme {
     int surfaceStyle = 0;
 };
 
+inline constexpr int kSurfaceStyleCount=12;
 inline const char* surface_style_name(int style) {
     static const char* names[] = {"Fine Grain", "Brushed Metal", "Carbon Weave", "Paper Fiber",
-                                  "Circuit", "Precision Grid", "Silk", "Flat"};
-    return names[style < 0 ? 0 : style > 7 ? 7 : style];
+                                  "Circuit", "Precision Grid", "Silk", "Flat",
+                                  "Ceramic", "Micro Perforation", "Etched Contours", "Anodized"};
+    return names[style < 0 ? 0 : style >= kSurfaceStyleCount ? kSurfaceStyleCount-1 : style];
 }
 
 // Scale the RGB channels by `factor`; alpha kept.
@@ -313,8 +315,16 @@ inline std::vector<Theme> theme_builtins() {
             theme_palette("VELVET", 0xFF21182A, 0xFF38263D, 0xFFF2B7D9, 0xFFFFE1F1, 0xFFB3B8FF),
             theme_palette("BLUEPRINT", 0xFF101E36, 0xFF1B3551, 0xFF9ADCF5, 0xFFE2F3FF, 0xFFFFCE96),
             theme_palette("EMBER", 0xFF241919, 0xFF3C2826, 0xFFFFAC83, 0xFFFFE3C6, 0xFFF2D38C),
-            theme_palette("OBSIDIAN", 0xFF101116, 0xFF222431, 0xFFBCB8F9, 0xFFE7E6FF, 0xFF8FE1D3)};
-    const int styles[] = {0,5,6,3,1,5,6,1,4,7,1,5,7,6,7,7,2,1,3,4,6,5,0,2};
+            theme_palette("OBSIDIAN", 0xFF101116, 0xFF222431, 0xFFBCB8F9, 0xFFE7E6FF, 0xFF8FE1D3),
+            theme_palette("PORCELAIN NOIR", 0xFF161C22, 0xFF29313A, 0xFFC7E2E4, 0xFFF0F5F5, 0xFFE7BB91),
+            theme_palette("AURORA", 0xFF101A23, 0xFF20333F, 0xFF86E9CA, 0xFFD0E9FF, 0xFFD8B4ED),
+            theme_palette("OXBLOOD", 0xFF21171D, 0xFF392731, 0xFFEEB89F, 0xFFFFE6D8, 0xFFB5CFDD),
+            theme_palette("PETROL", 0xFF101E21, 0xFF20383C, 0xFFA9DCCB, 0xFFDCF4ED, 0xFFE6C188),
+            theme_palette("MOONSTONE", 0xFF1B1D28, 0xFF2D3143, 0xFFBABEEB, 0xFFE7EAFE, 0xFFA6D8D0),
+            theme_palette("BRASS CONSOLE", 0xFF201E18, 0xFF353127, 0xFFE7C38E, 0xFFF5E9D5, 0xFFA2CCC0),
+            theme_palette("OCEAN GLASS", 0xFF111C2D, 0xFF20354B, 0xFF8ED9EB, 0xFFDFF3FF, 0xFFCEB8ED),
+            theme_palette("FOREST VELVET", 0xFF171F1C, 0xFF28372F, 0xFFB4D7A7, 0xFFE7F0DD, 0xFFE0BB9C)};
+    const int styles[] = {0,5,6,3,1,5,6,1,4,7,1,5,7,6,7,7,2,1,3,4,6,5,0,2,8,10,11,9,8,11,10,9};
     for(size_t i=0;i<themes.size();++i) themes[i].surfaceStyle=styles[i];
     return themes;
 }

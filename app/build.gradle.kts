@@ -29,8 +29,8 @@ android {
         targetSdk = 34
         // Hand-bumped per release: 990 = 0.9.9, 991 = 0.9.9.1, 1000 = 1.0.0 next. F-Droid's update check and
         // the changelog file name (changelogs/<versionCode>.txt) need a literal value.
-        versionCode = 20001
-        versionName = "0.2.0-beta.1"
+        versionCode = 20002
+        versionName = "0.2.0-beta.2"
         testInstrumentationRunner = providers.gradleProperty("ptTestRunner")
             .orElse("com.conanizer.pockettracker.CaptureSmoke").get()
 
@@ -89,6 +89,11 @@ android {
         }
     }
 
+    // Opt-in maintainer path for updating the earlier private .debug package in place.
+    // It preserves the original package/key pair; it is never the public release identity.
+    val legacyPrivateUpdate = providers.gradleProperty("ptLegacyPrivateUpdate")
+        .orElse("false").get() == "true"
+
     testBuildType = providers.gradleProperty("ptTestBuildType").orElse("debug").get()
 
     buildTypes {
@@ -108,10 +113,15 @@ android {
             )
             // Never label a debug-signed package as a public release. A fresh clone may
             // build an unsigned release; maintainers supply a private signing-properties path.
-            signingConfig = if (keystorePropertiesFile.exists())
-                signingConfigs.getByName("release")
-            else
-                null
+            if (legacyPrivateUpdate) {
+                applicationIdSuffix = ".debug"
+                signingConfig = signingConfigs.getByName("debug")
+            } else {
+                signingConfig = if (keystorePropertiesFile.exists())
+                    signingConfigs.getByName("release")
+                else
+                    null
+            }
         }
     }
     compileOptions {

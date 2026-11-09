@@ -136,7 +136,7 @@ inline bool parse_theme(const std::string& text, Theme& out) {
         t.visualizerType = visualizer_from_serial_name(it->get<std::string>());
     if (const auto it=j.find("surfaceStyle");it!=j.end()&&it->is_number_integer()) {
         const auto value=it->get<int64_t>();
-        if(value>=0&&value<=7)t.surfaceStyle=static_cast<int>(value);
+        if(value>=0&&value<kSurfaceStyleCount)t.surfaceStyle=static_cast<int>(value);
     }
 
     out = t;

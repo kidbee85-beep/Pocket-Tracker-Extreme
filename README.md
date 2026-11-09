@@ -2,7 +2,7 @@
 
 **A hands-on music studio for Android and TrimUI Brick / KNULLI.**
 
-Public beta candidate **0.2.0-beta.1**, by **Kid Bunka** and contributors.
+Public beta candidate **0.2.0-beta.2**, by **Kid Bunka** and contributors.
 
 Pocket Tracker Extreme is an independent fork of [PocketTracker by conanizer and contributors](https://github.com/conanizer/pockettracker), with an expanded synthesis studio, punch-in performance effects, detailed sample editing, groove generation, mastering, and online digging. The original authors and all third-party copyright notices remain credited in [CREDITS.md](CREDITS.md).
 
@@ -13,13 +13,13 @@ Pocket Tracker Extreme is an independent fork of [PocketTracker by conanizer and
 - **Tracker sequencing:** eight stereo tracks, pattern and song arrangement, note and effect editing, resampling, mix and stem export.
 - **Synthesis studio:** sound models and articulations using open DSP adapted from Mutable Instruments Braids, Plaits, Rings, Elements, Clouds and Warps, plus drum and other sound models. Model/articulation choices are not a claim of that many independent DSP engines.
 - **Live sound design:** engine-specific controls, preset browsing, live instrument updates and note audition.
-- **Punch-in performance:** momentary performance processing and categorized effect presets.
+- **Punch-in performance:** 64 momentary gestures in eight visible eight-pad banks; L + SELECT opens Punch directly.
 - **Sample laboratory:** waveform editing, trim, zoom, transient-oriented slicing, slice markers, destructive tools and instrument loading.
 - **Drumlab and groove:** build patterns from a selected kit and distribute generated parts across tracker tracks.
 - **Mastering and tone:** equalization, dynamics, saturation, delay and reverb, with presets and mix/export tools.
 - **Digging:** search supported online sources, audition, place in/out markers and turn an excerpt into a local WAV for editing. Availability depends on the source, network and platform.
-- **Recording:** Android microphone and USB-audio input paths; KNULLI input-device selection and experimental direct iPhone helpers. Real-device support varies; see the feature matrix below.
-- **Personal appearance:** textured styles, color themes, visualizers and an animated Extreme splash screen.
+- **Recording:** visible RECORD entries on Instrument and Sample Editor, frame/input diagnostics, Stop/Keep and Use Take into Edit & Slice. Android microphone/USB-audio paths and experimental Brick iPhone helpers remain hardware-dependent; see the status matrix.
+- **Personal appearance:** 32 palettes, 12 surface materials, visualizers and the animated Extreme splash. Existing theme IDs, defaults and custom controls are preserved.
 - **M8 import:** imports the supported sampler/arrangement subset, reports omissions and keeps source files intact. This is not a full M8 synth/effect emulator.
 - **Presets:** an extensive built-in studio library and an additional categorized 2,048-instrument factory pack. The Brick launcher prepares missing pack files on first launch, or you can use the optional computer-side preparer; Android users can extract the separately supplied pack into their selected media folder.
 
@@ -29,16 +29,23 @@ Each release provides these separate artifacts:
 
 | File | Purpose |
 | --- | --- |
-| `Pocket-Tracker-Extreme-0.2.0-beta.1-Android.apk` | Signed Android application: ARM64, ARMv7 (32-bit) and x86-64 |
-| `Pocket-Tracker-Extreme-0.2.0-beta.1-Brick.zip` | Native ARM64 Linux port for TrimUI Brick running KNULLI |
-| `Pocket-Tracker-Extreme-0.2.0-beta.1-R36S-Community-Test.zip` | Separate Linux community-test build for R36S-class handhelds; hardware validation pending |
-| `Pocket-Tracker-Extreme-0.2.0-beta.1-Factory-Presets.zip` | Additional presets, particularly for Android storage folders |
-| `Pocket-Tracker-Extreme-0.2.0-beta.1-Source.zip` | Matching application, helper sources, notices and build instructions |
-| `Pocket-Tracker-Extreme-0.2.0-beta.1-Demo-Project.zip` | Original editable Mint Afterhours demonstration song and samples, CC BY 4.0 |
+| `Pocket-Tracker-Extreme-0.2.0-beta.2-Android.apk` | Signed Android application: ARM64, ARMv7 (32-bit) and x86-64 |
+| `Pocket-Tracker-Extreme-0.2.0-beta.2-Brick.zip` | Complete native ARM64 package for a new Brick / KNULLI installation |
+| `Pocket-Tracker-Extreme-0.2.0-beta.2-Brick-Program-Update.zip` | One-program update with hash verification, backup and rollback; existing data and launcher retained |
+| `Pocket-Tracker-Extreme-0.2.0-beta.2-R36S-Community-Test.zip` | Separate Linux community-test build for R36S-class handhelds; hardware validation pending |
+| `Pocket-Tracker-Extreme-0.2.0-beta.2-Factory-Presets.zip` | Additional presets, particularly for Android storage folders |
+| `Pocket-Tracker-Extreme-0.2.0-beta.2-Source.zip` | Matching application, helper sources, notices and build instructions |
+| `Pocket-Tracker-Extreme-0.2.0-beta.2-Demo-Project.zip` | Original editable Mint Afterhours demonstration song and samples, CC BY 4.0 |
 | `HOW-TO-FIRST-START.txt` | Simple standalone Brick / KNULLI installation guide |
 | `SHA256SUMS.txt` | Integrity hashes for the published artifacts |
 
 These packages do not contain KNULLI, PortMaster, SOLIS, proprietary Polyend libraries, another vendor's firmware or a personal sample library. A Polyend Tracker Mini version is not part of this beta.
+
+## Updating without a reset
+
+For an existing Brick installation, use the program-only update kit and [its instructions](docs/brick/UPDATE-EXISTING-INSTALL.txt). It replaces only the native executable. Keep the working KNULLI card, launcher, samples, projects, presets, themes, controller files and settings; no reflash, folder replacement or reset is needed. A verified previous-program backup supports rollback.
+
+The signed public APK updates the public beta.1 identity in place. Earlier private `.studio.debug` builds need their own matching-key update, supplied separately to their owners. Do not uninstall or clear storage to force a mismatched APK installation. [The illustrated upgrade guide](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html#updating) explains the distinction.
 
 ## Install on Android
 
@@ -66,7 +73,7 @@ The native launcher does not require PortMaster scripts to start. It uses KNULLI
 
 | Area | Status and practical limit |
 | --- | --- |
-| Brick launch and musical workflows | User-tested on the actual device; no errors reported so far. The full acceptance workbook remains in progress. |
+| Brick launch and musical workflows | The preceding private build/startup path was user-tested with no errors reported. Beta.2 has software/VM validation; physical acceptance of this new version remains pending. |
 | Android | ARM64, ARMv7 (32-bit) and x86-64 libraries are packaged. Installation and release runtime checks passed on an ARM64 emulator; every handheld, OS/driver combination and interface is not certified. Android 8/API 26 or newer is required. |
 | R36S-class Linux handhelds | Separate community-test package. This is not Android; system SDL2 and the documented Linux ABI are required. Physical R36S controls/audio tests are pending. |
 | Synthesis, samples, effects and mastering | Shared native implementation. CPU load, polyphony and very long files remain device-dependent. |

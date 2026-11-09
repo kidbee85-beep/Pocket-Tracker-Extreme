@@ -85,6 +85,7 @@ const char* cell_label(Cell cell, int cc_slot_index) {
         case Cell::PRESET_SAVE:
         case Cell::PRESET_LOAD:
         case Cell::STUDIO:
+        case Cell::RECORD:
             return "";
     }
     return "";
@@ -151,6 +152,7 @@ std::string cell_text(Cell cell, int cc_slot_index, const InstrumentEditorState&
         case Cell::PRESET_SAVE:
         case Cell::PRESET_LOAD:
         case Cell::STUDIO:
+        case Cell::RECORD:
             return "";
     }
     return "";
@@ -227,12 +229,13 @@ void InstrumentEditorModule::draw_cell(Canvas& c, int label_x, int value_x, int 
                                        int cc_slot_index, bool is_cursor,
                                        const InstrumentEditorState& s) const {
     const Theme& t = s.theme;
-    if (cell == Cell::STUDIO) {
+    if (cell == Cell::STUDIO || cell == Cell::RECORD) {
+        const bool record=cell==Cell::RECORD;
         c.panel_rect(label_x - 3, text_y - 3, WIDTH - 16, 20, t.rowEvery4th,
                      is_cursor ? t.rowCursor : with_alpha(t.textParam, .25f), 3);
-        draw_cursor_cell(c, "STUDIO >", label_x + 3, text_y, is_cursor, t.textValue, t);
-        c.draw_label("Synth / FX / Master", value_x, text_y + 2, t.textParam);
-        c.draw_label("R + Select", value_x + 190, text_y + 2, t.rowCursor);
+        draw_cursor_cell(c, record?"RECORD >":"STUDIO >", label_x + 3, text_y, is_cursor, t.textValue, t);
+        c.draw_label(record?"Mic / USB audio / iPhone":"Synth / FX / Master", value_x, text_y + 2, t.textParam);
+        if(!record)c.draw_label("R + Select", value_x + 190, text_y + 2, t.rowCursor);
         return;
     }
     c.draw_text(cell_label(cell, cc_slot_index), label_x, text_y,
@@ -318,6 +321,7 @@ CursorContext InstrumentEditorModule::cursor_context(const InstrumentEditorState
         case Cell::PRESET_SAVE:
         case Cell::PRESET_LOAD:
         case Cell::STUDIO:
+        case Cell::RECORD:
             return cc::read_only();
 
         case Cell::ROOT: {
@@ -423,6 +427,7 @@ songcore::MapTarget InstrumentEditorModule::map_target(const InstrumentEditorSta
         case Cell::PRESET_SAVE:
         case Cell::PRESET_LOAD:
         case Cell::STUDIO:
+        case Cell::RECORD:
         case Cell::TSP:
         case Cell::TIC:
         case Cell::ROOT:
@@ -527,6 +532,7 @@ InstrumentInputResult InstrumentEditorModule::handle_input(Instrument& ins, int 
         case Cell::PRESET_SAVE:
         case Cell::PRESET_LOAD:
         case Cell::STUDIO:
+        case Cell::RECORD:
             break;
     }
     return r;

@@ -1,4 +1,5 @@
 #include "rack.h"
+#include "punch.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -52,7 +53,7 @@ struct Rack::State {
  float in[48][2]{},out[48][2]{},tmpL[48]{},tmpR[48]{},src[48]{};
  warps::ShortFrame wi[96]{},wo[96]{};clouds::ShortFrame ci[32]{},co[32]{};
  int pos=0,lastFx=-1;float envelope=0,prevIn[2]{},hp[2]{};
- float history[96000][2]{};float captured[48000][2]{};int capturedLength=1;double tapePos=0;float tapeRate=1;int write=0,play=0,lastPunch=0,lastRequested=0;float wetPunch=0,filter[2]{},band[2]{};
+ PunchProcessor punchProcessor;
  State(){rings.Init(reverb);rings.set_polyphony(1);warps.Init(96000);clouds.Init(large,sizeof(large),small,sizeof(small));clouds.set_num_channels(2);clouds.set_low_fidelity(false);}
  void effect(const std::array<int,COUNT>& p){
   int fx=p[FX];float color=p[COLOR]/255.f,texture=p[TEXTURE]/255.f;
@@ -81,19 +82,11 @@ void Rack::reset(){s_->~State();new(s_.get()) State;punch.store(0,std::memory_or
 void Rack::process(float* buf,int frames,int ch,float sr){
  if(!buf||ch!=2||frames<1||!std::isfinite(sr)||sr<8000)return;
  std::array<int,COUNT> p{};for(int i=0;i<COUNT;++i)p[i]=std::clamp(control[i].load(std::memory_order_relaxed),0,255);p[FX]=std::min(19,p[FX]);
- const bool enabled=p[ENABLE]!=0;const int requested=std::clamp(punch.load(),0,24);
- // Keep rendering the previous gesture while its wet gain returns to zero.
- // Replacing it with dry audio here would bypass the release ramp and click.
- const int effect=requested?requested:s_->lastPunch;
- if(!enabled&&!requested&&s_->wetPunch<.0001f){
-  for(int i=0;i<frames;++i){s_->history[s_->write][0]=buf[2*i];s_->history[s_->write][1]=buf[2*i+1];s_->write=(s_->write+1)%96000;}
-  s_->lastPunch=0;s_->lastRequested=0;return;
- }
+ const bool enabled=p[ENABLE]!=0;const int requested=std::clamp(punch.load(std::memory_order_relaxed),0,kPunchCount);
  const float threshold=std::pow(10.f,(-48+48*p[THRESHOLD]/255.f)/20),ratio=1+19*p[RATIO]/255.f;
  const float attack=std::exp(-1.f/(sr*(.001f+.099f*p[ATTACK]/255.f))),release=std::exp(-1.f/(sr*(.02f+.98f*p[RELEASE]/255.f)));
  const float drive=1+7*p[DRIVE]/255.f,gain=std::pow(10.f,(p[OUTPUT]-128)/128.f),ceiling=std::pow(10.f,(-12+12*p[CEILING]/255.f)/20);
  const float high=std::exp(-6.2831853f*(10+190*p[HIGH_PASS]/255.f)/sr);
- int loop=std::clamp(static_cast<int>(sr*60.f/std::max(20,tempo.load())/(effect==23?16:(effect==2||effect==11?8:4))),48,48000);
  for(int i=0;i<frames;++i){float l=buf[2*i],r=buf[2*i+1];
   if(enabled){
    if(p[FX]&&p[FX_MIX]){float ol=s_->out[s_->pos][0],orr=s_->out[s_->pos][1];s_->in[s_->pos][0]=l;s_->in[s_->pos][1]=r;if(++s_->pos==48){s_->pos=0;s_->effect(p);}l=ol;r=orr;}
@@ -103,37 +96,8 @@ void Rack::process(float* buf,int frames,int ch,float sr){
    float mid=(l+r)*.5f,side=(l-r)*.5f*p[WIDTH]/128.f;l=(mid+side)*gain*reduction;r=(mid-side)*gain*reduction;
    l=std::clamp(l,-ceiling,ceiling);r=std::clamp(r,-ceiling,ceiling);
   }
-  s_->history[s_->write][0]=l;s_->history[s_->write][1]=r;
-  if(requested&&(requested!=s_->lastPunch||!s_->lastRequested)){
-   s_->play=0;s_->tapePos=0;s_->tapeRate=1;s_->capturedLength=loop;
-   if((effect>=1&&effect<=3)||(effect>=8&&effect<=11)||effect==23)for(int k=0;k<loop;++k){int from=(s_->write-loop+k+96000)%96000;s_->captured[k][0]=s_->history[from][0];s_->captured[k][1]=s_->history[from][1];}
-   s_->lastPunch=effect;
-  }
-  s_->wetPunch+=((requested?1.f:0.f)-s_->wetPunch)*.01f;
-  float a=l,b=r;
-  switch(effect){case 1:case 2:case 3:case 11:case 23:{int k=(effect==3||effect==11)?s_->capturedLength-1-s_->play:s_->play;a=s_->captured[k][0];b=s_->captured[k][1];s_->play=(s_->play+1)%s_->capturedLength;break;}
-   case 4:s_->filter[0]+=.035f*(l-s_->filter[0]);s_->filter[1]+=.035f*(r-s_->filter[1]);a=s_->filter[0];b=s_->filter[1];break;
-   case 5:a=std::round(l*16)/16;b=std::round(r*16)/16;break;
-   case 6:{int k=(s_->write-loop+96000)%96000;a=l+.6f*s_->history[k][0];b=r+.6f*s_->history[k][1];break;}
-   case 7:{float g=(s_->write%(loop/2)<loop/4)?1.f:.05f;a=l*g;b=r*g;break;}
-   case 8:case 9:case 10:{int k=static_cast<int>(s_->tapePos)%s_->capturedLength;int next=(k+1)%s_->capturedLength;float f=s_->tapePos-static_cast<int>(s_->tapePos);a=s_->captured[k][0]+f*(s_->captured[next][0]-s_->captured[k][0]);b=s_->captured[k][1]+f*(s_->captured[next][1]-s_->captured[k][1]);double rate=effect==9?.5:effect==10?2:s_->tapeRate;s_->tapePos+=rate;if(s_->tapePos>=s_->capturedLength)s_->tapePos-=s_->capturedLength;if(effect==8)s_->tapeRate=std::max(0.f,s_->tapeRate-1.f/std::max(1,loop));break;}
-   case 12:case 13:{s_->filter[0]+=.045f*(l-s_->filter[0]);s_->filter[1]+=.045f*(r-s_->filter[1]);a=l-s_->filter[0];b=r-s_->filter[1];if(effect==13){s_->band[0]+=.18f*(a-s_->band[0]);s_->band[1]+=.18f*(b-s_->band[1]);a=s_->band[0];b=s_->band[1];}break;}
-   case 14:a=std::tanh(l*6);b=std::tanh(r*6);break;
-   case 15:a=std::sin(l*9.424778f);b=std::sin(r*9.424778f);break;
-   case 16:{float carrier=std::sin(s_->write*6.2831853f*50/sr);a=l*carrier;b=r*carrier;break;}
-   case 17:{float g=.55f+.45f*std::sin(s_->write*6.2831853f/std::max(1,loop));a=l*g;b=r*g;break;}
-   case 18:{float g=.5f+.5f*std::sin(s_->write*6.2831853f/std::max(1,loop));a=l*g;b=r*(1-g);break;}
-   case 19:a=r;b=l;break;
-   case 20:a=b=.5f*(l+r);break;
-   case 21:{float mid=.5f*(l+r),side=l-r;a=mid+side;b=mid-side;break;}
-   case 22:{float g=.1f+.9f*static_cast<float>(s_->write%loop)/loop;a=l*g;b=r*g;break;}
-   case 24:a=b=0;break;
-  }
-  buf[2*i]=l+s_->wetPunch*(a-l);buf[2*i+1]=r+s_->wetPunch*(b-r);
-  if(!std::isfinite(buf[2*i]))buf[2*i]=0;if(!std::isfinite(buf[2*i+1]))buf[2*i+1]=0;
-  s_->write=(s_->write+1)%96000;
+  buf[2*i]=l;buf[2*i+1]=r;
  }
- s_->lastRequested=requested;
- if(!requested&&s_->wetPunch<.0001f){s_->wetPunch=0;s_->lastPunch=0;}
+ s_->punchProcessor.process(buf,frames,sr,requested,tempo.load(std::memory_order_relaxed));
 }
 }

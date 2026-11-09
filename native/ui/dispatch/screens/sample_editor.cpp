@@ -3,6 +3,7 @@
 #include "ui/dispatch/dispatch_common.h"
 
 #include "ui/std_filesystem.h"
+#include "ui/studio.h"
 
 #include <algorithm>
 #include <string>
@@ -186,7 +187,7 @@ void InputDispatcher::open_sample_editor() {
     s_.sampleEditor.cursorRow    = 1;
     s_.sampleEditor.cursorCol    = 0;
 
-    s_.previousScreen = s_.currentScreen;
+    if(s_.currentScreen!=ScreenType::SAMPLE_EDITOR)s_.previousScreen = s_.currentScreen;
     s_.currentScreen  = ScreenType::SAMPLE_EDITOR;
     init_sample_editor_state();
 }
@@ -524,6 +525,12 @@ void InputDispatcher::refresh_sample_view(bool reset_selection) {
 void InputDispatcher::sample_editor_confirm() {
     SampleEditorState& se     = s_.sampleEditor;
     se.toolMessage.clear();
+    // Recording is an overlay: even a modified buffer, its selection and pending
+    // pitch stay intact when the user returns. Use Take separately protects it.
+    if(se.cursorRow==19&&se.cursorCol==(se.sliceMethod==SampleEditorModule::SLICE_OFF?3:4)){
+        run_due_sample_preview_restore(/*force=*/true);host_.restore_fx_preview_backup();host_.stop_preview();
+        open_studio_capture(s_);return;
+    }
     if (se.cursorRow == 9) {
         switch (se.cursorCol) {
             case 0: se.fit_selection(false); break;

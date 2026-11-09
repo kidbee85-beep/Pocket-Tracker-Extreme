@@ -1,6 +1,6 @@
 # TrimUI Brick beta
 
-Pocket Tracker Extreme0.2.0-beta.1 is a standalone native KNULLI port. See the [current illustrated guide](../site/guide.html), [quick start](../quick-start-guide.md), and [build instructions](../building.md).
+Pocket Tracker Extreme0.2.0-beta.2 is a standalone native KNULLI port. See the [current illustrated guide](../site/guide.html), [quick start](../quick-start-guide.md), and [build instructions](../building.md).
 
 Copy your audio to `SHARE/roms/ports/pockettracker_extreme/data/Samples`. On the device this is `/userdata/roms/ports/pockettracker_extreme/data/Samples`. `SHARE` is the volume, not an extra nested directory.
 

@@ -189,6 +189,7 @@ class InputDispatcher {
     void on_select_b();
     // R+SELECT: open Studio on musical screens; SELECT+R creates a folder in the browser.
     void on_select_r();
+    void on_select_l();
 
     // ── The plain buttons ────────────────────────────────────────────────────────────────────────
     // B inside a selection copies it and exits.
@@ -202,6 +203,7 @@ class InputDispatcher {
     void on_help_dismiss();
 
     bool help_full_open() const { return s_.helpFull; }
+    bool punch_open() const { return s_.studioOpen&&s_.studioTab==3; }
     // The mapper closes the overlay on any press and consumes it, so nothing reaches this.
     GestureResult help_layer(Gesture) { return GestureResult::TAKEN; }
     // START: play/stop; what it plays depends on the screen.

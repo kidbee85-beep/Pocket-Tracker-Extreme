@@ -19,6 +19,8 @@ A fresh clone builds an **unsigned** release; it never silently signs a release 
 ./gradlew -PptSigningProperties=/private/path/release-signing.properties :app:assembleRelease
 ```
 
+For a maintainer who still has the original development signing key, `-PptLegacyPrivateUpdate=true :app:assembleRelease` creates an optimized update for the earlier `.studio.debug` identity. This opt-in route uses that existing development key and retains R8/native release optimization. It is a separate private migration artifact, not the public `.studio` release. A matching package ID, original signing certificate and increasing version code are required for an in-place update; do not uninstall the old app to make a mismatched package install.
+
 The properties keys are `storeFile`, `storePassword`, `keyAlias` and `keyPassword`; use the example at the repository root as a template. Never commit the actual file or key. Keep the release key for every future update of application ID `com.conanizer.pockettracker.studio`.
 
 The APK includes `arm64-v8a`, `armeabi-v7a` and `x86_64`. The two 64-bit targets use 16 KiB ELF load alignment; all uncompressed native APK entries are 16 KiB ZIP aligned. ARMv7 remains a legacy 32-bit target. Run `python3 tools/release/check_apk.py /path/to/app-release.apk` to inspect the actual output. These build checks do not certify a physical Android device.

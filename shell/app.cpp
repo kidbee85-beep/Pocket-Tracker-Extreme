@@ -983,8 +983,10 @@ void FrameLoop::handle_sdl_event(const SDL_Event& e, Uint64 now) {
        (e.type==SDL_WINDOWEVENT&&e.window.event==SDL_WINDOWEVENT_FOCUS_LOST))
         ui::drumlab_stop(state.drumLab,host,engineRef);
     if(e.type==SDL_APP_WILLENTERBACKGROUND || e.type==SDL_APP_DIDENTERBACKGROUND ||
-       e.type==SDL_CONTROLLERDEVICEREMOVED || (e.type==SDL_WINDOWEVENT && e.window.event==SDL_WINDOWEVENT_FOCUS_LOST))
+       e.type==SDL_CONTROLLERDEVICEREMOVED || (e.type==SDL_WINDOWEVENT && e.window.event==SDL_WINDOWEVENT_FOCUS_LOST)) {
         engineRef.studioRack.punch.store(0);
+        if(state.studioTab==3)state.studioAUsed=false;
+    }
     // Any event may change the screen; over-drawing costs one frame, and present() compares pixels.
     sawInput = true;
 

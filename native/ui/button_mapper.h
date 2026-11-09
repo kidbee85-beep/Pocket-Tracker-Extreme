@@ -43,6 +43,13 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
     // A's state for what is drawn while it is held. Above every early return too.
     if (e.button == Button::A) d.on_a_held(e.action == ButtonAction::PRESSED);
 
+    // Punch owns A as a performance hold. START always remains transport, even
+    // while that hold/modifier is down; it must never route to tracker audition.
+    if(e.button==Button::START&&d.punch_open()) {
+        if(e.action==ButtonAction::PRESSED)d.on_start();
+        return;
+    }
+
     // ── Release ──────────────────────────────────────────────────────────────────────────────────
     if (e.action != ButtonAction::PRESSED) {
         // The mute/solo chord ends on a release and consumes it (an armed A must not reach
@@ -98,6 +105,14 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
 
     // Any plain press silences an audition; START and A-combos (edits stay audible) do not.
     if (e.button != Button::START && !m.a) d.on_stop_preview();
+
+    // L+SELECT opens Punch directly. L+SELECT had no prior action; both orders work.
+    if (!m.r && !m.a && !m.b &&
+        ((e.button == Button::SELECT && m.l) || (e.button == Button::L_SHIFT && m.select))) {
+        ms.selectPressedAlone = false;
+        d.on_select_l();
+        return;
+    }
 
     // R+SELECT is Studio on musical screens, and the existing SELECT+R folder action in
     // the file browser. Accept either press order without leaving a deferred bare SELECT.

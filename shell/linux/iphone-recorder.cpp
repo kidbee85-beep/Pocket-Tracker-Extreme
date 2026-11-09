@@ -53,7 +53,7 @@ Json idleState() {
     return {{"state", "idle"}, {"message", "iPhone USB is experimental. Connect to USB HOST, unlock and refresh."},
             {"path", ""}, {"frames", 0}, {"rate", 48000}, {"channels", 2},
             {"requestedId", IPHONE_CAPTURE_ACTION}, {"routedId", 0}, {"routedName", ""},
-            {"peakL", 0.0}, {"peakR", 0.0}};
+            {"peakL", 0.0}, {"peakR", 0.0}, {"phoneDetected", false}, {"phoneTrusted", false}};
 }
 bool executable(const fs::path& path) {
     std::error_code error; return fs::is_regular_file(path, error) && access(path.c_str(), X_OK) == 0;
@@ -267,6 +267,7 @@ struct IphoneSampleRecorder::Impl {
     fs::path root, directory; std::string helper, pairHelper, muxHelper;
     std::mutex stateMutex, commandMutex; std::condition_variable wake;
     Json state = idleState(); std::vector<Phone> current;
+    std::string discoveryDetail="Checking iPhone USB devices...";
     std::map<std::string, int> identities; int nextId = IPHONE_CAPTURE_ACTION + 1;
     bool pending = false; int pendingId = 0, pendingRate = 0, pendingChannels = 0; std::string pendingSerial;
     std::atomic<bool> quit{false}, stopping{false}, running{false}, scanRequested{true};
@@ -296,6 +297,7 @@ struct IphoneSampleRecorder::Impl {
             phone.inputId = it->second;
         }
         current = std::move(phones);
+        discoveryDetail=current.empty()?"No iPhone detected. Connect to USB HOST, unlock and refresh.":"Phone detected. Press Record to verify Trust and request audio.";
     }
     void scan() {
         try {
@@ -304,6 +306,7 @@ struct IphoneSampleRecorder::Impl {
         } catch (const Cancelled&) {}
         catch (const std::exception& e) {
             std::lock_guard<std::mutex> lock(stateMutex); current.clear();
+            discoveryDetail=e.what();
             // Discovery cannot erase a completed take or change its import state.
             if (state.value("state", "idle") == "idle") state["message"] = e.what();
         }
@@ -361,6 +364,7 @@ struct IphoneSampleRecorder::Impl {
         }
         if (!failure.empty()) throw std::runtime_error(failure);
         if (!pair.success() || !verified) throw std::runtime_error("iPhone access was not verified; unlock and retry");
+        {std::lock_guard<std::mutex> lock(stateMutex);state["phoneTrusted"]=true;}
         // Release only our daemon and its descendants before raw QVH claims USB.
         pair.stop(); daemon.stop();
         pairingMessage("iPhone access verified; connecting direct USB audio");
@@ -416,7 +420,7 @@ struct IphoneSampleRecorder::Impl {
                 selected = *found;
             }
             setPhones(phones);
-            { std::lock_guard<std::mutex> lock(stateMutex); selected.inputId = identities.at(selected.id); }
+            { std::lock_guard<std::mutex> lock(stateMutex); selected.inputId = identities.at(selected.id);state["phoneDetected"]=true; }
             pairPhone(selected);
             if (quit.load() || stopping.load()) throw Cancelled{};
             path = reservePath(directory);
@@ -494,8 +498,8 @@ std::string IphoneSampleRecorder::inputs_json() {
     {
         std::lock_guard<std::mutex> lock(p.stateMutex);
         for (const auto& phone : p.current)
-            rows.push_back({{"id", phone.inputId}, {"name", phone.name + " USB (experimental) [" + phone.id.substr(phone.id.size() > 6 ? phone.id.size() - 6 : 0) + "]"}, {"kind", "iphone"}, {"channels", {1, 2}}, {"rates", {44100, 48000}}});
-        if (rows.empty()) rows.push_back({{"id", IPHONE_CAPTURE_ACTION}, {"name", "iPhone / iPad USB (experimental)"}, {"kind", "iphone-action"}, {"connected", false}, {"channels", {1, 2}}, {"rates", {44100, 48000}}});
+            rows.push_back({{"id", phone.inputId}, {"name", phone.name + " USB (experimental) [" + phone.id.substr(phone.id.size() > 6 ? phone.id.size() - 6 : 0) + "]"}, {"kind", "iphone"}, {"connected", true}, {"detail", p.discoveryDetail}, {"channels", {1, 2}}, {"rates", {44100, 48000}}});
+        if (rows.empty()) rows.push_back({{"id", IPHONE_CAPTURE_ACTION}, {"name", "iPhone / iPad USB (experimental)"}, {"kind", "iphone-action"}, {"connected", false}, {"detail", p.discoveryDetail}, {"channels", {1, 2}}, {"rates", {44100, 48000}}});
         if (!p.running.load() && Clock::now() >= p.nextScan) { p.nextScan = Clock::now() + std::chrono::seconds(2); p.scanRequested = true; }
     }
     p.wake.notify_one(); return rows.dump();

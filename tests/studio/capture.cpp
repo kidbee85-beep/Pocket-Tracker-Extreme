@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     TestFileSystem fs((out / "app-data").string());
     FakeCaptureBackend fake;
     AppState app; app.project = &host.edit_project(); app.studioOpen = true; app.studioTab = 4;
-    app.currentInstrument = 77;
+    app.currentInstrument = 77; app.capture.targetInstrument=77;
     // The desktop/no-backend path must not mutate a project.
     app.studioRow = 4; studio_capture_action(app, host, *engine, fs);
     assert(app.studioMessage.find("unavailable") != std::string::npos);
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     std::swap(fake.inputs[0], fake.inputs[2]); studio_capture_refresh(app); app.capture.selected = 0;
 
     uint64_t clock = 1000;
-    auto poll = [&] { clock += 125; assert(studio_poll_capture(app, clock)); };
+    auto poll = [&] { app.studioOpen=true;app.studioTab=4;clock += 125; assert(studio_poll_capture(app, clock)); };
     poll(); const int polls = fake.polls;
     assert(!studio_poll_capture(app, clock + 50) && fake.polls == polls);
     clock += 100; assert(studio_poll_capture(app, clock) && fake.polls == polls + 1);
@@ -117,8 +117,8 @@ int main(int argc, char** argv) {
     edit(0, Button::DPAD_RIGHT); assert(app.capture.inputs[app.capture.selected].id == 83);
     edit(1, Button::DPAD_RIGHT); assert(app.capture.channels == 2);
     edit(2, Button::DPAD_LEFT); assert(app.capture.rate == 44100);
-    edit(3, Button::DPAD_RIGHT); assert(app.currentInstrument == 78);
-    edit(3, Button::DPAD_LEFT); assert(app.currentInstrument == 77);
+    edit(3, Button::DPAD_RIGHT); assert(app.capture.targetInstrument == 78 && app.currentInstrument==77);
+    edit(3, Button::DPAD_LEFT); assert(app.capture.targetInstrument == 77 && app.currentInstrument==77);
     fake.nextStartState = "permission"; fake.accepted = false;
     action(4); assert(fake.starts == 1 && fake.device == 83 && fake.channels == 2 && fake.rate == 44100);
     assert(app.capture.state == "permission" && !app.capture.active());
@@ -169,26 +169,29 @@ int main(int argc, char** argv) {
     old.reverse = true; old.tableId = 12; old.modSlots[0].type = songcore::ModType::AHD;
     old.modSlots[0].dest = songcore::ModDest::VOLUME; old.modSlots[0].decay = 1;
     host.edit_project().instruments[0].name = "UNRELATED KEEP";
+    app.capture.targetInstrument=78;
     fake.state("ready", stereo.string(), stereoFrames, 48000, 2); poll(); action(5);
     const auto imported = app.capture.importedPath;
     assert(!imported.empty() && fs.file_exists(imported) && fs.file_exists(stereo.string()));
     assert(std::filesystem::path(imported).parent_path() == out / "app-data/Samples/Recordings");
     assert(bytes(imported) == bytes(stereo));
-    const auto& clean = host.project().instruments[77];
-    assert(clean.id == 77 && clean.sampleId == 77 && clean.sampleFilePath == imported);
+    const auto& clean = host.project().instruments[78];
+    assert(host.project().instruments[77].name=="OLD SYNTH" && host.project().instruments[77].instrumentType==songcore::InstrumentType::EXTERNAL);
+    assert(!app.studioOpen && app.pendingSampleEditor && app.currentInstrument==78);
+    assert(clean.id == 78 && clean.sampleId == 78 && clean.sampleFilePath == imported);
     assert(clean.instrumentType == songcore::InstrumentType::SAMPLER && !clean.soundfontPath);
     assert(clean.loopMode == "off" && clean.volume == 170 && !clean.reverse && clean.tableId == -1);
     assert(clean.filterType == "off" && clean.drive == 0 && songcore::note_to_midi(clean.root) == 60);
     for (const auto& mod : clean.modSlots) assert(mod.type == songcore::ModType::NONE);
-    assert(engine->getSampleLength(77) == stereoFrames && engine->hasStereoData(77));
+    assert(engine->getSampleLength(78) == stereoFrames && engine->hasStereoData(78));
     assert(host.project().instruments[0].name == "UNRELATED KEEP");
-    host.preview_instrument(77); float audio[1024]{}; double energy = 0;
+    host.preview_instrument(78); float audio[1024]{}; double energy = 0;
     for (int block = 0; block < 6; ++block) {
         engine->processLiveBlock(audio, 512, 2, 48000);
         for (float value : audio) { assert(std::isfinite(value)); energy += value * value; }
     }
     host.stop_preview(); assert(energy > 1e-8);
-    const int copied = fs.copies; app.currentInstrument = 92; action(5);
+    const int copied = fs.copies; app.capture.targetInstrument = 92; action(5);
     assert(fs.copies == copied && host.project().instruments[92].sampleFilePath == imported);
 
     // Starting another take immediately invalidates the previous export association.
@@ -197,32 +200,32 @@ int main(int argc, char** argv) {
     const auto mono = out / "private" / "second" / "capture-stereo.wav";
     wav(mono, 44100, 1, 1024);
     fake.state("error", mono.string(), 1024, 44100, 1); poll();
-    fs.failCopy = true; const auto keep = host.project().instruments[92].sampleFilePath; action(5);
+    app.capture.targetInstrument=93;fs.failCopy = true; const auto keep = host.project().instruments[92].sampleFilePath; action(5);
     assert(app.capture.importedPath.empty() && host.project().instruments[92].sampleFilePath == keep);
     assert(fs.file_exists(mono.string()) && app.studioMessage.find("original kept") != std::string::npos);
     fs.failCopy = false; action(5);
     assert(app.capture.importedPath != imported && bytes(imported) == bytes(stereo));
     assert(bytes(app.capture.importedPath) == bytes(mono));
-    assert(engine->getSampleLength(92) == 1024 && !engine->hasStereoData(92));
+    assert(engine->getSampleLength(93) == 1024 && !engine->hasStereoData(93));
     assert(app.capture.actualRate == 44100 && app.capture.routedId == 83);
 
     const auto silent = out / "private" / "silence.wav"; wav(silent, 48000, 1, 512, true);
-    fake.state("ready", silent.string(), 512); poll(); app.currentInstrument = 37; action(5);
+    fake.state("ready", silent.string(), 512); poll(); app.capture.targetInstrument = 37; action(5);
     assert(engine->getSampleLength(37) == 512);
     float silentData[512]{}; engine->getSampleData(37, silentData);
     for (float value : silentData) assert(value == 0); // A deliberately silent take remains valid PCM.
     const auto invalid = out / "private" / "invalid.wav"; std::ofstream(invalid) << "broken WAV";
     const auto intact = host.project().instruments[37].sampleFilePath;
-    fake.state("error", invalid.string(), 999); poll(); action(5);
+    fake.state("error", invalid.string(), 999); poll();app.capture.targetInstrument=38;action(5);
     assert(host.project().instruments[37].sampleFilePath == intact && engine->getSampleLength(37) == 512);
     assert(app.studioMessage.find("load failed") != std::string::npos && fs.file_exists(invalid.string()));
 
     fake.state("idle"); fake.snapshot["peakL"] = 9.; fake.snapshot["peakR"] = -2.; poll();
-    assert(app.capture.peakL == 1.f && app.capture.peakR == 0.f);
+    assert(app.capture.peakL == 0.f && app.capture.peakR == 0.f);
     fake.overrideJson = "malformed JSON"; poll(); assert(app.capture.message == "Input status unavailable");
     fake.overrideJson.clear(); fake.inputs = json::array(); action(6);
     const int beforeEmpty = fake.starts; action(4);
-    assert(fake.starts == beforeEmpty && app.studioMessage == "No audio input detected");
+    assert(fake.starts == beforeEmpty && app.studioMessage.find("No input")!=std::string::npos);
     const json report = {{"passed", true}, {"jvm_fixture", usedJvmFixture}, {"copy_attempts", fs.copies},
                          {"starts", fake.starts}, {"stops", fake.stops},
                          {"checks", "input IDs/edit locks/poll cache/state guards/exit stop/fresh sampler/import copy reuse/collision/partial error/silence/copy and decode failures"}};

@@ -207,3 +207,7 @@ apk/
 # Portable release checks/preparation are source despite the generic release/ rule.
 !/tools/release/
 !/tools/release/*.py
+
+# Python helper build caches
+__pycache__/
+*.py[cod]
