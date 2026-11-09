@@ -9,7 +9,23 @@ def digest(path):
 
 
 def commit_new_file(temp, target):
-    """Atomic no-replace rename on Windows, macOS and modern Linux/exFAT."""
+    """Publish without replacement; stop if the mounted filesystem cannot do it."""
+    try:
+        _commit_new_file(temp, target)
+    except OSError as error:
+        if error.errno in (errno.ENOTSUP, errno.EOPNOTSUPP, errno.ENOSYS):
+            raise RuntimeError(
+                'This mounted filesystem does not support the atomic no-replace '
+                'operation required for computer preparation. Existing presets '
+                'and the pack marker have been preserved. Safely eject the card '
+                'and start Pocket Tracker Extreme on the device; its first launch '
+                'will prepare missing presets.'
+            ) from error
+        raise
+
+
+def _commit_new_file(temp, target):
+    """Use only operations that atomically refuse to replace an existing file."""
     if os.name=='nt':
         os.rename(temp,target)  # Windows rename fails if the destination exists.
         return
