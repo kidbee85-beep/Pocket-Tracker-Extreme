@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Exercise the actual optional preparer and the operating system's no-clobber commit."""
 from pathlib import Path
-import hashlib,importlib.util,json,subprocess,sys,tempfile,unittest
+import contextlib,ctypes,errno,hashlib,importlib.util,io,json,subprocess,sys,tempfile,types,unittest
+from unittest import mock
 
 ROOT=Path(__file__).resolve().parents[2]
 SCRIPT=ROOT/'tools/release/prepare_presets.py'
@@ -44,6 +45,32 @@ class Preparation(unittest.TestCase):
         temp=self.root/'new.tmp';temp.write_text('NEW');target=self.root/'existing.pti';target.write_text('USER')
         with self.assertRaises(FileExistsError):module.commit_new_file(temp,target)
         self.assertEqual(target.read_text(),'USER');self.assertEqual(temp.read_text(),'NEW')
+    @unittest.skipIf(sys.platform=='win32','Exercises the macOS/POSIX no-replace path')
+    def test_unsupported_macos_filesystem_keeps_custom_preset_and_marker(self):
+        class UnsupportedRename:
+            def __call__(self, source, target, flags):
+                self.flags=flags
+                ctypes.set_errno(errno.ENOTSUP)
+                return -1
+        for existing_marker in (False,True):
+            with self.subTest(existing_marker=existing_marker):
+                data=self.root/('unsupported-with-marker' if existing_marker else 'unsupported-fresh')
+                custom=data/'Presets/Drums/Kick 01.pti';custom.parent.mkdir(parents=True);custom.write_bytes(b'MY CUSTOM PRESET')
+                marker=data/'.factory-presets-pack.id'
+                if existing_marker:marker.write_bytes(b'previous-pack-marker\n')
+                rename=UnsupportedRename();libc=types.SimpleNamespace(renamex_np=rename)
+                stderr=io.StringIO()
+                with mock.patch.object(module.ctypes,'CDLL',return_value=libc), mock.patch.object(module.sys,'platform','darwin'), mock.patch.object(module.sys,'argv',[str(SCRIPT),'--factory',str(self.factory),'--data',str(data)]), contextlib.redirect_stderr(stderr):
+                    result=module.main()
+                self.assertEqual(result,1)
+                self.assertEqual(rename.flags,4)  # Actual RENAME_EXCL call returned ENOTSUP.
+                self.assertIn('does not support the atomic no-replace operation',stderr.getvalue())
+                self.assertIn('first launch will prepare missing presets',stderr.getvalue())
+                self.assertEqual(custom.read_bytes(),b'MY CUSTOM PRESET')
+                self.assertFalse((data/'Presets/Synths/Pad.pti').exists())
+                if existing_marker:self.assertEqual(marker.read_bytes(),b'previous-pack-marker\n')
+                else:self.assertFalse(marker.exists())
+                self.assertFalse(list(data.rglob('.pte-*')))
     def test_repeated_preparation_keeps_all_files(self):
         self.assertEqual(self.run_cli().returncode,0);self.assertEqual(self.run_cli().returncode,0)
         self.assertEqual(len(list((self.data/'Presets').rglob('*.pti'))),2)
