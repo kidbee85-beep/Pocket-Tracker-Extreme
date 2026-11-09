@@ -1,0 +1,896 @@
+#ifndef POCKETTRACKER_SONGCORE_MIDI_IN_H
+#define POCKETTRACKER_SONGCORE_MIDI_IN_H
+
+// MIDI in: bytes from a cable become bus events. `IMidiIn` is the platform seam. Above it:
+// `MidiInQueue` (the thread boundary), `MidiParser` (the protocol, no policy), `MidiInputRouter`
+// (which track and instrument a key plays) and `MidiInPipeline` (the drain that runs them in turn).
+// ⚠️ The drain runs on the AUDIO thread, so everything it touches is real-time safe; whatever needs
+// the project happens on the UI thread one poll later. Frames are arguments — testable with no device.
+// The clock, Start / Continue / Stop and the song position go to `MidiSyncIn` (midi_sync_in.h).
+
+#include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+
+#include "event.h"
+#include "midi_map.h"   // the knob gate
+#include "midi_sync_in.h"
+#include "model.h"
+#include "note_command.h"
+#include "router.h"
+#include "seqlock.h"
+
+namespace songcore {
+
+// Where a backend puts received bytes.
+// ⚠️ Called from a thread you do not own: be quick, never block, never call back into the backend.
+struct IMidiInSink {
+    virtual ~IMidiInSink() = default;
+    virtual void on_bytes(const uint8_t* data, int len) = 0;
+    // The same, stamped with when they arrived (`std::chrono::steady_clock`, µs).
+    virtual void on_bytes_at(const uint8_t* data, int len, int64_t arrivalUs) {
+        (void)arrivalUs;
+        on_bytes(data, len);
+    }
+};
+
+// A MIDI input port, one per platform, shaped like `IMidiOut`.
+// ⚠️ `set_sink(nullptr)` must be safe at any moment and honoured before `close()` returns, or a backend
+// thread outlives the object it writes into.
+struct IMidiIn {
+    virtual ~IMidiIn() = default;
+
+    // Re-enumerated on each call; hot-plug changes it.
+    virtual int device_count() = 0;
+    virtual std::string device_name(int index) = 0;
+
+    virtual bool open(int index) = 0;
+    virtual void close() = 0;
+    virtual bool is_open() const = 0;
+    // The open port failed in a way only a reopen cures (the cable was pulled).
+    virtual bool broken() const { return false; }
+
+    // Set BEFORE `open`, cleared before the sink dies.
+    virtual void set_sink(IMidiInSink* sink) = 0;
+};
+
+// A byte ring between the backend's thread and the drain — bytes, since a backend read can split a
+// message. ⚠️ One producer, one consumer (the audio thread), no lock; each side owns one index.
+// Overflow is counted, never silent.
+class MidiInQueue : public IMidiInSink {
+  public:
+    // ~341 three-byte messages, drained every few ms; a flat-out cable sends ~1 040 a second.
+    static constexpr int CAPACITY = 1024;   // a power of two: the slot is `index & MASK`
+    static constexpr int64_t NO_STAMP = INT64_MIN;   // a sink that keeps no time
+
+    void on_bytes(const uint8_t* data, int len) override { on_bytes_at(data, len, NO_STAMP); }
+
+    // When full, drops the NEWEST bytes — dropping the oldest would orphan note-offs still coming.
+    void on_bytes_at(const uint8_t* data, int len, int64_t arrivalUs) override {
+        if (!data || len <= 0) return;
+        const uint32_t head = head_.load(std::memory_order_acquire);
+        uint32_t       tail = tail_.load(std::memory_order_relaxed);
+        for (int i = 0; i < len; ++i) {
+            if (tail - head >= static_cast<uint32_t>(CAPACITY)) {
+                dropped_.fetch_add(static_cast<uint64_t>(len - i), std::memory_order_relaxed);
+                break;
+            }
+            buf_[tail & MASK]   = data[i];
+            stamp_[tail & MASK] = arrivalUs;
+            ++tail;
+        }
+        tail_.store(tail, std::memory_order_release);
+    }
+
+    // Move up to `max` bytes into `out`, and their arrival stamps into `stamps` (nullable); returns
+    // how many.
+    int drain(uint8_t* out, int max, int64_t* stamps = nullptr) {
+        if (!out || max <= 0) return 0;
+        const uint32_t tail = tail_.load(std::memory_order_acquire);
+        uint32_t       head = head_.load(std::memory_order_relaxed);
+        int n = 0;
+        while (head != tail && n < max) {
+            if (stamps) stamps[n] = stamp_[head & MASK];
+            out[n++] = buf_[head & MASK];
+            ++head;
+        }
+        head_.store(head, std::memory_order_release);
+        return n;
+    }
+
+    // Bytes lost to a full ring, ever.
+    uint64_t dropped() const { return dropped_.load(std::memory_order_relaxed); }
+
+    int pending() const {
+        return static_cast<int>(tail_.load(std::memory_order_acquire) - head_.load(std::memory_order_acquire));
+    }
+
+    // ⚠️ The consumer's call — it moves the consumer's index.
+    void clear() { head_.store(tail_.load(std::memory_order_acquire), std::memory_order_release); }
+
+    // A mark for `discard_up_to`. Any thread.
+    uint32_t written() const { return tail_.load(std::memory_order_acquire); }
+
+    // The consumer's: drop everything written before `mark`.
+    void discard_up_to(uint32_t mark) {
+        const uint32_t head = head_.load(std::memory_order_relaxed);
+        if (static_cast<int32_t>(mark - head) > 0) head_.store(mark, std::memory_order_release);
+    }
+
+  private:
+    static constexpr uint32_t MASK = CAPACITY - 1;
+    static_assert((CAPACITY & MASK) == 0, "the ring's capacity must be a power of two");
+
+    uint8_t               buf_[CAPACITY] = {0};
+    int64_t               stamp_[CAPACITY] = {0};
+    std::atomic<uint32_t> head_{0};      // consumer's
+    std::atomic<uint32_t> tail_{0};      // producer's
+    std::atomic<uint64_t> dropped_{0};
+};
+
+// How many bytes a message with this status byte occupies — 1, 2 or 3.
+// ⚠️ Backends need it too: winmm packs a message into a DWORD without its length, and assuming three
+// turns a program change into two.
+inline int midi_message_length(uint8_t status) {
+    if (status >= 0xF8) return 1;
+    if (status < 0xF0) {
+        const uint8_t hi = status & 0xF0;
+        return (hi == 0xC0 || hi == 0xD0) ? 2 : 3;   // program change / channel pressure carry one
+    }
+    switch (status) {
+        case 0xF1: return 2;   // MTC quarter frame
+        case 0xF2: return 3;   // song position pointer
+        case 0xF3: return 2;   // song select
+        default:   return 1;   // 0xF4 0xF5 undefined, 0xF6 tune request
+    }
+}
+
+// One complete message. `status` is the nibble for a channel message, the whole byte for a system one.
+struct MidiInMessage {
+    uint8_t status  = 0;   // 0x80-0xE0 channel (nibble) | 0xF1-0xFF system (whole byte)
+    uint8_t channel = 0;   // 0-15; meaningless for system messages
+    uint8_t data1   = 0;
+    uint8_t data2   = 0;
+    uint8_t len     = 0;   // 1-3, as it appeared on the wire (running status excluded)
+    // A note command (status MIDI_SYSEX, note_command.h): data1 its note, data2 its value.
+    uint8_t id      = 0;
+    uint8_t kind    = 0;
+
+    bool is_channel()  const { return status >= 0x80 && status <= 0xE0; }
+    bool is_realtime() const { return status >= 0xF8; }
+
+    // ⚠️ A note-on with velocity 0 IS a note-off. Ask these, never `status`.
+    bool is_note_on()  const { return status == EV_NOTE_ON  && data2 > 0; }
+    bool is_note_off() const { return status == EV_NOTE_OFF || (status == EV_NOTE_ON && data2 == 0); }
+};
+
+// A streaming parser: running status; real-time bytes mid-message change NOTHING (resetting would eat
+// notes while a clock runs); System Common and SysEx cancel running status; orphan data bytes are
+// dropped and counted.
+class MidiParser {
+  public:
+    // Feed one byte; true when `message()` holds a newly completed message.
+    bool feed(uint8_t b) {
+        // ── real time: complete in one byte, and interrupts NOTHING ──
+        if (b >= 0xF8) {
+            msg_ = MidiInMessage{};
+            msg_.status = b;
+            msg_.len    = 1;
+            return true;                      // status_, pending_, running status: all untouched
+        }
+
+        if (b >= 0x80) {                      // a status byte
+            if (b == 0xF7) return end_sysex();
+            pendingCount_ = 0;
+            if (b == 0xF0) {                  // start of SysEx — its body is kept only if it is ours
+                inSysex_  = true;
+                sysexLen_ = 0;
+                status_   = 0;
+                return false;
+            }
+            inSysex_ = false;
+            status_  = b;
+            expect_  = data_bytes_for(b);
+            if (expect_ == 0) {               // 0xF6 tune request, 0xF4/0xF5 undefined
+                emit();
+                status_ = 0;                  // system messages never establish running status
+                return true;
+            }
+            return false;
+        }
+
+        // ── a data byte ──
+        if (inSysex_) {
+            if (sysexLen_ < SYSEX_KEPT) sysex_[sysexLen_] = b;
+            ++sysexLen_;
+            return false;
+        }
+        if (status_ == 0) { orphans_.fetch_add(1, std::memory_order_relaxed); return false; }   // no running status to belong to
+
+        pending_[pendingCount_++] = b;
+        if (pendingCount_ < expect_) return false;
+
+        emit();
+        pendingCount_ = 0;
+        if (status_ >= 0xF0) status_ = 0;     // System Common is one-shot; channel status runs on
+        return true;
+    }
+
+    const MidiInMessage& message() const { return msg_; }
+
+    // Data bytes with no status to belong to: a resync, or — if many — a bug.
+    uint64_t orphan_bytes() const { return orphans_.load(std::memory_order_relaxed); }
+
+    // Forget everything mid-flight, when a port closes.
+    void reset() {
+        status_ = 0;
+        expect_ = pendingCount_ = 0;
+        inSysex_ = false;
+        msg_ = MidiInMessage{};
+    }
+
+  private:
+    static int data_bytes_for(uint8_t status) { return midi_message_length(status) - 1; }
+
+    // Another PocketTracker's note command is the one SysEx with a meaning here; any other is skipped.
+    bool end_sysex() {
+        NoteCommand c;
+        const bool ours = inSysex_ && sysexLen_ <= SYSEX_KEPT && decode_note_command(sysex_, sysexLen_, c);
+        inSysex_ = false;
+        if (!ours) return false;
+        msg_ = MidiInMessage{};
+        msg_.status  = MIDI_SYSEX;
+        msg_.channel = c.channel;
+        msg_.data1   = c.note;
+        msg_.data2   = c.value;
+        msg_.id      = c.id;
+        msg_.kind    = c.kind;
+        msg_.len     = 3;
+        return true;
+    }
+
+    void emit() {
+        msg_ = MidiInMessage{};
+        if (status_ < 0xF0) {
+            msg_.status  = status_ & 0xF0;
+            msg_.channel = status_ & 0x0F;
+        } else {
+            msg_.status = status_;
+        }
+        msg_.data1 = expect_ > 0 ? pending_[0] : 0;
+        msg_.data2 = expect_ > 1 ? pending_[1] : 0;
+        msg_.len   = static_cast<uint8_t>(1 + expect_);
+    }
+
+    MidiInMessage msg_;
+    uint8_t  status_ = 0;          // the status byte in force — running status, once established
+    int      expect_ = 0;          // data bytes `status_` wants
+    uint8_t  pending_[2] = {0, 0};
+    int      pendingCount_ = 0;
+    bool     inSysex_ = false;
+    static constexpr int SYSEX_KEPT = NOTE_COMMAND_BYTES - 2;
+    uint8_t  sysex_[SYSEX_KEPT] = {};
+    int      sysexLen_ = 0;           // counts past SYSEX_KEPT, so a longer one is not taken for ours
+    std::atomic<uint64_t> orphans_{0};   // read by the UI's counters, written by the drain
+};
+
+// ─── The route: the routing facts, flat, for a thread that cannot read the project ───────────────
+
+struct MidiRouteInstrument {
+    float   volume   = 1.0f;   // hex_to_float(ins.volume), baked into a note-on as the sequencer does
+    float   pan      = 0.5f;
+    uint8_t external = 0;      // routes to the cable, not to a voice
+};
+
+// ⚠️ The ONLY view of the project the drain sees, published whole from the UI thread. A new routing
+// rule's facts go in here, never a pointer to the project.
+struct MidiRoute {
+    int16_t  instrument;                   // what a key plays: the instrument the UI is on; -1 = none
+    int8_t   baseTrack;                    // the track the SONG cursor is on — the first voice
+    int8_t   voices;                       // 1 = MONO, 2..8 = POLY: tracks baseTrack.. baseTrack+voices-1
+    int16_t  instrumentCount;              // ids at or past this resolve to nothing
+    int8_t   controlChannel;               // the CTL CH row: 0-15, MIDI_CTL_CH_ALL, or -1 for none
+    uint8_t  learnArmed;                   // R is held: a knob on the control channel names, never drives
+    uint8_t  velocity;                     // 0 = every key plays at full strength
+    uint64_t claimed[2];                   // bit per controller number: a mapping would drive it
+    MidiRouteInstrument ins[POOL_INSTRUMENTS];
+
+    bool claims(uint8_t controller) const {
+        return controller < 128 && ((claimed[controller >> 6] >> (controller & 63)) & 1u) != 0;
+    }
+};
+
+// Build the route on the UI thread. A mapping whose destination is gone claims nothing, so its knob
+// falls through to the tracks.
+inline MidiRoute build_midi_route(const Project& p, int instrument, int baseTrack, int voices,
+                                  int controlChannel, bool learnArmed, bool velocity = true) {
+    MidiRoute r{};
+    r.instrument      = static_cast<int16_t>(instrument);
+    r.baseTrack       = static_cast<int8_t>(baseTrack < 0 ? 0 : (baseTrack >= POOL_TRACKS ? POOL_TRACKS - 1 : baseTrack));
+    r.voices          = static_cast<int8_t>(voices < 1 ? 1 : (voices > POOL_TRACKS ? POOL_TRACKS : voices));
+    r.instrumentCount = static_cast<int16_t>(p.instruments.size() < static_cast<size_t>(POOL_INSTRUMENTS)
+                                                 ? p.instruments.size() : static_cast<size_t>(POOL_INSTRUMENTS));
+    r.controlChannel  = static_cast<int8_t>(controlChannel);
+    r.learnArmed      = learnArmed ? 1 : 0;
+    r.velocity        = velocity ? 1 : 0;
+    for (int i = 0; i < r.instrumentCount; ++i) {
+        const Instrument& ins = p.instruments[static_cast<size_t>(i)];
+        r.ins[i].volume   = hex_to_float(ins.volume);
+        r.ins[i].pan      = hex_to_float(ins.pan);
+        r.ins[i].external = instrument_routes_external(ins) ? 1 : 0;
+    }
+    for (const MidiMapping& m : p.midiMappings) {
+        if (m.controller > 127) continue;
+        if (!map_dest(m.dest) || !map_dest_present(p, m)) continue;
+        r.claimed[m.controller >> 6] |= (1ull << (m.controller & 63));
+    }
+    return r;
+}
+
+using MidiRoutePublisher = SeqPublisher<MidiRoute>;
+
+// The channel-mode controllers that silence a channel.
+constexpr uint8_t CC_ALL_SOUND_OFF = 120, CC_ALL_NOTES_OFF = 123;
+// Reset all controllers centres the bend; the controllers a note starts with stay, as RP-015 says.
+constexpr uint8_t CC_RESET_CONTROLLERS = 121;
+// RPN 0 is the bend range, written through data entry (6 semitones, 38 cents). An NRPN takes the
+// data entry over, so selecting one deselects the RPN.
+constexpr uint8_t CC_DATA_MSB = 6, CC_DATA_LSB = 38, CC_NRPN_LSB = 98, CC_NRPN_MSB = 99,
+                  CC_RPN_LSB = 100, CC_RPN_MSB = 101;
+
+// The bend's span until a sender states one — what a keyboard's wheel assumes.
+constexpr int MIDI_IN_BEND_RANGE_DEFAULT = 2;
+
+// The controllers a channel keeps for its next notes. VOL and PAN ride the note-on; the rest follow
+// it a frame later — at its own frame they would reach the note it replaces.
+constexpr uint8_t KEPT_CC[] = {CC_VOLUME, CC_PAN, CC_FILTER_CUT, CC_FILTER_RES, CC_REVERB_SEND,
+                               CC_DELAY_SEND};
+constexpr int KEPT_CC_COUNT = static_cast<int>(sizeof KEPT_CC);
+constexpr int KEPT_VOLUME = 0, KEPT_PAN = 1, KEPT_AFTER_NOTE = 2;
+
+// What a synth keeps per channel, and starts each of the channel's notes with.
+struct MidiInChannel {
+    uint16_t bend    = MIDI_BEND_CENTRE;
+    uint8_t  semis   = MIDI_IN_BEND_RANGE_DEFAULT;
+    uint8_t  cents   = 0;
+    uint8_t  rpnMsb  = 127, rpnLsb = 127;   // where data entry goes; 127/127 = nowhere
+    int16_t  program = -1;                  // the instrument a program change chose; −1 = the UI's
+    int8_t   kept[KEPT_CC_COUNT] = {-1, -1, -1, -1, -1, -1};   // KEPT_CC's last values, −1 = never sent
+
+    // What another PocketTracker sent for the next note-on of a pitch here (note_command.h). Not
+    // kept past that note: the one after starts from the instrument again.
+    struct NoteCommandFor { int8_t note = -1; uint8_t id = 0, value = 0; };
+    static constexpr int NEXT_COMMANDS = 8;
+    NoteCommandFor next[NEXT_COMMANDS];
+    uint8_t        nextAt = 0;   // the slot the next one takes, round
+
+    float bend_semitones() const {
+        return static_cast<float>(bend - MIDI_BEND_CENTRE) / 8192.0f *
+               (static_cast<float>(semis) + static_cast<float>(cents) / 100.0f);
+    }
+};
+
+// A parsed message into bus records; every channel is heard. A key plays its channel's program, or
+// else the UI's instrument, on a window of `voices` tracks from the SONG cursor's, taking the LOWEST
+// free one (all held: the oldest is stolen). ⚠️ A note-off follows the KEY across every track — the
+// cursor may have moved. A track belongs to the channel of its last key: a controller reaches its own
+// channel's tracks and the window's unclaimed ones, a bend only its own channel's.
+class MidiInputRouter {
+  public:
+    // A controller can reach every track twice: CC 121 is a bend and a controller.
+    static constexpr int MAX_EVENTS = 2 * POOL_TRACKS;
+
+    MidiInputRouter() { reset(); }
+
+    // The pointer must stay valid between calls; the drain owns the copy.
+    void set_route(const MidiRoute* r) {
+        route_ = r;
+        // A program change holds until the UI's instrument changes: choosing one hands the keys back.
+        if (r && r->instrument != uiInstrument_) {
+            uiInstrument_ = r->instrument;
+            for (MidiInChannel& c : channels_) c.program = -1;
+        }
+    }
+
+    // RPN 0 as it is written, before anything decides where the controller goes — a mapped knob on
+    // CC 6 must not leave the bend range behind.
+    void track_rpn(const MidiInMessage& msg) {
+        if (msg.status != EV_CC) return;
+        MidiInChannel& ch = channels_[msg.channel];
+        switch (msg.data1) {
+            case CC_RPN_MSB:  ch.rpnMsb = msg.data2; break;
+            case CC_RPN_LSB:  ch.rpnLsb = msg.data2; break;
+            case CC_NRPN_MSB:
+            case CC_NRPN_LSB:
+            case CC_RESET_CONTROLLERS: ch.rpnMsb = ch.rpnLsb = 127; break;
+            case CC_DATA_MSB: if (ch.rpnMsb == 0 && ch.rpnLsb == 0) ch.semis = msg.data2; break;
+            case CC_DATA_LSB: if (ch.rpnMsb == 0 && ch.rpnLsb == 0) ch.cents = msg.data2; break;
+            default: break;
+        }
+    }
+
+    // The channel's wheel in semitones — what its EV_PITCH_BEND records mean to the engine.
+    float wheel_semitones(uint8_t channel) const { return channels_[channel & 0x0F].bend_semitones(); }
+
+    // Route one message at `frame`; returns records written to `out`. A note's follow-ups are at
+    // `frame + 1`.
+    int route(const MidiInMessage& msg, int64_t frame, Event* out, int maxOut) {
+        if (!route_ || !out || maxOut <= 0) return 0;
+
+        if (msg.status == MIDI_SYSEX) return note_command(msg, frame, out, maxOut);
+        if (!msg.is_channel()) { bump(nonChannel_); return 0; }
+
+        MidiInChannel& ch = channels_[msg.channel];
+        int n = 0;
+
+        // ⚠️ The note-off arm first: a velocity-0 note-on must find the track holding its key.
+        if (msg.is_note_off()) {
+            for (int t = 0; t < POOL_TRACKS && n < maxOut; ++t) {
+                if (held_[t] != static_cast<int>(msg.data1) || heldCh_[t] != msg.channel) continue;
+                held_[t] = -1;
+                note_off(frame, static_cast<uint8_t>(t), out[n++]);
+                bump(routed_);
+            }
+            return n;
+        }
+
+        // All notes off / all sound off: every key held from that channel is released, as a synth does.
+        if (msg.status == EV_CC && (msg.data1 == CC_ALL_NOTES_OFF || msg.data1 == CC_ALL_SOUND_OFF)) {
+            for (MidiInChannel::NoteCommandFor& c : ch.next) c.note = -1;
+            for (int t = 0; t < POOL_TRACKS && n < maxOut; ++t) {
+                if (held_[t] < 0 || heldCh_[t] != msg.channel) continue;
+                held_[t] = -1;
+                note_off(frame, static_cast<uint8_t>(t), out[n++]);
+                bump(routed_);
+            }
+            return n;
+        }
+
+        if (msg.status == EV_PROGRAM) {
+            ch.program = msg.data1;
+            bump(programs_);
+            return 0;
+        }
+
+        if (msg.is_note_on()) {
+            const int instrument = ch.program >= 0 && ch.program < route_->instrumentCount
+                                       ? ch.program : play_instrument();
+            if (instrument < 0) { bump(noInstrument_); return 0; }
+            const int target = take_track();
+            held_[target]    = static_cast<int>(msg.data1);
+            heldCh_[target]  = msg.channel;
+            heldIns_[target] = static_cast<int16_t>(instrument);
+            owner_[target]   = static_cast<int8_t>(msg.channel);
+            taken_[target]   = ++clock_;
+            const uint8_t track = static_cast<uint8_t>(target);
+            const bool thru = route_->ins[instrument].external != 0;
+            note_on(msg, ch, frame, track, instrument, thru, out[n++]);
+            bump(routed_);
+            // ⚠️ Thru: the cable was sent the channel's bend and controllers as they came.
+            if (thru) return take_note_commands(ch, msg.data1, frame + 1, track, false, out, n, maxOut);
+            if (ch.bend != MIDI_BEND_CENTRE && n < maxOut) {
+                wheel(frame + 1, track, ch.bend, out[n++]);
+                bump(routed_);
+            }
+            for (int i = KEPT_AFTER_NOTE; i < KEPT_CC_COUNT && n < maxOut; ++i) {
+                if (ch.kept[i] < 0) continue;
+                cc(frame + 1, track, KEPT_CC[i], ch.kept[i], out[n++]);
+                bump(routed_);
+            }
+            // Last, so they win over a kept controller.
+            return take_note_commands(ch, msg.data1, frame + 1, track, true, out, n, maxOut);
+        }
+
+        if (msg.status == EV_PITCH_BEND) {
+            ch.bend = static_cast<uint16_t>((static_cast<int>(msg.data2) << 7) | static_cast<int>(msg.data1));
+            n = bend_channel(msg.channel, frame, out, n, maxOut);
+            return n;
+        }
+
+        if (msg.status == EV_CC) {
+            for (int i = 0; i < KEPT_CC_COUNT; ++i)
+                if (msg.data1 == KEPT_CC[i]) ch.kept[i] = static_cast<int8_t>(msg.data2);
+            if (msg.data1 == CC_RESET_CONTROLLERS) {
+                ch.bend = MIDI_BEND_CENTRE;
+                n = bend_channel(msg.channel, frame, out, n, maxOut);
+            }
+            for (int t = 0; t < POOL_TRACKS && n < maxOut; ++t) {
+                const bool unclaimed = owner_[t] < 0 && t >= window_begin() && t < window_end();
+                if (owner_[t] != msg.channel && !unclaimed) continue;
+                cc(frame, static_cast<uint8_t>(t), msg.data1, msg.data2, out[n++]);
+                bump(routed_);
+            }
+            return n;
+        }
+
+        bump(unsupported_);   // 0xA0 / 0xD0 pressure: no bus form
+        return 0;
+    }
+
+    // ⚠️ Call wherever the notes are silenced, or the allocator thinks tracks are busy and steals.
+    void release_all_keys() {
+        for (int t = 0; t < POOL_TRACKS; ++t) {
+            held_[t] = -1; heldCh_[t] = 0; heldIns_[t] = INSTRUMENT_NONE; owner_[t] = -1;
+        }
+    }
+
+    // A new port: no key held, every channel as a synth powers up.
+    void reset() {
+        release_all_keys();
+        for (MidiInChannel& c : channels_) c = MidiInChannel{};
+    }
+
+    // Every path that produces no event counts why (unsupported = aftertouch).
+    uint64_t routed() const { return routed_.load(std::memory_order_relaxed); }
+    uint64_t nonChannel() const { return nonChannel_.load(std::memory_order_relaxed); }
+    uint64_t noInstrument() const { return noInstrument_.load(std::memory_order_relaxed); }
+    uint64_t unsupported() const { return unsupported_.load(std::memory_order_relaxed); }
+    uint64_t programs() const { return programs_.load(std::memory_order_relaxed); }
+
+
+  private:
+    static void bump(std::atomic<uint64_t>& c) { c.fetch_add(1, std::memory_order_relaxed); }
+
+    int play_instrument() const {
+        const int id = route_->instrument;
+        return (id < 0 || id >= route_->instrumentCount) ? -1 : id;
+    }
+
+    int window_begin() const { return route_->baseTrack; }
+    int window_end() const {
+        const int end = route_->baseTrack + route_->voices;
+        return end > POOL_TRACKS ? POOL_TRACKS : end;
+    }
+
+
+    int take_track() const {
+        int oldest = -1;
+        for (int t = window_begin(); t < window_end(); ++t) {
+            if (held_[t] < 0) return t;
+            if (oldest < 0 || taken_[t] < taken_[oldest]) oldest = t;
+        }
+        return oldest;
+    }
+
+    // The channel's wheel onto every track its keys are on.
+    int bend_channel(uint8_t channel, int64_t frame, Event* out, int n, int maxOut) {
+        for (int t = 0; t < POOL_TRACKS && n < maxOut; ++t) {
+            if (owner_[t] != channel) continue;
+            wheel(frame, static_cast<uint8_t>(t), channels_[channel].bend, out[n++]);
+            bump(routed_);
+        }
+        return n;
+    }
+
+    static void note_off(int64_t frame, uint8_t track, Event& ev) {
+        ev = Event{};
+        ev.frame        = frame;
+        ev.track        = track;
+        ev.instrument   = INSTRUMENT_NONE;      // track-scoped, like every note-off
+        ev.type         = EV_NOTE_OFF;
+        ev.noteOff.mode = NOTE_OFF_KEY;         // only MIDI in emits it
+    }
+
+    // Another PocketTracker's command for one of its notes: kept for that note's next note-on, or
+    // played on the note sounding now. ⚠️ Only the commands that shape a voice: the id goes straight
+    // to the engine.
+    int note_command(const MidiInMessage& msg, int64_t frame, Event* out, int maxOut) {
+        if (!travels_as_note_command(msg.id)) { bump(unsupported_); return 0; }
+        MidiInChannel& ch = channels_[msg.channel];
+        if (msg.kind == NOTE_COMMAND_WITH_NOTE) {
+            ch.next[ch.nextAt++ % MidiInChannel::NEXT_COMMANDS] = {static_cast<int8_t>(msg.data1), msg.id, msg.data2};
+            return 0;
+        }
+        int n = 0;
+        for (int t = 0; t < POOL_TRACKS && n < maxOut; ++t) {
+            if (held_[t] != static_cast<int>(msg.data1) || heldCh_[t] != msg.channel) continue;
+            if (heldIns_[t] >= 0 && route_->ins[heldIns_[t]].external) continue;   // thru: not ours to play
+            command(frame, static_cast<uint8_t>(t), msg.id, msg.data2, out[n++]);
+            bump(routed_);
+        }
+        return n;
+    }
+
+    // The commands kept for `note`, onto its track at `frame` (`play`), and forgotten either way.
+    int take_note_commands(MidiInChannel& ch, uint8_t note, int64_t frame, uint8_t track, bool play,
+                           Event* out, int n, int maxOut) {
+        for (MidiInChannel::NoteCommandFor& c : ch.next) {
+            if (c.note != static_cast<int8_t>(note)) continue;
+            c.note = -1;
+            if (!play || n >= maxOut) continue;
+            command(frame, track, c.id, c.value, out[n++]);
+            bump(routed_);
+        }
+        return n;
+    }
+
+    // ⚠️ The scheduler's wiring (emit_note): velGain = (v/127)², volGain = the volume. The channel's
+    // VOL and PAN stand in for the instrument's, except on the cable, which has them already.
+    void note_on(const MidiInMessage& msg, const MidiInChannel& ch, int64_t frame, uint8_t track,
+                 int instrument, bool thru, Event& ev) const {
+        const MidiRouteInstrument& ins = route_->ins[instrument];
+        const int8_t vol = thru ? -1 : ch.kept[KEPT_VOLUME], pan = thru ? -1 : ch.kept[KEPT_PAN];
+        ev = Event{};
+        ev.frame      = frame;
+        ev.track      = track;
+        ev.instrument = static_cast<int16_t>(instrument);
+        ev.type       = EV_NOTE_ON;
+
+        NoteOnPayload& n = ev.noteOn;
+        n.note = msg.data1;
+        const uint8_t vel  = route_->velocity ? msg.data2 : 127;
+        const float   unit = static_cast<float>(vel) / 127.0f;
+        n.velocity    = static_cast<int8_t>(vel);
+        n.velGainBits = f32_bits(unit * unit);
+        n.volGainBits = f32_bits(vol >= 0 ? static_cast<float>(vol) / 127.0f : ins.volume);
+        n.panBits     = f32_bits(pan >= 0 ? static_cast<float>(pan) / 127.0f : ins.pan);
+        // No phrase behind it: no FX, no slice, its own table, no transpose.
+        n.start = -1; n.slice = -1; n.tableId = -1; n.tableRow = -1;
+        n.transpose = 0; n.pit = 0; n.arp = 0;
+        n.pslOffBits = n.pslDurBits = n.pbnRateBits = n.vibSpdBits = n.vibDepBits = f32_bits(0.0f);
+    }
+
+    // A literal controller, as `CCA` sends; 0-127 → 0-1, narrowed back by `to7bit`.
+    static void cc(int64_t frame, uint8_t track, uint8_t controller, int value, Event& ev) {
+        ev = Event{};
+        ev.frame        = frame;
+        ev.track        = track;
+        ev.instrument   = INSTRUMENT_NONE;
+        ev.type         = EV_CC;
+        ev.cc.param     = controller;
+        ev.cc.valueBits = f32_bits(static_cast<float>(value) / 127.0f);
+    }
+
+    // A note command's record: the byte the author typed, 00-FF → 0-1, as the phrase would send it.
+    static void command(int64_t frame, uint8_t track, uint8_t id, uint8_t value, Event& ev) {
+        cc(frame, track, id, 0, ev);
+        ev.cc.valueBits = f32_bits(static_cast<float>(value) / 255.0f);
+    }
+
+    static void wheel(int64_t frame, uint8_t track, uint16_t value14, Event& ev) {
+        ev = Event{};
+        ev.frame      = frame;
+        ev.track      = track;
+        ev.instrument = INSTRUMENT_NONE;
+        ev.type       = EV_PITCH_BEND;
+        ev.pitchBend.value14 = value14;
+    }
+
+    const MidiRoute* route_ = nullptr;
+    int uiInstrument_ = INT16_MIN;   // the route's instrument when the programs were last handed back
+
+    MidiInChannel channels_[16];
+
+    // Per track: the key held (−1 none), its channel, its instrument, when it was taken, and the
+    // channel of its last key (−1 = no key yet).
+    int      held_[POOL_TRACKS];
+    uint8_t  heldCh_[POOL_TRACKS];
+    int16_t  heldIns_[POOL_TRACKS];
+    int8_t   owner_[POOL_TRACKS];
+    uint64_t taken_[POOL_TRACKS] = {};
+    uint64_t clock_              = 0;
+
+    std::atomic<uint64_t> routed_{0}, nonChannel_{0}, noInstrument_{0}, unsupported_{0}, programs_{0};
+};
+
+// ─── What the drain saw, carried back to the UI thread ───────────────────────────────────────────
+
+// Told about every handled message, on the UI thread (it may print or allocate). `count` may be 0:
+// the message still arrived.
+struct IMidiInObserver {
+    virtual ~IMidiInObserver() = default;
+    virtual void on_midi_in(const MidiInMessage& msg, const Event* events, int count) = 0;
+};
+
+struct MidiInSeen {
+    enum Kind : uint8_t {
+        ROUTED = 0,   // `events[0..count)` went to the engine; the UI owes thru and bookkeeping
+        MAPPED = 1,   // a CC a mapping claims: the UI applies it to the song; nothing routed
+        LEARN  = 2,   // a CC on the control channel while R is held: it names, does not drive
+    };
+    MidiInMessage msg;
+    Kind          kind  = ROUTED;
+    uint8_t       count = 0;
+    Event         events[MidiInputRouter::MAX_EVENTS];
+};
+
+// Turns a byte's arrival stamp into a frame: `frame` was being handed to the device at `us`. With
+// no rate (a host with no engine) a message arrived on the drain's own frame.
+struct MidiArrivalClock {
+    int64_t frame = 0;
+    int64_t us    = 0;
+    int     rate  = 0;
+
+    int64_t frame_at(int64_t stampUs, int64_t fallback) const {
+        if (rate <= 0 || stampUs == MidiInQueue::NO_STAMP) return fallback;
+        return frame + (stampUs - us) * rate / 1000000;
+    }
+};
+
+// Queue → parser → knob gate → router. `run` is called by the engine each block (or an engine-less
+// host from its poll); what it handled goes back to the UI thread through `pop_seen`.
+// ⚠️ Real-time safe: lock-free rings, the route copied under a sequence lock, and reset / release as
+// REQUESTS honoured at the next run. A CC a mapping claims is withheld from the tracks here.
+class MidiInPipeline {
+  public:
+    struct Apply {
+        virtual ~Apply() = default;
+        // One record from a live key. `external` = the note-on goes to the cable, not a voice.
+        virtual void apply(const Event& ev, bool external) = 0;
+        // An EV_PITCH_BEND record, in the semitones its channel's bend range makes of it.
+        virtual void wheel(int64_t /*frame*/, uint8_t /*track*/, float /*semitones*/) {}
+    };
+
+    static constexpr int SEEN_CAPACITY = 128;   // messages between two UI polls; a power of two
+
+    // The backend's thread.
+    MidiInQueue& sink() { return queue_; }
+
+    // ── the UI thread ──
+    void publish_route(const MidiRoute& r) { publisher_.publish(r); }
+
+    // Forget parked bytes, the half message and held keys at the next run — up to a mark taken now,
+    // so a newly opened port's first bytes are kept.
+    void request_reset() {
+        resetMark_.store(queue_.written(), std::memory_order_relaxed);
+        requests_.fetch_or(REQ_RESET, std::memory_order_release);
+    }
+    void request_release_keys() { requests_.fetch_or(REQ_RELEASE, std::memory_order_release); }
+
+    // The next handled message, oldest first.
+    bool pop_seen(MidiInSeen& out) {
+        const uint32_t tail = seenTail_.load(std::memory_order_acquire);
+        const uint32_t head = seenHead_.load(std::memory_order_relaxed);
+        if (head == tail) return false;
+        out = seen_[head & (SEEN_CAPACITY - 1)];
+        seenHead_.store(head + 1, std::memory_order_release);
+        return true;
+    }
+
+
+    // ── the consumer ──
+
+    // Drain → parse → gate → route → `apply`, from `frame` on. `apply` may be null. The clock and the
+    // transport go to `sync()` on the frame they arrived (`clock`); a key plays at the drain's frame.
+    // ⚠️ Each message a frame after the last record of the one before: at one frame the engine runs
+    // kills before notes, so a short note's on and off in the same drain would release nothing and
+    // then sound for ever.
+    int run(int64_t frame, Apply* apply, const MidiArrivalClock& clock = MidiArrivalClock{}) {
+        service_requests();
+        if (publisher_.read(route_, routeSeen_)) router_.set_route(&route_);
+        if (!publisher_.published()) { queue_.clear(); return 0; }   // nothing to route against yet
+
+        // The buffer is the ring's whole capacity, so one drain empties it.
+        const int n = queue_.drain(buf_, MidiInQueue::CAPACITY, stamps_);
+        if (n <= 0) return 0;
+        bytes_.fetch_add(static_cast<uint64_t>(n), std::memory_order_relaxed);
+
+        int     total = 0;
+        int64_t at    = frame;
+        for (int i = 0; i < n; ++i) {
+            if (!parser_.feed(buf_[i])) continue;
+            messages_.fetch_add(1, std::memory_order_relaxed);
+            const MidiInMessage& m = parser_.message();
+
+            // A message completes on its last byte, so that byte's stamp is when it arrived.
+            if (m.is_realtime() || m.status == MIDI_SPP) {
+                const bool sync = sync_.feed(m.status, m.data1, m.data2, clock.frame_at(stamps_[i], at));
+                // The clock is not handed back: 48 a second at 120 BPM, and the line carries it.
+                if (sync && m.status == MIDI_RT_CLOCK) continue;
+            }
+
+            router_.track_rpn(m);
+
+            MidiInSeen seen{};
+            seen.msg = m;
+
+            // A CC goes to the mappings FIRST and is consumed if claimed; while learn is armed it only
+            // names.
+            if (m.status == EV_CC && ctl_ch_covers(route_.controlChannel, static_cast<int>(m.channel))) {
+                if (route_.learnArmed)        { seen.kind = MidiInSeen::LEARN;  push_seen(seen); continue; }
+                if (route_.claims(m.data1))   { seen.kind = MidiInSeen::MAPPED; push_seen(seen); continue; }
+            }
+
+            const int k = router_.route(m, at, seen.events, MidiInputRouter::MAX_EVENTS);
+            seen.count = static_cast<uint8_t>(k);
+            total += k;
+            injected_.fetch_add(static_cast<uint64_t>(k), std::memory_order_relaxed);
+            int64_t next = at + 1;   // past this message's last record, a note's follow-ups included
+            for (int j = 0; j < k; ++j) {
+                const Event& ev = seen.events[j];
+                next = std::max(next, ev.frame + 1);
+                if (!apply) continue;
+                if (ev.type == EV_PITCH_BEND) {
+                    apply->wheel(ev.frame, ev.track, router_.wheel_semitones(m.channel));
+                    continue;
+                }
+                const bool external =
+                    ev.type == EV_NOTE_ON && ev.instrument >= 0 && ev.instrument < route_.instrumentCount &&
+                    route_.ins[ev.instrument].external != 0;
+                apply->apply(ev, external);
+            }
+            at = next;
+            // ⚠️ Handed back even when `k == 0`: it still arrived.
+            push_seen(seen);
+        }
+        return total;
+    }
+
+    // While the engine is not live (an export): bytes are dropped and counted, not saved for a burst.
+    void discard() {
+        service_requests();
+        const int n = queue_.pending();
+        if (n > 0) {
+            queue_.clear();
+            discarded_.fetch_add(static_cast<uint64_t>(n), std::memory_order_relaxed);
+        }
+    }
+
+
+    void service_requests() {
+        const uint32_t r = requests_.exchange(0, std::memory_order_acquire);
+        if (r & REQ_RESET) {
+            queue_.discard_up_to(resetMark_.load(std::memory_order_relaxed));
+            parser_.reset();
+            router_.reset();
+            sync_.reset();
+        }
+        if (r & REQ_RELEASE) { router_.release_all_keys(); }
+    }
+
+    // ── counters, any thread ──
+    uint64_t bytes() const { return bytes_.load(std::memory_order_relaxed); }
+    uint64_t messages() const { return messages_.load(std::memory_order_relaxed); }
+    uint64_t injected() const { return injected_.load(std::memory_order_relaxed); }
+    uint64_t discarded() const { return discarded_.load(std::memory_order_relaxed); }
+    // Handled messages the UI ring had no room for (thru missed them; the sound did not).
+    uint64_t seen_dropped() const { return seenDropped_.load(std::memory_order_relaxed); }
+
+    const MidiInputRouter& router() const { return router_; }
+    const MidiParser&      parser() const { return parser_; }
+    const MidiInQueue&     queue()  const { return queue_; }
+    // SYNC IN: the clock and the transport events. `pop_event` is the UI thread's.
+    MidiSyncIn&            sync() { return sync_; }
+    const MidiSyncIn&      sync() const { return sync_; }
+
+  private:
+    static constexpr uint32_t REQ_RESET = 1, REQ_RELEASE = 2;
+
+    void push_seen(const MidiInSeen& s) {
+        const uint32_t head = seenHead_.load(std::memory_order_acquire);
+        const uint32_t tail = seenTail_.load(std::memory_order_relaxed);
+        if (tail - head >= static_cast<uint32_t>(SEEN_CAPACITY)) {
+            seenDropped_.fetch_add(1, std::memory_order_relaxed);
+            return;
+        }
+        seen_[tail & (SEEN_CAPACITY - 1)] = s;
+        seenTail_.store(tail + 1, std::memory_order_release);
+    }
+
+    MidiInQueue        queue_;
+    MidiParser         parser_;
+    MidiInputRouter    router_;
+    MidiSyncIn         sync_;
+    // The drain's scratch: one ring's worth of bytes and their stamps.
+    uint8_t            buf_[MidiInQueue::CAPACITY] = {0};
+    int64_t            stamps_[MidiInQueue::CAPACITY] = {0};
+    MidiRoutePublisher publisher_;
+    MidiRoute          route_{};        // the drain's copy
+    uint32_t           routeSeen_ = 0;
+    std::atomic<uint32_t> requests_{0};
+    std::atomic<uint32_t> resetMark_{0};
+
+    // ⚠️ On the heap: inline, the ring is ~165 KB and the host lives on the stack (Windows gives 1 MB).
+    std::unique_ptr<MidiInSeen[]> seen_{new MidiInSeen[SEEN_CAPACITY]};
+    std::atomic<uint32_t> seenHead_{0};   // the UI's
+    std::atomic<uint32_t> seenTail_{0};   // the drain's
+
+    std::atomic<uint64_t> bytes_{0}, messages_{0}, injected_{0}, discarded_{0}, seenDropped_{0};
+};
+
+}  // namespace songcore
+
+#endif  // POCKETTRACKER_SONGCORE_MIDI_IN_H

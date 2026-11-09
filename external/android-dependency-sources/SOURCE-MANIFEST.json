@@ -1,0 +1,22 @@
+[
+  {
+    "file": "rhino-1.8.1-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.8.1/rhino-1.8.1-sources.jar",
+    "sha256": "2303a0e5aa222faae0b95865c25442da89ec14c0fc81ac1608f2a6095e3d2459",
+    "bytes": 912671
+  },
+  {
+    "file": "rhino-engine-1.8.1-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/mozilla/rhino-engine/1.8.1/rhino-engine-1.8.1-sources.jar",
+    "sha256": "c3316bdfd713c92d2688ea921b5cc7568a5a879ecd395847559407862fce5089",
+    "bytes": 9007
+  },
+  {
+    "file": "desugar-jdk-libs-2.1.5-source.tar.gz",
+    "url": "https://codeload.github.com/google/desugar_jdk_libs/tar.gz/73170c345e6a762fc6a1f0301bb15218850023ef",
+    "revision": "73170c345e6a762fc6a1f0301bb15218850023ef",
+    "release_evidence": "Official CHANGELOG commit: Prepare for jdk-11 based desugared library version2.1.5",
+    "sha256": "4cd2faa88ecb2450522fd4f0dcd11d6df878d7197b2276fb35532c50267f7a64",
+    "bytes": 18251068
+  }
+]

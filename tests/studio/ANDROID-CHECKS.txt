@@ -1,0 +1,37 @@
+Pocket Tracker Extreme: Android checks
+
+Use an isolated emulator. CaptureSmoke intentionally refuses physical devices;
+launch the emulator with -no-audio to avoid opening the host microphone.
+
+Build the app and the virtual microphone runner:
+  ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+Install both APKs into the emulator, grant RECORD_AUDIO to the target package,
+then run:
+  adb shell am instrument -r -w \
+    com.conanizer.pockettracker.studio.debug.test/com.conanizer.pockettracker.CaptureSmoke
+
+Build the separate source-decoder runner (the production app stays the same):
+  ./gradlew -PptTestRunner=com.conanizer.pockettracker.SourceSmoke \
+    :app:assembleDebugAndroidTest
+Install the resulting androidTest APK. Local WAV/AAC exact-range checks:
+  adb shell am instrument -r -w \
+    com.conanizer.pockettracker.studio.debug.test/com.conanizer.pockettracker.SourceSmoke
+
+Public-provider search, preview, IN/OUT, WAV+credits and Record-toggle workflow:
+  adb shell 'am instrument -r -w -e network true -e provider archive -e query jazz \
+    com.conanizer.pockettracker.studio.debug.test/com.conanizer.pockettracker.SourceSmoke'
+Replace provider with commons or youtube. Quote multiword query values for the
+remote Android shell, e.g. -e query "Big Buck Bunny Blender official" inside the
+single-quoted shell command. Public-source availability can change independently
+of the app; a failed service request must remain a failed test with its real cause.
+
+Optional Vorbis fixture: place owned or appropriately licensed Ogg audio in the
+target's private files/SourceSmoke/fixture.ogg and add -e vorbis true. This checks
+both a 250..650 ms cut and a 0..1000 ms cut against the actual source sample rate.
+Fixture media is not part of the production APK.
+
+Native UI/host checks are CMake targets under PT_STUDIO_CHECK=ON. They include
+ptsource-sampler-check (backend contract and controls) and
+ptsource-integration-check (real WAV import, provenance, editor handoff and retry).
+Run them with an output-directory argument; repeat with AddressSanitizer for
+memory checks. ptpresetpack-check takes a preset manifest and an output folder.

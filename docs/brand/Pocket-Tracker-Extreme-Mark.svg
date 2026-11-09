@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72" role="img" aria-label="Pocket Tracker Extreme mark"><defs>
+ <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#202B3A"/><stop offset="1" stop-color="#0B101B"/></linearGradient>
+ <linearGradient id="violet" x1="35" y1="32" x2="73" y2="78" gradientUnits="userSpaceOnUse"><stop stop-color="#B4A7FF"/><stop offset="1" stop-color="#8A77E8"/></linearGradient>
+ <linearGradient id="mint" x1="35" y1="32" x2="73" y2="78" gradientUnits="userSpaceOnUse"><stop stop-color="#92F4E1"/><stop offset="1" stop-color="#4BCBB6"/></linearGradient>
+</defs><path d="M28 60 L66 34 H80 V48 L42 74 H28 Z M54 49 L59 54 L54 59 L49 54 Z" fill="url(#violet)" fill-rule="evenodd"/><path d="M28 34 H42 L80 60 V74 H66 L28 48 Z M54 49 L59 54 L54 59 L49 54 Z" fill="url(#mint)" fill-rule="evenodd"/></svg>

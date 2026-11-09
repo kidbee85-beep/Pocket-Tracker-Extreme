@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "tests": 26,
+  "failures": 0,
+  "errors": 0,
+  "launcher_sha256": "24631f89f858167f1c1cdf0023a3cd751b7b67a3a02a5b393afeca4e17695a9f",
+  "method": "Actual standalone Bash launcher and owned native process fixtures; no physical R36S/device/USB/network access"
+}

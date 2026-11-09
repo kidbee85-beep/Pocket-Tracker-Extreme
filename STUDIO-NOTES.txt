@@ -1,0 +1,36 @@
+POCKET TRACKER EXTREME — PUBLIC BETA 0.2.0-beta.1
+Kid Bunka · Independent PocketTracker fork
+
+CURRENT USER GUIDES
+Illustrated tutorial:
+https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html
+
+Offline source: docs/site/guide.html
+Text quick start: docs/quick-start-guide.md
+Brick first start: docs/brick/HOW-TO-FIRST-START.txt
+Build instructions: docs/building.md
+
+Open Studio using R + SELECT from a musical tracker page, or the STUDIO
+button on the Instrument page. SELECT opens the help for the current area.
+The existing physical controls remain in use.
+
+Use INSTRUMENT > LOAD for synth choices, instrument presets, samples and
+SoundFonts. LIVE synth controls update an already loaded synth while the
+sequence plays. DRAFT prepares a replacement before loading it. Hold L to
+hear the audition root note; release it to stop. Each engine has its own
+parameter pages, followed by common filter, level and envelope controls.
+
+In Digging, search or request random suggestions, audition a selected track,
+place IN/OUT markers, render the excerpt and import the local WAV for editing.
+Use only material you have permission to obtain and sample. Online source
+availability can change. Direct iPhone/USB interface compatibility still
+requires hardware tests; emulation does not certify an attached device.
+
+The optional 2,048-instrument factory pack contains parameter presets rather
+than a third-party sample library. The Brick launcher prepares missing preset
+files before opening its native window. The optional computer-side preparer
+avoids that first-launch file work; see the Brick first-start guide.
+
+Android's public application ID and release key differ from the earlier
+private .debug test app. Back up media and settings before changing builds.
+Read README.md for the precise beta feature and validation limits.

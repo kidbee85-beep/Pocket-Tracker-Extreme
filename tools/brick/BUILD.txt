@@ -1,0 +1,5 @@
+Pocket Tracker Extreme0.2.0-beta.1
+
+See docs/building.md for the current reproducible build process and docs/site/guide.html for the illustrated English installation/tutorial.
+
+Retain the system-provided SDL2 ABI. Do not ship the linkSDK as a replacement library. Audio/interface behavior is device-dependent; directiPhone capture remains experimental.

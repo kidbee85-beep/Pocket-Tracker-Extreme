@@ -1,0 +1,29 @@
+DaisySP copies distributed under GNU GPL version 3 or later
+==========================================================
+
+Conversion date: 9 November 2026
+Project: Pocket Tracker Extreme
+
+The following copies were originally supplied under GNU LGPL version 2.1:
+
+native/effects/primitives/daisysp/compressor.h
+native/effects/primitives/daisysp/balance.h
+native/effects/primitives/daisysp/reverbsc.h
+native/effects/primitives/daisysp/bitcrush.h
+
+For these copies, we exercise the permission in LGPL version 2.1 section 3
+to apply the ordinary GNU General Public License, version 3 or any later
+version. The source-file license notices have been changed accordingly;
+the original copyright notices remain intact. This decision concerns only
+these distributed copies and does not change their upstream licensing.
+
+The corresponding implementations include their governing headers and
+are distributed under the same GNU GPL version 3 or later terms here.
+The complete governing GPL text is in LICENSE at the repository root and
+in the license payload of each application package.
+
+Compressor, balance and ReverbSc are used by the application. Bitcrush is
+retained in the vendored source for completeness. This notice is not a
+claim that every vendored DaisySP module is part of the compiled engine.
+
+All other DaisySP copyright and permission notices remain as supplied.

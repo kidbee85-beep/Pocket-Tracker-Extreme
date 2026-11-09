@@ -1,0 +1,8 @@
+Official KNULLI Scarab release 20260511 — original TrimUI Brick / Hammer
+
+2c6e059b0f7db9d6b0fce3c383e72ca989b1c1224f4b3e81af11c66ebea5421f  knulli-a133-trimui-brick-scarab-20260511.img.gz
+
+Verified local reference image: 1,983,415,643 bytes.
+Source: https://github.com/knulli-cfw/knulli-linux/releases/tag/20260511
+
+This is the operating-system image, not a Pocket Tracker ZIP. It is linked from the official KNULLI release and is not repackaged or bundled here. Use it only for the correct device and a spare/backed-up card. Writing the image erases the selected card.

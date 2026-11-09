@@ -1,0 +1,140 @@
+#pragma once
+
+// OKLab/OKLCh and the WCAG contrast ratio, over the theme's `Argb`.
+// The constants are copied from `soreja/colorm` (public domain, the Unlicense), commit
+// `4d41b6e0fbc32b3237e7e7171850e5f461368050`.
+// ⚠️ Two lightnesses, not interchangeable: `OkLab::L` (perceptual, the palette ladders) and
+// `relative_luminance` (WCAG, only inside `wcag_contrast`).
+
+#include <cmath>
+#include <cstdint>
+
+#include "ui/theme.h"   // Argb
+
+namespace pt::ui {
+
+struct OkLab { double L = 0.0, a = 0.0, b = 0.0; };
+struct OkLch { double L = 0.0, C = 0.0, H = 0.0; };   // H in degrees, 0..360
+
+namespace color_detail {
+
+// The sRGB transfer function, both directions, 0..1.
+inline double to_linear(double v) {
+    return (v <= 0.04045) ? (v / 12.92) : std::pow((v + 0.055) / 1.055, 2.4);
+}
+inline double to_gamma(double v) {
+    return (v <= 0.0031308) ? (v * 12.92) : (1.055 * std::pow(v, 1.0 / 2.4) - 0.055);
+}
+
+inline double clamp01(double v) { return v < 0.0 ? 0.0 : (v > 1.0 ? 1.0 : v); }
+
+// Inside the sRGB cube, with a hair of slack so a round trip is not a miss.
+inline bool in_gamut(double r, double g, double b) {
+    constexpr double EPS = 1e-6;
+    return r >= -EPS && r <= 1.0 + EPS && g >= -EPS && g <= 1.0 + EPS && b >= -EPS && b <= 1.0 + EPS;
+}
+
+// Unclamped.
+inline void oklab_to_linear(const OkLab& c, double& r, double& g, double& b) {
+    const double l_ = c.L + 0.3963377774 * c.a + 0.2158037573 * c.b;
+    const double m_ = c.L - 0.1055613458 * c.a - 0.0638541728 * c.b;
+    const double s_ = c.L - 0.0894841775 * c.a - 1.2914855480 * c.b;
+    const double l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
+    r =  4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    b = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+}
+
+}  // namespace color_detail
+
+// ─── sRGB ↔ OKLab ────────────────────────────────────────────────────────────────────────────────
+
+inline OkLab to_oklab(Argb c) {
+    using namespace color_detail;
+    const double r = to_linear(static_cast<double>((c >> 16) & 0xFF) / 255.0);
+    const double g = to_linear(static_cast<double>((c >> 8) & 0xFF) / 255.0);
+    const double b = to_linear(static_cast<double>(c & 0xFF) / 255.0);
+
+    const double l = std::cbrt(0.4122214708018041 * r + 0.5363325363454300 * g + 0.0514459928527659 * b);
+    const double m = std::cbrt(0.2119034982505858 * r + 0.6806995451361225 * g + 0.1073969566132915 * b);
+    const double s = std::cbrt(0.0883024618887421 * r + 0.2817188376235317 * g + 0.6299787004877261 * b);
+
+    return {0.2104542682745812 * l + 0.7936177747300267 * m - 0.0040720430046080 * s,
+            1.9779985323885080 * l - 2.4285922419362860 * m + 0.4505937095477779 * s,
+            0.0259040424876582 * l + 0.7827717124269177 * m - 0.8086757549145759 * s};
+}
+
+// Opaque. Out of gamut, chroma gives way — never lightness or hue, which clamping channels would shift.
+inline Argb to_argb(const OkLab& c) {
+    using namespace color_detail;
+
+    double r = 0.0, g = 0.0, b = 0.0;
+    oklab_to_linear(c, r, g, b);
+
+    if (!in_gamut(r, g, b)) {
+        // 18 steps is finer than one 8-bit code.
+        double lo = 0.0, hi = 1.0;
+        for (int i = 0; i < 18; ++i) {
+            const double mid = 0.5 * (lo + hi);
+            const OkLab trial{c.L, c.a * mid, c.b * mid};
+            oklab_to_linear(trial, r, g, b);
+            if (in_gamut(r, g, b)) lo = mid; else hi = mid;
+        }
+        const OkLab best{c.L, c.a * lo, c.b * lo};
+        oklab_to_linear(best, r, g, b);
+    }
+
+    const auto ch = [](double v) {
+        return static_cast<Argb>(std::lround(clamp01(to_gamma(clamp01(v))) * 255.0));
+    };
+    return 0xFF000000u | (ch(r) << 16) | (ch(g) << 8) | ch(b);
+}
+
+// ─── OKLab ↔ OKLCh ───────────────────────────────────────────────────────────────────────────────
+
+inline OkLch to_oklch(const OkLab& c) {
+    const double chroma = std::sqrt(c.a * c.a + c.b * c.b);
+    // A grey has no hue.
+    if (chroma < 1e-9) return {c.L, 0.0, 0.0};
+    double hue = std::atan2(c.b, c.a) * 180.0 / 3.14159265358979323846;
+    if (hue < 0.0) hue += 360.0;
+    return {c.L, chroma, hue};
+}
+
+inline OkLab to_oklab(const OkLch& c) {
+    const double rad = c.H * 3.14159265358979323846 / 180.0;
+    const double chroma = c.C < 0.0 ? 0.0 : c.C;
+    return {c.L, chroma * std::cos(rad), chroma * std::sin(rad)};
+}
+
+inline OkLch to_oklch(Argb c)          { return to_oklch(to_oklab(c)); }
+inline Argb  to_argb(const OkLch& c)   { return to_argb(to_oklab(c)); }
+
+// ─── The two measurements the rules are written in ───────────────────────────────────────────────
+
+// Perceptual lightness, 0..1.
+inline double ok_lightness(Argb c) { return to_oklab(c).L; }
+
+// Distance in OKLab — "do these look like the same colour?"
+inline double ok_delta_e(Argb x, Argb y) {
+    const OkLab p = to_oklab(x), q = to_oklab(y);
+    const double dL = p.L - q.L, da = p.a - q.a, db = p.b - q.b;
+    return std::sqrt(dL * dL + da * da + db * db);
+}
+
+// A step inside `wcag_contrast`, not a lightness.
+inline double relative_luminance(Argb c) {
+    using color_detail::to_linear;
+    return 0.2126390058715102 * to_linear(static_cast<double>((c >> 16) & 0xFF) / 255.0) +
+           0.7151686787677560 * to_linear(static_cast<double>((c >> 8) & 0xFF) / 255.0) +
+           0.0721923153607337 * to_linear(static_cast<double>(c & 0xFF) / 255.0);
+}
+
+// 1..21, symmetric.
+inline double wcag_contrast(Argb x, Argb y) {
+    const double a = relative_luminance(x) + 0.05;
+    const double b = relative_luminance(y) + 0.05;
+    return (a > b) ? (a / b) : (b / a);
+}
+
+}  // namespace pt::ui

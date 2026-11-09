@@ -1,0 +1,20 @@
+Hi moderators,
+
+I'm Kid Bunka, maintainer of Pocket Tracker Extreme, a free GPL-3.0-or-later
+PocketTracker fork for Android handhelds and the original TrimUI Brick/KNULLI.
+It adds synthesis, sample editing, effects and groove tools. I'd like to share
+one short demonstration/setup post and invite relevant device compatibility
+reports. The project was developed with AI assistance; its promotional artwork
+and showcase music also include AI assistance. I would disclose this, use only
+materials your rules permit, and respond to questions as the maintainer.
+
+Is that welcome here, and is there a preferred category, flair or recurring
+thread? Would you permit an introduction to this AI-assisted software project,
+and what media or authorship restrictions should I follow? There is no paid
+feature tier or purchase requirement.
+
+Project: https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/
+Source: https://github.com/kidbee85-beep/Pocket-Tracker-Extreme
+
+Thank you,
+Kid Bunka

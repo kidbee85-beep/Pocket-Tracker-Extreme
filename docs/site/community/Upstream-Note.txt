@@ -1,0 +1,23 @@
+Hi conanizer and PocketTracker contributors,
+
+Thank you for PocketTracker. I'm Kid Bunka, and I've been working on an
+independent GPL-3.0-or-later fork called Pocket Tracker Extreme for personal music
+workflows on Android and the original TrimUI Brick running KNULLI. Development
+has included AI assistance.
+
+The expansion includes live synthesis using credited open DSP, studio effects,
+sample editing, a kit-based groove generator and an online-source browser.
+The existing physical tracker controls remain central. Original attribution,
+licences and matching corresponding source are preserved.
+
+I'd like to share the beta with interested testers in the appropriate place:
+https://github.com/kidbee85-beep/Pocket-Tracker-Extreme
+https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/
+
+Please let me know which channel or discussion is appropriate for a short
+introduction. I'd also be glad to discuss focused fixes that could be useful
+upstream. Extreme is presented as an independent fork, without implying your
+endorsement or replacing the original project.
+
+Thanks again,
+Kid Bunka

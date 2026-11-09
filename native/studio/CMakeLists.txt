@@ -1,0 +1,17 @@
+set(MI_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../vendor/mutable)
+set(MI_SOURCES ${MI_ROOT}/stmlib/utils/random.cc ${MI_ROOT}/stmlib/dsp/units.cc ${MI_ROOT}/stmlib/dsp/atan.cc)
+foreach(module plaits rings elements warps clouds)
+ file(GLOB_RECURSE module_sources CONFIGURE_DEPENDS ${MI_ROOT}/${module}/dsp/*.cc)
+ list(APPEND MI_SOURCES ${module_sources} ${MI_ROOT}/${module}/resources.cc)
+endforeach()
+foreach(unit analog_oscillator digital_oscillator macro_oscillator resources)
+ list(APPEND MI_SOURCES ${MI_ROOT}/braids/${unit}.cc)
+endforeach()
+add_library(pt-mutable STATIC ${MI_SOURCES} synth.cpp rack.cpp m8_import.cpp)
+set_target_properties(pt-mutable PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(pt-mutable PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/.. PRIVATE ${MI_ROOT})
+target_compile_definitions(pt-mutable PRIVATE TEST=1)
+# Keep NaN handling and denormal protection effective; no unsafe reassociation.
+target_compile_options(pt-mutable PRIVATE -O2 -fno-fast-math -ffp-contract=off -Wno-narrowing -Wno-unused-local-typedef)
+# Plaits' TEST helpers call printf; do not depend on an incidental libc++ include.
+target_compile_options(pt-mutable PRIVATE -include cstdio)

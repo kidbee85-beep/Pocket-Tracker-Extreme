@@ -1,0 +1,50 @@
+{
+  "checked_on": "2026-11-09",
+  "purpose": "Pinned upstream firmware reference for the illustrated first-start guide. KNULLI is a separate project and is downloaded unchanged from its official maintainers.",
+  "firmware": {
+    "name": "KNULLI Scarab",
+    "release": "20260511",
+    "device": "Original TrimUI Brick / Brick Hammer (A133)",
+    "asset": "knulli-a133-trimui-brick-scarab-20260511.img.gz",
+    "bytes": 1983415643,
+    "sha256": "2c6e059b0f7db9d6b0fce3c383e72ca989b1c1224f4b3e81af11c66ebea5421f",
+    "local_copy_hash_verified": true,
+    "release_url": "https://github.com/knulli-cfw/knulli-linux/releases/tag/20260511",
+    "download_url": "https://github.com/knulli-cfw/knulli-linux/releases/download/20260511/knulli-a133-trimui-brick-scarab-20260511.img.gz",
+    "digest_source": "https://github.com/knulli-cfw/knulli-linux/releases/expanded_assets/20260511",
+    "redistributed_with_app": false,
+    "brick_pro_compatible": false
+  },
+  "working_device_evidence": {
+    "scope": "User-reported successful startup and musical workflows on the original Brick with the preceding app build, using the same software-surface launcher strategy. The public beta is rebuilt and has additional software checks; this is not a claim of a new physical public-beta acceptance run.",
+    "firmware_codename_from_device_log": "scarab",
+    "device_from_log": "trimui-brick",
+    "kernel_from_log": "4.9.191",
+    "glibc_from_log": "2.40",
+    "usb_sampling_hardware_verified": false
+  },
+  "r36s_reference": {
+    "scope": "The upstream stable release lists a separate R36S firmware image. Pocket Tracker Extreme on R36S remains an unverified community hardware target.",
+    "asset": "knulli-rk3326-r36s-scarab-20260510.img.gz",
+    "download_url": "https://github.com/knulli-cfw/knulli-linux/releases/download/20260511/knulli-rk3326-r36s-scarab-20260510.img.gz",
+    "upstream_asset_sha256": "068f405b5edcb0414430ce5ed24119ea62a945fe1be088cf9ca0bf22aabda466",
+    "local_copy_hash_verified": false
+  },
+  "official_help": {
+    "installation": "https://knulli.org/play/install/",
+    "quick_start": "https://knulli.org/play/quick-start/",
+    "brick_device": "https://knulli.org/devices/trimui/brick/",
+    "card_access": "https://knulli.org/play/add-games/accessing-sd-card/",
+    "formatting": "https://knulli.org/play/add-games/formatting/",
+    "image_writer": "https://www.raspberrypi.com/software/",
+    "branding_and_redistribution": "https://knulli.org/faq/knulli/"
+  },
+  "installation_boundaries": [
+    "Writing an OS image erases the selected card. Use a spare card or back up all data first.",
+    "Complete the first KNULLI boot before copying app files; first boot expands and prepares SHARE.",
+    "An existing working installation does not need to be reflashed to install this app.",
+    "For direct macOS/Windows card-reader access, SHARE must use a supported writable filesystem such as exFAT. ext4 requires additional access support. Reformatting erases data and is an optional new-card setup step.",
+    "The app installs to SHARE/roms/ports with its launcher beside the pockettracker_extreme folder. It does not require PortMaster to install or update first.",
+    "Do not use a Brick firmware image on an R36S, Brick Pro, or Android handheld."
+  ]
+}

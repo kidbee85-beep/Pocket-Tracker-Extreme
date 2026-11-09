@@ -1,0 +1,5 @@
+Corresponding sources for the iPhone USB companions in 0.1.0.8-Brick.
+
+libusb 1.0.30 and libplist 2.8.1 are unmodified official release sources. usbmuxd 1.1.1 is an isolated, foreground-only PTE variant: mandatory private -C/-S/-P paths, permission/owner checks, private socket0600/umask077, no global daemon control or default system paths; filename-only pair record IDs; internal legacy plist format constants renamed MUX_ to compile with current libplist. Preflight and systemd are disabled at configure time. No system services/rules are installed into the device.
+
+Build/relink: tools/brick/build_iphone.py; optional --libusb-source selects replacement LGPL source. Go modules and licenses are vendored separately in external/iphone-usb and external/iphone-pair. This package adds separate processes, not a libusb dependency inside the tracker executable.

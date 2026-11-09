@@ -1,0 +1,44 @@
+{
+  "yt_dlp": {
+    "version": "2026.10.26",
+    "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp_linux_aarch64",
+    "sha256": "e87e9533e89fe5889abaa21f5114dfe7756d6aa6219b83551add04d48b18e483",
+    "bytes": 40789792,
+    "license": "GPL-3.0-or-later combined PyInstaller binary; full third-party notices included",
+    "source_url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp.tar.gz",
+    "source_sha256": "21f942d258d25cc4e60b4982a25c423460f0bebb835f38e6dfd1fcb140087f95"
+  },
+  "cacert": {
+    "url": "https://curl.se/ca/cacert.pem",
+    "sha256": "427c064216761a1e72a8b30f0d954d08cb6e4435a82091fb865afd20c8497285",
+    "license": "MPL-2.0",
+    "date": "2026-11-05",
+    "upstream_sha256_verified": true
+  },
+  "quickjs": {
+    "version": "2026-06-04",
+    "source_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz",
+    "source_sha256": "b376e839b322978313d929fd20663b11ba58b75df5a46c126dd19ea2fa70ad2a",
+    "binary_sha256": "6d5615d7ce527d938302020595d907e1a58fe506f0ad10753ab21bce766d8ae7",
+    "target": "aarch64-linux-gnu.2.31 cortex_a53",
+    "bytes": 1077072,
+    "public_build_changes": "Prefix-map build paths; compile repl.js with a relative source name. No JS engine behavior change."
+  },
+  "iphone_helpers": {
+    "pte-iphone-usb": {
+      "sha256": "93c497b61fa9bb59c8068f05c97ec4335d0557eaea64beb7df487169bcc78446",
+      "bytes": 3296768,
+      "source": "external/iphone-usb or external/iphone-pair or external/apple-usb-deps; see tools/brick/build_iphone.py"
+    },
+    "pte-iphone-pair": {
+      "sha256": "e0888db7c37f73ee670219a08e1c11ff482c7845185292e21d731fb6dfde5301",
+      "bytes": 6815904,
+      "source": "external/iphone-usb or external/iphone-pair or external/apple-usb-deps; see tools/brick/build_iphone.py"
+    },
+    "pte-usbmuxd": {
+      "sha256": "0df86e70587c1596d31339179e0371b9a8eae30b3cd5aa8582994aae9922c918",
+      "bytes": 245720,
+      "source": "external/iphone-usb or external/iphone-pair or external/apple-usb-deps; see tools/brick/build_iphone.py"
+    }
+  }
+}

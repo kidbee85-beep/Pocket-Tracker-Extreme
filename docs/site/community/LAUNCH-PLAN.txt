@@ -1,0 +1,90 @@
+POCKET TRACKER EXTREME — COMMUNITY & PRESS
+Kid Bunka · checked 9 November 2026
+Public contact and submission routes. Respect each destination’s rules.
+These are recommendations, not claims of acceptance or endorsement.
+
+Project: https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/
+Source: https://github.com/kidbee85-beep/Pocket-Tracker-Extreme
+Film: https://youtu.be/eWSW_xNtZVI
+
+1. Renoise / Other Trackers
+https://forum.renoise.com/c/other-trackers/26
+Route: Registered forum topic after the current guidelines check.
+Rule/evidence: The category explicitly welcomes other trackers; the public forum guidelines were reviewed. Login is required to post.
+Source: https://forum.renoise.com/categories
+
+2. PocketTracker community
+https://github.com/conanizer/pockettracker
+Route: Ask where a brief introduction belongs; use the current README contact route.
+Rule/evidence: The README names Discussions for ideas/questions and links Discord. Joining and channel rules were not tested.
+Source: https://github.com/conanizer/pockettracker#contributing
+
+3. r/TrackerMusic
+https://www.reddit.com/r/TrackerMusic/
+Route: Honest moderator clarification first; otherwise leave this destination on hold.
+Rule/evidence: Rules limit posts to tracker-made music and prohibit AI content. No moderator permission has been obtained.
+Source: https://www.reddit.com/r/TrackerMusic/
+
+4. ChipMusic / Software & Plug-ins
+https://chipmusic.org/forums/forum/18/software-plugins/
+Route: Registered topic in Software & Plug-ins, after checking current rules.
+Rule/evidence: The board contains tracker/software projects and requires login to create a topic. Full posting rules were not audited.
+Source: https://chipmusic.org/forums/forum/18/software-plugins/
+
+5. r/trimui
+https://www.reddit.com/r/trimui/
+Route: Moderator clarification, then a TrimUI-only post if explicitly welcomed.
+Rule/evidence: Rules prohibit AI-generated text posts and images. The generated drafts and brand artwork are unsuitable for direct posting.
+Source: https://www.reddit.com/r/trimui/
+
+6. r/ANBERNIC
+https://www.reddit.com/r/ANBERNIC/
+Route: Anbernic-specific post with the current relevant flair; recheck rules at posting.
+Rule/evidence: On-topic promotion is allowed in the visible rules, with no spam. This is not moderator endorsement.
+Source: https://www.reddit.com/r/ANBERNIC/
+
+7. r/R36S
+https://www.reddit.com/r/R36S/
+Route: Check announcement requirements or ask moderators, then request launch/input/audio/save results.
+Rule/evidence: Community and visible rules checked. Specific app-announcement permission and flair remain unconfirmed.
+Source: https://www.reddit.com/r/R36S/
+
+8. r/SBCGaming
+https://www.reddit.com/r/SBCGaming/
+Route: Moderator clarification and compliant human-authored, permitted materials only.
+Rule/evidence: Generated media/text are restricted; AI-assisted software needs disclosure. Promotion must stay below 10% of interactions; duplicate multi-sub posts are prohibited.
+Source: https://www.reddit.com/r/SBCGaming/
+
+9. KNULLI community
+https://knulli.org/community/contribute/
+Route: Ask the official community where the music port belongs.
+Rule/evidence: The official contribution page links Discord and welcomes testing/knowledge contributions. Channel rules and joining were not tested.
+Source: https://knulli.org/community/contribute/#join-the-community
+
+10. PortMaster
+https://portmaster.games/porting.html
+Route: Maintainer discussion → required firmware/display testing → packaging → PR, if welcomed.
+Rule/evidence: The game-focused catalogue requires proper packaging plus documented #testing-n-dev community testing before a PR.
+Source: https://portmaster.games/packaging.html
+
+11. CDM / Create Digital Music
+https://cdm.link/submit-a-news-item/
+Route: Official news-tip form with a concise pitch, public guide and approved demo.
+Rule/evidence: The official news-tip page accepts creative projects and music-technology tips. Coverage and replies are not promised.
+Source: https://cdm.link/submit-a-news-item/
+
+12. Bedroom Producers Blog
+https://bedroomproducersblog.com/contact/
+Route: Contact form or tomislav@bedroomproducersblog.com. Send once, with approved public links.
+Rule/evidence: The contact page accepts press releases/content tips and publishes an alternative email address.
+Source: https://bedroomproducersblog.com/contact/
+
+13. Rekkerd.org
+https://rekkerd.org/contact/
+Route: Contact form or ronnie@rekkerd.org, with a short personal pitch and approved media links.
+Rule/evidence: The official page invites news tips/product announcements and lists Ronnie’s contact address. Coverage is not guaranteed.
+Source: https://rekkerd.org/contact/
+
+Reusable English templates are supplied beside this file. They disclose the independent fork and AI assistance. They must not be posted where generated text is prohibited.
+Direct iPhone-to-Brick USB-C recording failed in the current user hardware test. Class-compliant interfaces remain a separate test.
+All software features and source remain free.
