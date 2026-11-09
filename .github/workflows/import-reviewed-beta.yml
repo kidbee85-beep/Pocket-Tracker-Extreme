@@ -11,15 +11,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify the initial repository before adding reviewed files
+      - name: Verify the beta.1 baseline before updating reviewed files
         shell: bash
         run: |
           set -euo pipefail
-          git merge-base --is-ancestor 4fccd28913ff56f9d8e5b8958bfa5d39014b8830 HEAD
+          git merge-base --is-ancestor v0.2.0-beta.1 HEAD
           python3 - <<'PY'
           import subprocess
+          changed = set(subprocess.check_output(['git','diff','--name-only','v0.2.0-beta.1','HEAD']).decode().splitlines())
+          assert changed <= {'.github/workflows/import-reviewed-beta.yml', '.github/workflows/build.yml'}, changed
           tracked = set(subprocess.check_output(['git','ls-files','-z']).decode().split('\0')) - {''}
-          assert tracked == {'README.md', '.github/workflows/import-reviewed-beta.yml', '.github/workflows/build.yml', '.github/workflows/release.yml', '.github/workflows/pages.yml'}
+          assert len(tracked) == 7746, len(tracked)
           PY
       - name: Add the SHA-256 verified corresponding source
         env:
@@ -28,30 +30,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag='v0.2.0-beta.1'
-          source_name='Pocket-Tracker-Extreme-0.2.0-beta.1-Source.zip'
+          tag='v0.2.0-beta.2'
+          source_name='Pocket-Tracker-Extreme-0.2.0-beta.2-Source.zip'
           release_id="$(gh api "repos/$GH_REPO/releases" --jq ".[] | select(.tag_name == \"$tag\" and .draft == true) | .id")"
           test -n "$release_id"
           asset_id="$(gh api "repos/$GH_REPO/releases/$release_id/assets" --jq ".[] | select(.name == \"$source_name\") | .id")"
           test -n "$asset_id"
           archive="$RUNNER_TEMP/$source_name"
           gh api "repos/$GH_REPO/releases/assets/$asset_id" -H 'Accept: application/octet-stream' > "$archive"
-          echo "61870c05e1fb8298066080208dafc9099aa3e1f21928e5b3824fe68eb45d21b4  $archive" | sha256sum --check
+          echo "eb86a368a15d14e5801c62ae3ac8c3e9b3a926527b8658b34216e42ae5a368a7  $archive" | sha256sum --check
           python3 - "$archive" "$GITHUB_WORKSPACE" <<'PY'
           import pathlib, sys, zipfile
           archive, destination = sys.argv[1], pathlib.Path(sys.argv[2])
-          prefix = 'Pocket-Tracker-Extreme-0.2.0-beta.1/'
+          prefix = 'Pocket-Tracker-Extreme-0.2.0-beta.2/'
           with zipfile.ZipFile(archive) as z:
               assert z.testzip() is None
               entries = [i for i in z.infolist() if not i.is_dir()]
-              assert len(entries) == 7745
+              assert len(entries) == 7763
               for item in entries:
                   assert item.filename.startswith(prefix)
                   relative = pathlib.PurePosixPath(item.filename[len(prefix):])
                   assert not relative.is_absolute() and '..' not in relative.parts
                   assert not any(p in {'.git','.gradle','.cxx','.kotlin','build'} for p in relative.parts)
                   target = destination.joinpath(*relative.parts)
-                  if target.exists() and relative.as_posix() != 'README.md':
+                  if target.exists() and relative.as_posix().startswith('.github/workflows/'):
                       assert target.read_bytes() == z.read(item)
                       continue
                   target.parent.mkdir(parents=True, exist_ok=True)
@@ -61,7 +63,8 @@ jobs:
           git config user.name 'Kid Bunka'
           git config user.email '338288444+kidbee85-beep@users.noreply.github.com'
           git add -A
-          test "$(git ls-files -z | tr -cd '\0' | wc -c)" -eq 7746
+          test "$(git ls-files -z | tr -cd '\0' | wc -c)" -eq 7764
           test -z "$(git diff --cached --diff-filter=D --name-only)"
-          git commit --quiet -m 'Add verified Pocket Tracker Extreme 0.2.0-beta.1 corresponding source'
+          git commit --quiet -m 'Add verified Pocket Tracker Extreme 0.2.0-beta.2 corresponding source'
           git push origin HEAD:main
+
