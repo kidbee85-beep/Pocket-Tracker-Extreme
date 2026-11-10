@@ -1,6 +1,6 @@
-Pocket Tracker Extreme factory preset library
+TrackWerk factory preset library
 
-2,304 presets: 2,048 parameter-based .pti instruments and 256 additional effect/master presets. No third-party audio samples or SoundFonts. Distributed under GPL-3.0-or-later with Pocket Tracker Extreme.
+2,304 presets: 2,048 parameter-based .pti instruments and 256 additional effect/master presets. No third-party audio samples or SoundFonts. Distributed under GPL-3.0-or-later with TrackWerk.
 
 Effect collection: 64 Reverbs (.ptr), 64 Delays (.ptd), 96 Studio FX (.ptfx), 32 Mastering (.ptmaster), organized by category.
 

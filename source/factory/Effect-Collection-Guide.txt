@@ -1,4 +1,4 @@
-POCKET TRACKER EXTREME / KID BUNKA
+TRACKWERK / KID BUNKA
 EXTREME EFFECT COLLECTION / BETA .3
 
 256 additional authored presets: 64 send reverbs, 64 send delays, 96 Studio FX
@@ -71,5 +71,5 @@ Names, category and descriptions are included. Factory IDs are append-only:
 Reverb 20-83; Delay 20-83; Studio FX 160-255; Master 32-63 (zero based).
 Total native banks: 84 reverbs, 84 delays, 256 Studio FX and 64 masters.
 
-Original preset settings and descriptions for Pocket Tracker Extreme.
+Original preset settings and descriptions for TrackWerk.
 GPL-3.0-or-later, like the application. No personal samples are included.

@@ -1,4 +1,4 @@
-POCKET TRACKER EXTREME — FIRST START ON TRIMUI BRICK
+TRACKWERK — FIRST START ON TRIMUI BRICK
 Public beta 0.2.0-beta.3 · Kid Bunka
 
 ALREADY RUNNING KNULLI?
@@ -40,7 +40,7 @@ https://knulli.org/play/add-games/accessing-sd-card/
 https://knulli.org/play/add-games/game-storage/
 
 3. INSTALL POCKET TRACKER
-Unzip Pocket-Tracker-Extreme-0.2.0-beta.3-Brick.zip into:
+Unzip TrackWerk-0.9-Brick-KNULLI.zip into:
 SHARE/roms/ports/
 
 After extracting, you should have:
@@ -77,7 +77,7 @@ Later launches skip preparation when the same factory pack is already ready.
 
 5. START
 Wait for all computer copies to finish, safely eject the card, insert it into
-the powered-off Brick and turn it on. Choose Ports > Pocket Tracker Extreme.
+the powered-off Brick and turn it on. Choose Ports > TrackWerk.
 If it is absent, refresh KNULLI's game list. The package keeps the proven SDL
 software-surface compatibility mode and the existing physical controls.
 
@@ -91,7 +91,7 @@ R+Left or the '..' row opens the parent folder; B closes the browser.
 You do not need Android-style folder permissions or a library scan on KNULLI.
 
 7. FOLLOW THE ILLUSTRATED ENGLISH GUIDE
-https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html
+https://kidbee85-beep.github.io/TrackWerk/guide.html
 
 This is beta software. The preceding private build/startup path was user-tested
 on a Brick with no errors reported. Beta.2 has software/VM validation; physical

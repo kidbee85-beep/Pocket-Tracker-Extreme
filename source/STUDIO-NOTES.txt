@@ -1,9 +1,9 @@
-POCKET TRACKER EXTREME — PUBLIC BETA 0.2.0-beta.2
+TRACKWERK — PUBLIC BETA 0.9.0
 Kid Bunka · Independent PocketTracker fork
 
 CURRENT USER GUIDES
 Illustrated tutorial:
-https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html
+https://kidbee85-beep.github.io/TrackWerk/guide.html
 
 Offline source: docs/site/guide.html
 Text quick start: docs/quick-start-guide.md

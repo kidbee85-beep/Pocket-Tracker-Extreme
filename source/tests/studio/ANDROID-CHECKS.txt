@@ -1,4 +1,4 @@
-Pocket Tracker Extreme: Android checks
+TrackWerk: Android checks
 
 Use an isolated emulator. CaptureSmoke intentionally refuses physical devices;
 launch the emulator with -no-audio to avoid opening the host microphone.

@@ -1,7 +1,7 @@
 Native showcase capture utilities
 
 These optional development tools render the actual TrackerLayout and AudioEngine
-used by Pocket Tracker Extreme. They are not features of the shipping application.
+used by TrackWerk. They are not features of the shipping application.
 They create scripted software captures, not physical-device camera footage.
 
 stills.cpp renders menu illustrations from a supplied real .ptp project.

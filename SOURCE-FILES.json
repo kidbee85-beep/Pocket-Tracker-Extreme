@@ -1,18 +1,18 @@
 {
   "version": "0.9.0",
-  "freeze": "27597fb255f6c500d66628992f4a1cce02fb5a2b83dd45ffab88672394c3c230",
+  "freeze": "8e96634f5861295e4de9a823007b521b1ece502ac3b5eb213c89d18a9035a508",
   "baseline_freeze": "e3e7c1104ec4fa32800ca23190b6327081887a13b1a03606487bb12c0e8ef6e6",
   "public_application_id": "com.kidbunka.trackwerk",
   "files": [
     {
       "path": "BUILD-TRACKWERK-0.9.txt",
-      "bytes": 3491,
-      "sha256": "59e7f95f13880cca57421d98461e0c3eae91aca3bbcddbf9f9d1b0011fe7d5d5"
+      "bytes": 3501,
+      "sha256": "ec3b871b3393a95c98a0c70e67c12279e3d06c0d11f30646180a76d583e473c8"
     },
     {
       "path": "PUBLIC-PRODUCTION-SOURCE-FREEZE.json",
-      "bytes": 1258506,
-      "sha256": "77e2a2e529ddc47e29bb137294c6b808103272a0b38d2fab9c32be878db5e2ab"
+      "bytes": 1261720,
+      "sha256": "9d07eed2cf11b8ed192dcec2345bff2cf7c2e4d041d01201979b4dffd2337917"
     },
     {
       "path": "brand-authoring/NATIVE-BRAND-ASSETS.json",
@@ -165,6 +165,11 @@
       "sha256": "abaacdc6ce0126e7813e2c71d50338bd39a90a8124603f1aa52e0791cc384e5f"
     },
     {
+      "path": "release-tools/refresh_public_branding.py",
+      "bytes": 14809,
+      "sha256": "cbdcc9d4f7b6277effd3767b3d90b9907932d7e64e988a481aca78a7cfd097e0"
+    },
+    {
       "path": "release-tools/setup_brick_menu.py",
       "bytes": 5285,
       "sha256": "1f502e5ba0a14b81214a32afb5eceea53387da295a4e8af70ebd6e2df213d571"
@@ -186,8 +191,8 @@
     },
     {
       "path": "source/.github/ISSUE_TEMPLATE/handheld-compatibility.yml",
-      "bytes": 2817,
-      "sha256": "1b088a5bdea757ef5ad1bcf3bcaea2de5a02a80cb8b2a12f4774cd1975f115ba"
+      "bytes": 2804,
+      "sha256": "13828d83c4711f6dfec4784d2a246bbd28f584491dd09db64b362d564d36ff6b"
     },
     {
       "path": "source/.github/PULL_REQUEST_TEMPLATE.md",
@@ -226,13 +231,13 @@
     },
     {
       "path": "source/README.md",
-      "bytes": 1327,
-      "sha256": "6889f0720b2074a4cc472eb0ba32bb852432e1bb942761aa16eef550162fb2e6"
+      "bytes": 1314,
+      "sha256": "64b73c56cef2a914a3f2c8ee478ee1667746e66cc7531fa03fc293c4bb718a06"
     },
     {
       "path": "source/STUDIO-NOTES.txt",
-      "bytes": 2616,
-      "sha256": "10da1be3fa3cebfd93474b3ad67cb35a12f7d9ecfac118395ed55135bfb2b380"
+      "bytes": 2583,
+      "sha256": "027f5366fb7bd491c56b13b3ee9b7ed7f75605f4f76120292fe87df005898693"
     },
     {
       "path": "source/app/.gitignore",
@@ -841,8 +846,8 @@
     },
     {
       "path": "source/docs/brick/HOW-TO-FIRST-START.txt",
-      "bytes": 5378,
-      "sha256": "3b69618234931047d2b7cbdac2ac04962b8f5584c990c0f7520553cc3523d9f8"
+      "bytes": 5324,
+      "sha256": "63a8ff7748b70813e1d268bf99d059ccba37ffdcb24645a10dcaf89bb53b599c"
     },
     {
       "path": "source/docs/brick/KNULLI-Official-Download.url",
@@ -856,8 +861,8 @@
     },
     {
       "path": "source/docs/brick/README.md",
-      "bytes": 1417,
-      "sha256": "453033444a453181480f91e14e31aeb11fcf8588cfb814dd4920a796aa211f7c"
+      "bytes": 1385,
+      "sha256": "a7d56a9c5664fd4e79aec9dab3fc65f3a6c5200d1b818f006c3e8db0c802bc79"
     },
     {
       "path": "source/docs/brick/UPDATE-EXISTING-INSTALL.txt",
@@ -866,13 +871,13 @@
     },
     {
       "path": "source/docs/brick/knulli-reference.json",
-      "bytes": 3281,
-      "sha256": "499cc9e40f1033eef8eb22d37e87464b8272f87fe40ba0fffac793be8122fb6e"
+      "bytes": 3268,
+      "sha256": "95038ab47a03377c1a216925f7aa1984a570820e60f9b61a147a97cbb694588d"
     },
     {
       "path": "source/docs/building.md",
-      "bytes": 4637,
-      "sha256": "d88bbe84d165e2e47ff1e2758a8aeb10225c7c609f000cba205c82bcb035dbfb"
+      "bytes": 4624,
+      "sha256": "ec588affe2ee8d397641e908db021a9db3929d29fef778f5de9dda7967d87d2c"
     },
     {
       "path": "source/docs/features.md",
@@ -991,8 +996,8 @@
     },
     {
       "path": "source/docs/quick-start-guide.md",
-      "bytes": 5982,
-      "sha256": "1028f3a6423d2706787d891d364c67710a26c355ff2b722bdba686cc06b1648b"
+      "bytes": 5956,
+      "sha256": "80491faa4193bd3322af4124b30dd074c7bbb47929ad0ffc08ea4a745cf863a5"
     },
     {
       "path": "source/docs/technical-architecture.md",
@@ -3171,8 +3176,8 @@
     },
     {
       "path": "source/external/iphone-pair/README.txt",
-      "bytes": 4138,
-      "sha256": "76772dab0b9ab28232ac9b120f28c54de5f2467f5f336e0fa57fa6781bcb5c24"
+      "bytes": 4125,
+      "sha256": "7caf01fdd678090a28e1ceb867e94a256cd961f33964c31e9b98273d433e43aa"
     },
     {
       "path": "source/external/iphone-pair/go.mod",
@@ -7926,8 +7931,8 @@
     },
     {
       "path": "source/external/iphone-usb/README.md",
-      "bytes": 4966,
-      "sha256": "c7db6b37188d9bec51cfd6a15b5fc41a7aacb1cea693995fd668d96a2f73bf94"
+      "bytes": 4953,
+      "sha256": "ad07be09346bcce860178b98612f8b8f1b4872ec7ce7006d3a14336d009a223a"
     },
     {
       "path": "source/external/iphone-usb/cmd/pte-iphone-usb/main.go",
@@ -8321,13 +8326,13 @@
     },
     {
       "path": "source/factory/Effect-Collection-Catalog.txt",
-      "bytes": 8172,
-      "sha256": "ab95b0fa2ef957079549b497512935aec24858ea0d0e33b9532ae90d12359d8b"
+      "bytes": 8159,
+      "sha256": "41307af0b2d6e0dc20cfd1840ff1f19cfc8b38a90e4455d088b91f9d15bdc823"
     },
     {
       "path": "source/factory/Effect-Collection-Guide.txt",
-      "bytes": 3996,
-      "sha256": "43466c31329d881f236736678da23f59ef0365d2e3d8530a3cd32d560728da37"
+      "bytes": 3970,
+      "sha256": "bb0aac6cdc170ef8a546f70e5285cf300ad210241d9220bdde339088ddd6fb90"
     },
     {
       "path": "source/factory/Presets/Delays/Extreme_Collection/01_Slaps/BASS_DOUBLE.ptd",
@@ -19851,13 +19856,13 @@
     },
     {
       "path": "source/factory/README.txt",
-      "bytes": 805,
-      "sha256": "da20a1599e2aea7922fecbc331be34bcbb7255df4df38e62ddd32d5b113a6ac9"
+      "bytes": 779,
+      "sha256": "ed3637360804678144ffe99fedf7766896aca33bb1facf770f418cfcdb0b8c06"
     },
     {
       "path": "source/factory/effect-catalog.json",
-      "bytes": 68065,
-      "sha256": "f57e21f9161ed0010e08f99a6bc9adaf03927af5e710679321da41b0e7d7c952"
+      "bytes": 68052,
+      "sha256": "a9e98ac47d218ea7b81af3e5a22631536a2085ed0694dbcd9316129e5973baa9"
     },
     {
       "path": "source/factory/presets-pack.id",
@@ -37406,23 +37411,23 @@
     },
     {
       "path": "source/shell/brick/Pocket Tracker Extreme.sh",
-      "bytes": 10752,
-      "sha256": "deda50266675a87a52b2ff86e8b0c51223e1034405043376f7c66481f2541d2f"
+      "bytes": 10699,
+      "sha256": "98360d32fa0abe1fbde094589b09d59ba5d84f154d56d71a566c0c8f34d9e491"
     },
     {
       "path": "source/shell/brick/README.txt",
-      "bytes": 5079,
-      "sha256": "270a14e6aa4efd01ec512aab2341b15401d091435db7a1d51f6922355eccfaca"
+      "bytes": 5025,
+      "sha256": "697501dd0e5ec0c9d7f50b75bf9944f9f1ede81d415387275d07c96144d18be1"
     },
     {
       "path": "source/shell/brick/gameinfo.xml",
-      "bytes": 917,
-      "sha256": "86a4ff1ddf9c9f5dbf75834880cda4c0c1739c4d7638e20f2bcd90e469aff959"
+      "bytes": 878,
+      "sha256": "90498583dc0bb045c3e5fa17f71aac9b078da1418165e7a107f634cc1bcdc65a"
     },
     {
       "path": "source/shell/brick/port.json",
-      "bytes": 1150,
-      "sha256": "f3a15534ae253db1f4d2efd72de6a09541464df492a897d9c0a1868ca5eeeecc"
+      "bytes": 1109,
+      "sha256": "628204a0b5e9276ded263eb0b82bc3e7e536fdae12b56b06cb7d5d25a4c2b75d"
     },
     {
       "path": "source/shell/brick/screenshot.png",
@@ -37656,13 +37661,13 @@
     },
     {
       "path": "source/shell/r36s/Pocket Tracker Extreme.sh",
-      "bytes": 10614,
-      "sha256": "72a8838b388dc638d368c86a89e25ddf43add6803f9f22e0cca93741b8f84aa8"
+      "bytes": 10561,
+      "sha256": "a97e95efae43e8911c90571361137db33f4495448d83c2188f342e65082978b9"
     },
     {
       "path": "source/shell/r36s/README.txt",
-      "bytes": 6794,
-      "sha256": "bf0d1b86f829fc754506f4164cf82492604c8698966a909aaad6aed83f7ac0d4"
+      "bytes": 6768,
+      "sha256": "e410a2eea43b5720a0a60c3072512799773f4dacbdff50131a7e30975a3ac5d1"
     },
     {
       "path": "source/shell/r36s/controllerdb/LICENSE.txt",
@@ -37681,8 +37686,8 @@
     },
     {
       "path": "source/shell/r36s/package.py",
-      "bytes": 12547,
-      "sha256": "3801b6e883688ab2cbfb7f4a537a82e8c39a573d7fed425442486290117ee3f1"
+      "bytes": 12456,
+      "sha256": "43daa4ec9b5b8b6d33882aacb2d9240c2fd2a96c98c675b1ecc2150cc827a6ea"
     },
     {
       "path": "source/shell/sdl/make-window-icon.ps1",
@@ -37916,8 +37921,8 @@
     },
     {
       "path": "source/tests/brick-launcher/check_launcher.py",
-      "bytes": 14481,
-      "sha256": "fe4665721b27ebf7a2e58d30a5a4c81148443baf8be2ceca803563e71fc2bc04"
+      "bytes": 14461,
+      "sha256": "f6d371a866eec08ff72e27b497fc2a29d3ce3a5a64fddd418c4e9914d3420e31"
     },
     {
       "path": "source/tests/brick-launcher/check_preset_preparer.py",
@@ -37936,8 +37941,8 @@
     },
     {
       "path": "source/tests/r36s-launcher/check_launcher.py",
-      "bytes": 15585,
-      "sha256": "e167ae139a8c9975a4622c5d165d976594827b9a71416fc0fd42db9f0317e4bb"
+      "bytes": 15565,
+      "sha256": "19cba3481ff159f5ca45ecdc19b655e404d5c5321362b3b492c857af31e6b204"
     },
     {
       "path": "source/tests/r36s-launcher/result.json",
@@ -37946,8 +37951,8 @@
     },
     {
       "path": "source/tests/studio/ANDROID-CHECKS.txt",
-      "bytes": 2155,
-      "sha256": "be19d2c1a5adf937f1fb20c2d373cb39f3278bd4f84fe0da78c2c7c3745fd937"
+      "bytes": 2142,
+      "sha256": "457b759fdca199e08b5f9372b8df455974c490b7a7fb1c9a8e45c53070122b71"
     },
     {
       "path": "source/tests/studio/CMakeLists.txt",
@@ -38206,18 +38211,18 @@
     },
     {
       "path": "source/tools/brick/BUILD.txt",
-      "bytes": 353,
-      "sha256": "77fb206942c376e14559972549211d3bb6ac5500bdea4a0d5264a72d914f548e"
+      "bytes": 334,
+      "sha256": "02622f51b1949cd86cf0f3447c123a9e71229411286f8230a1ff0b74e89b3114"
     },
     {
       "path": "source/tools/brick/STARTFIX.txt",
-      "bytes": 353,
-      "sha256": "77fb206942c376e14559972549211d3bb6ac5500bdea4a0d5264a72d914f548e"
+      "bytes": 334,
+      "sha256": "02622f51b1949cd86cf0f3447c123a9e71229411286f8230a1ff0b74e89b3114"
     },
     {
       "path": "source/tools/brick/SURFACE.txt",
-      "bytes": 353,
-      "sha256": "77fb206942c376e14559972549211d3bb6ac5500bdea4a0d5264a72d914f548e"
+      "bytes": 334,
+      "sha256": "02622f51b1949cd86cf0f3447c123a9e71229411286f8230a1ff0b74e89b3114"
     },
     {
       "path": "source/tools/brick/build.py",
@@ -38236,8 +38241,8 @@
     },
     {
       "path": "source/tools/presets/effects_catalog.json",
-      "bytes": 94271,
-      "sha256": "452338101b22207818ce0dd5cfec40a6c02b8bc8c4191424dd65e9ed154548e2"
+      "bytes": 94258,
+      "sha256": "c980be9fe884c31747fa889efcb2f162657880b75ad09e7c767ae065077c629c"
     },
     {
       "path": "source/tools/presets/update_pack_id.py",
@@ -38251,28 +38256,28 @@
     },
     {
       "path": "source/tools/release/package_brick.py",
-      "bytes": 8010,
-      "sha256": "a61f261318f63726d1e9bb228b3737ba27be9f34c8be2f9ab1a4ee1eec1757fb"
+      "bytes": 7962,
+      "sha256": "665e3ecd223987511fb60018f1504689bbd45bc2645bb218ba653bcab60671db"
     },
     {
       "path": "source/tools/release/package_factory.py",
-      "bytes": 4800,
-      "sha256": "046a17d1127bfe182931813d96f0002ef9432138574e501db740a2279abc611c"
+      "bytes": 4748,
+      "sha256": "c8ae1a88c7661ea6404ece79178662ec35085b4d86c9bfd13589baeec093f04c"
     },
     {
       "path": "source/tools/release/prepare_presets.py",
-      "bytes": 6258,
-      "sha256": "ca549d1f1efe3a4563bf183aba8060701d7734ce2eb91ef8e225484969e64c27"
+      "bytes": 6245,
+      "sha256": "edacd908e9cad76b6915632442996c04f1ba31632220c258a977886cd30a8b05"
     },
     {
       "path": "source/tools/release/update_brick.py",
-      "bytes": 12545,
-      "sha256": "8911b272c814a177f21ae79efd1513b45e1e89dd4a7877ea9321439e8eccd923"
+      "bytes": 12532,
+      "sha256": "e0c79b6e2f7a032256b6e0365ffe6fd3bd41201c6d27d933ab78a14ea9dc11bf"
     },
     {
       "path": "source/tools/showcase/README.txt",
-      "bytes": 1843,
-      "sha256": "e892e8f85b10a4eba086dfc50042b03055eb7de34cc7e402c633b8c732af5bf2"
+      "bytes": 1830,
+      "sha256": "74cdcf1e0bd58a2011c2110703ffb6457788ebd66935c1769b714ddae08abec4"
     },
     {
       "path": "source/tools/showcase/capture.cpp",
@@ -40269,5 +40274,6 @@
       "bytes": 1034,
       "sha256": "7f6bc2018576d9db8ef9c357c442e407346ac71d0320c00e6feb38e20355fa01"
     }
-  ]
+  ],
+  "previous_public_freeze": "27597fb255f6c500d66628992f4a1cce02fb5a2b83dd45ffab88672394c3c230"
 }

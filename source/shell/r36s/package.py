@@ -15,7 +15,7 @@ import zipfile
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 VERSION = "0.2.0-beta.3"
-NAME = f"Pocket-Tracker-Extreme-{VERSION}-R36S-Community-Test"
+NAME = f"TrackWerk-{VERSION}-R36S-Community-Test"
 LAUNCHER = "Pocket Tracker Extreme.sh"
 APP = "pockettracker_extreme"
 ELF_SHA = "5e1fef394d9988b871fb1a73cdf6ae8122be07ddd41e1c540358d5984263acc2"
@@ -102,7 +102,7 @@ def build(stage: Path, output: Path, cpu_validation: Path | None) -> Path:
         (root / "R36S-COMMUNITY-TEST.txt").write_text(guide)
         (app / "README.txt").write_text(guide)
         (app / "QUICK-START.md").write_text("# R36S community test\n\n" + guide)
-        (app / "VERSION.txt").write_text(f"Pocket Tracker Extreme {VERSION}\nExperimental R36S community test; no physical R36S validation.\n")
+        (app / "VERSION.txt").write_text(f"TrackWerk {VERSION}\nExperimental R36S community test; no physical R36S validation.\n")
         (app / "tools/prepare_presets-HOWTO.txt").write_text(
             "OPTIONAL COMPUTER PREPARATION\n\nWith Python 3 installed, open a terminal in pockettracker_extreme/ and run:\n"
             "  python3 tools/prepare_presets.py\n\nThe script verifies the full factory pack and copies only missing presets.\n"
@@ -112,7 +112,7 @@ def build(stage: Path, output: Path, cpu_validation: Path | None) -> Path:
             "same presets on first launch. See ../README.txt for the complete setup.\n")
         metadata = {
             "format": "pocket-tracker-extreme-community-package-v1", "version": VERSION,
-            "title": "Pocket Tracker Extreme — R36S Community Test", "creator": "Kid Bunka",
+            "title": "TrackWerk — R36S Community Test", "creator": "Kid Bunka",
             "target": "R36S / compatible aarch64 Linux userspace", "experimental": True,
             "physical_hardware_tested": False, "official_portmaster_catalog_entry": False,
             "requirements": {"architecture": "aarch64", "libc": "glibc >= 2.31", "SDL2": ">= 2.0.18", "shell": "Bash"},
@@ -122,22 +122,22 @@ def build(stage: Path, output: Path, cpu_validation: Path | None) -> Path:
             "controllerdb_policy": "Fallback only when SDL_GAMECONTROLLERCONFIG_FILE is unset; preserve explicit empty and frontend inline mappings",
             "OS_image_included": False, "system_libraries_replaced": False,
             "USB_iPhone_R36S_validation": "pending physical hardware testing",
-            "source": "Matching Pocket Tracker Extreme 0.2.0-beta.3 source bundle; shell/r36s/package.py",
+            "source": "Matching TrackWerk 0.2.0-beta.3 source bundle; shell/r36s/package.py",
         }
         write_json(app / "community-test.json", metadata)
         write_json(app / "port.json", {
             "version": 4, "name": NAME + ".zip", "items": [LAUNCHER, APP], "items_opt": [],
-            "attr": {"title": "Pocket Tracker Extreme (R36S Community Test)", "porter": ["Kid Bunka"],
+            "attr": {"title": "TrackWerk (R36S Community Test)", "porter": ["Kid Bunka"],
                 "desc": "Experimental native ARM64 Linux music studio. No physical R36S testing; see README.txt.",
                 "inst": "Extract complete ZIP into your firmware's ports folder. Preserve existing data. No PortMaster startup dependency.",
                 "genres": ["other"], "rtr": False, "exp": True, "runtime": [], "store": [], "availability": "full",
                 "reqs": [], "arch": ["aarch64"], "min_glibc": "2.31"}})
         (app / "gameinfo.xml").write_text('''<?xml version="1.0" encoding="UTF-8"?>
 <gameList><game><path>./Pocket Tracker Extreme.sh</path>
-<name>Pocket Tracker Extreme (R36S Community Test)</name>
+<name>TrackWerk (R36S Community Test)</name>
 <desc>Experimental native ARM64 Linux music studio by Kid Bunka. R36S physical display, controls, performance and recording remain untested. Read README.txt.</desc>
 <image>./pockettracker_extreme/screenshot.png</image><releasedate>20261109T000000</releasedate>
-<developer>PocketTracker contributors / Pocket Tracker Extreme</developer><publisher>Kid Bunka community beta</publisher><genre>Other</genre><players>1</players>
+<developer>PocketTracker contributors / TrackWerk</developer><publisher>Kid Bunka community beta</publisher><genre>Other</genre><players>1</players>
 </game></gameList>
 ''')
         validation = app / "validation"

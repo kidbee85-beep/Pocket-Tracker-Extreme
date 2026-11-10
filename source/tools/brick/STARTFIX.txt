@@ -1,4 +1,4 @@
-Pocket Tracker Extreme0.2.0-beta.1
+TrackWerk 0.9.0
 
 See docs/building.md for the current reproducible build process and docs/site/guide.html for the illustrated English installation/tutorial.
 

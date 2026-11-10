@@ -54,7 +54,7 @@ THIRD-PARTY-NOTICES files. Mutable Instruments modifications preserve the
 original MIT notices; GPL dependencies and corresponding source bundles remain.
 No raw personal music or screenshots of private user paths are required to build.
 This is the corresponding source for the public 0.9 beta release candidate.
-The five identity/artwork source changes are recorded in
+The identity/artwork and distribution-text changes are recorded in
 PUBLIC-PRODUCTION-SOURCE-FREEZE.json. Audio DSP and input logic are unchanged.
 Authoring metadata paths are portable and no personal samples or signing
 materials are included.

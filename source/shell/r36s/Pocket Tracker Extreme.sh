@@ -8,12 +8,12 @@ PTE_SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 [ "$PTE_SCRIPT_DIR" != "${BASH_SOURCE[0]}" ] || PTE_SCRIPT_DIR=.
 PTE_APP_DIR="$PTE_SCRIPT_DIR/pockettracker_extreme"
 if [ ! -d "$PTE_APP_DIR" ]; then
-    printf '%s\n' "Pocket Tracker Extreme: App folder missing: $PTE_APP_DIR" >&2
+    printf '%s\n' "TrackWerk: App folder missing: $PTE_APP_DIR" >&2
     exit 2
 fi
 PTE_LOG="$PTE_APP_DIR/log.txt"
 exec >> "$PTE_LOG" 2>&1 || exit 2
-printf '\n=== Pocket Tracker Extreme 0.2.0-beta.2-R36S-Community-Test: shell entered ===\n'
+printf '\n=== TrackWerk 0.9.0-R36S-Community-Test: shell entered ===\n'
 # Persist before any command substitution or native graphics initialization.
 # A forced power-off must not erase the only evidence of where startup stopped.
 sync || printf '%s\n' 'WARNING: initial startup log sync failed'
@@ -86,7 +86,7 @@ PTE_LOG_SIZE="$(wc -c < "$PTE_LOG" 2>/dev/null)"
 if [[ "$PTE_LOG_SIZE" =~ ^[[:space:]]*[0-9]+[[:space:]]*$ ]] && [ "$PTE_LOG_SIZE" -gt 1048576 ]; then
     mv -f -- "$PTE_LOG" "$GAMEDIR/log.previous.txt" || pte_fail "Cannot rotate startup log."
     exec >> "$PTE_LOG" 2>&1 || exit 2
-    printf '\n=== Pocket Tracker Extreme 0.2.0-beta.2-R36S-Community-Test: shell entered (log rotated) ===\n'
+    printf '\n=== TrackWerk 0.9.0-R36S-Community-Test: shell entered (log rotated) ===\n'
 fi
 pte_phase "Standalone start; no PortMaster scripts or network checks"
 

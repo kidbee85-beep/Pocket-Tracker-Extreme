@@ -4,7 +4,7 @@
   "versionCode": 90000,
   "files": 6013,
   "manifest_algorithm": "SHA256 of UTF-8 compact JSON entries with sorted object keys",
-  "manifest_sha256": "27597fb255f6c500d66628992f4a1cce02fb5a2b83dd45ffab88672394c3c230",
+  "manifest_sha256": "8e96634f5861295e4de9a823007b521b1ece502ac3b5eb213c89d18a9035a508",
   "baseline_manifest_sha256": "e3e7c1104ec4fa32800ca23190b6327081887a13b1a03606487bb12c0e8ef6e6",
   "distribution_changes": [
     {
@@ -31,6 +31,61 @@
       "path": "native/ui/mascot_sprite_large.h",
       "before_sha256": "c47a0648cb893fa7e54f7aef9d36241a1b1bd4529825573b8e060f11cc0c590e",
       "after_sha256": "0f31e7114b08fd55cb9a239f607ead6ef5c7d4276f0d81925b4f185aa3152ed5"
+    },
+    {
+      "path": "factory/Effect-Collection-Catalog.txt",
+      "before_sha256": "ab95b0fa2ef957079549b497512935aec24858ea0d0e33b9532ae90d12359d8b",
+      "after_sha256": "41307af0b2d6e0dc20cfd1840ff1f19cfc8b38a90e4455d088b91f9d15bdc823"
+    },
+    {
+      "path": "factory/Effect-Collection-Guide.txt",
+      "before_sha256": "43466c31329d881f236736678da23f59ef0365d2e3d8530a3cd32d560728da37",
+      "after_sha256": "bb0aac6cdc170ef8a546f70e5285cf300ad210241d9220bdde339088ddd6fb90"
+    },
+    {
+      "path": "factory/README.txt",
+      "before_sha256": "da20a1599e2aea7922fecbc331be34bcbb7255df4df38e62ddd32d5b113a6ac9",
+      "after_sha256": "ed3637360804678144ffe99fedf7766896aca33bb1facf770f418cfcdb0b8c06"
+    },
+    {
+      "path": "factory/effect-catalog.json",
+      "before_sha256": "f57e21f9161ed0010e08f99a6bc9adaf03927af5e710679321da41b0e7d7c952",
+      "after_sha256": "a9e98ac47d218ea7b81af3e5a22631536a2085ed0694dbcd9316129e5973baa9"
+    },
+    {
+      "path": "shell/brick/Pocket Tracker Extreme.sh",
+      "before_sha256": "deda50266675a87a52b2ff86e8b0c51223e1034405043376f7c66481f2541d2f",
+      "after_sha256": "98360d32fa0abe1fbde094589b09d59ba5d84f154d56d71a566c0c8f34d9e491"
+    },
+    {
+      "path": "shell/brick/README.txt",
+      "before_sha256": "270a14e6aa4efd01ec512aab2341b15401d091435db7a1d51f6922355eccfaca",
+      "after_sha256": "697501dd0e5ec0c9d7f50b75bf9944f9f1ede81d415387275d07c96144d18be1"
+    },
+    {
+      "path": "shell/brick/gameinfo.xml",
+      "before_sha256": "86a4ff1ddf9c9f5dbf75834880cda4c0c1739c4d7638e20f2bcd90e469aff959",
+      "after_sha256": "90498583dc0bb045c3e5fa17f71aac9b078da1418165e7a107f634cc1bcdc65a"
+    },
+    {
+      "path": "shell/brick/port.json",
+      "before_sha256": "f3a15534ae253db1f4d2efd72de6a09541464df492a897d9c0a1868ca5eeeecc",
+      "after_sha256": "628204a0b5e9276ded263eb0b82bc3e7e536fdae12b56b06cb7d5d25a4c2b75d"
+    },
+    {
+      "path": "shell/r36s/Pocket Tracker Extreme.sh",
+      "before_sha256": "72a8838b388dc638d368c86a89e25ddf43add6803f9f22e0cca93741b8f84aa8",
+      "after_sha256": "a97e95efae43e8911c90571361137db33f4495448d83c2188f342e65082978b9"
+    },
+    {
+      "path": "shell/r36s/README.txt",
+      "before_sha256": "bf0d1b86f829fc754506f4164cf82492604c8698966a909aaad6aed83f7ac0d4",
+      "after_sha256": "e410a2eea43b5720a0a60c3072512799773f4dacbdff50131a7e30975a3ac5d1"
+    },
+    {
+      "path": "shell/r36s/package.py",
+      "before_sha256": "3801b6e883688ab2cbfb7f4a537a82e8c39a573d7fed425442486290117ee3f1",
+      "after_sha256": "43daa4ec9b5b8b6d33882aacb2d9240c2fd2a96c98c675b1ecc2150cc827a6ea"
     }
   ],
   "audio_dsp_or_input_logic_changed": false,
@@ -593,13 +648,13 @@
     },
     {
       "path": "factory/Effect-Collection-Catalog.txt",
-      "bytes": 8172,
-      "sha256": "ab95b0fa2ef957079549b497512935aec24858ea0d0e33b9532ae90d12359d8b"
+      "bytes": 8159,
+      "sha256": "41307af0b2d6e0dc20cfd1840ff1f19cfc8b38a90e4455d088b91f9d15bdc823"
     },
     {
       "path": "factory/Effect-Collection-Guide.txt",
-      "bytes": 3996,
-      "sha256": "43466c31329d881f236736678da23f59ef0365d2e3d8530a3cd32d560728da37"
+      "bytes": 3970,
+      "sha256": "bb0aac6cdc170ef8a546f70e5285cf300ad210241d9220bdde339088ddd6fb90"
     },
     {
       "path": "factory/Presets/Delays/Extreme_Collection/01_Slaps/BASS_DOUBLE.ptd",
@@ -12123,13 +12178,13 @@
     },
     {
       "path": "factory/README.txt",
-      "bytes": 805,
-      "sha256": "da20a1599e2aea7922fecbc331be34bcbb7255df4df38e62ddd32d5b113a6ac9"
+      "bytes": 779,
+      "sha256": "ed3637360804678144ffe99fedf7766896aca33bb1facf770f418cfcdb0b8c06"
     },
     {
       "path": "factory/effect-catalog.json",
-      "bytes": 68065,
-      "sha256": "f57e21f9161ed0010e08f99a6bc9adaf03927af5e710679321da41b0e7d7c952"
+      "bytes": 68052,
+      "sha256": "a9e98ac47d218ea7b81af3e5a22631536a2085ed0694dbcd9316129e5973baa9"
     },
     {
       "path": "factory/presets-pack.id",
@@ -29588,23 +29643,23 @@
     },
     {
       "path": "shell/brick/Pocket Tracker Extreme.sh",
-      "bytes": 10752,
-      "sha256": "deda50266675a87a52b2ff86e8b0c51223e1034405043376f7c66481f2541d2f"
+      "bytes": 10699,
+      "sha256": "98360d32fa0abe1fbde094589b09d59ba5d84f154d56d71a566c0c8f34d9e491"
     },
     {
       "path": "shell/brick/README.txt",
-      "bytes": 5079,
-      "sha256": "270a14e6aa4efd01ec512aab2341b15401d091435db7a1d51f6922355eccfaca"
+      "bytes": 5025,
+      "sha256": "697501dd0e5ec0c9d7f50b75bf9944f9f1ede81d415387275d07c96144d18be1"
     },
     {
       "path": "shell/brick/gameinfo.xml",
-      "bytes": 917,
-      "sha256": "86a4ff1ddf9c9f5dbf75834880cda4c0c1739c4d7638e20f2bcd90e469aff959"
+      "bytes": 878,
+      "sha256": "90498583dc0bb045c3e5fa17f71aac9b078da1418165e7a107f634cc1bcdc65a"
     },
     {
       "path": "shell/brick/port.json",
-      "bytes": 1150,
-      "sha256": "f3a15534ae253db1f4d2efd72de6a09541464df492a897d9c0a1868ca5eeeecc"
+      "bytes": 1109,
+      "sha256": "628204a0b5e9276ded263eb0b82bc3e7e536fdae12b56b06cb7d5d25a4c2b75d"
     },
     {
       "path": "shell/brick/screenshot.png",
@@ -29838,13 +29893,13 @@
     },
     {
       "path": "shell/r36s/Pocket Tracker Extreme.sh",
-      "bytes": 10614,
-      "sha256": "72a8838b388dc638d368c86a89e25ddf43add6803f9f22e0cca93741b8f84aa8"
+      "bytes": 10561,
+      "sha256": "a97e95efae43e8911c90571361137db33f4495448d83c2188f342e65082978b9"
     },
     {
       "path": "shell/r36s/README.txt",
-      "bytes": 6794,
-      "sha256": "bf0d1b86f829fc754506f4164cf82492604c8698966a909aaad6aed83f7ac0d4"
+      "bytes": 6768,
+      "sha256": "e410a2eea43b5720a0a60c3072512799773f4dacbdff50131a7e30975a3ac5d1"
     },
     {
       "path": "shell/r36s/controllerdb/LICENSE.txt",
@@ -29863,8 +29918,8 @@
     },
     {
       "path": "shell/r36s/package.py",
-      "bytes": 12547,
-      "sha256": "3801b6e883688ab2cbfb7f4a537a82e8c39a573d7fed425442486290117ee3f1"
+      "bytes": 12456,
+      "sha256": "43daa4ec9b5b8b6d33882aacb2d9240c2fd2a96c98c675b1ecc2150cc827a6ea"
     },
     {
       "path": "shell/sdl/make-window-icon.ps1",
@@ -30101,5 +30156,20 @@
       "bytes": 524,
       "sha256": "892d6d3fcd569b501cf86e0ec2f979076c121f41fc1c7b2106797456027cb774"
     }
-  ]
+  ],
+  "previous_public_manifest_sha256": "27597fb255f6c500d66628992f4a1cce02fb5a2b83dd45ffab88672394c3c230",
+  "branding_metadata_changes": [
+    "factory/Effect-Collection-Catalog.txt",
+    "factory/Effect-Collection-Guide.txt",
+    "factory/README.txt",
+    "factory/effect-catalog.json",
+    "shell/brick/Pocket Tracker Extreme.sh",
+    "shell/brick/README.txt",
+    "shell/brick/gameinfo.xml",
+    "shell/brick/port.json",
+    "shell/r36s/Pocket Tracker Extreme.sh",
+    "shell/r36s/README.txt",
+    "shell/r36s/package.py"
+  ],
+  "engine_inputs_byte_identical_to_previous_public_build": true
 }

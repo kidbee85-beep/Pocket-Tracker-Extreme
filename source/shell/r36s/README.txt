@@ -1,4 +1,4 @@
-POCKET TRACKER EXTREME 0.2.0-beta.3
+TRACKWERK 0.2.0-beta.3
 R36S COMMUNITY TEST — EXPERIMENTAL
 Kid Bunka / PocketTracker contributors
 
@@ -27,7 +27,7 @@ INSTALL ON AN ALREADY WORKING R36S SYSTEM
    Do not create an extra nested package folder. Do not replace a complete
    existing ports list or delete your existing data folder during an update.
 3. Safely eject the SD card, insert it, and refresh the frontend's games list
-   if necessary. Open Ports -> Pocket Tracker Extreme.
+   if necessary. Open Ports -> TrackWerk.
 4. The first launch prepares 2,304 factory presets (2,048 instruments and 256 effects) in the local data folder.
    This can take time on a slow SD card. Watch the log if it fails to launch.
    Subsequent launches skip preparation when the pack identifier matches.

@@ -1,6 +1,6 @@
 # Experimental direct iPhone USB audio helper
 
-`pte-iphone-usb` is an audio-only companion for Pocket Tracker Extreme on Linux.
+`pte-iphone-usb` is an audio-only companion for TrackWerk on Linux.
 It uses an Apple-specific bulk USB capture protocol, **not USB Audio Class**.
 An iPhone is not a standard USB audio interface when plugged into the Brick.
 Physical compatibility with the Brick and current iOS versions still needs a

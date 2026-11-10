@@ -1,4 +1,4 @@
-# Pocket Tracker Extreme — Quick Start
+# TrackWerk — Quick Start
 
 Version 0.2.0-beta.3. Use the [illustrated English tutorial](site/guide.html) for the complete workflow.
 
@@ -6,7 +6,7 @@ Version 0.2.0-beta.3. Use the [illustrated English tutorial](site/guide.html) fo
 
 **Android:** install the signed beta APK, open a file browser and choose **ADD FOLDER…**. Pick a writable media folder. Microphone recording may request microphone permission. Internet-source functions use your network connection.
 
-**TrimUI Brick/KNULLI:** extract the Brick package into `SHARE/roms/ports/`, preserving your existing `pockettracker_extreme/data` folder. Launch **Ports → Pocket Tracker Extreme**. Storage is already set to that `data` folder; there is no Android-style folder grant.
+**TrimUI Brick/KNULLI:** extract the Brick package into `SHARE/roms/ports/`, preserving your existing `pockettracker_extreme/data` folder. Launch **Ports → TrackWerk**. Storage is already set to that `data` folder; there is no Android-style folder grant.
 
 ## Make a first beat
 

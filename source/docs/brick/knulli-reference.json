@@ -24,7 +24,7 @@
     "usb_sampling_hardware_verified": false
   },
   "r36s_reference": {
-    "scope": "The upstream stable release lists a separate R36S firmware image. Pocket Tracker Extreme on R36S remains an unverified community hardware target.",
+    "scope": "The upstream stable release lists a separate R36S firmware image. TrackWerk on R36S remains an unverified community hardware target.",
     "asset": "knulli-rk3326-r36s-scarab-20260510.img.gz",
     "download_url": "https://github.com/knulli-cfw/knulli-linux/releases/download/20260511/knulli-rk3326-r36s-scarab-20260510.img.gz",
     "upstream_asset_sha256": "068f405b5edcb0414430ce5ed24119ea62a945fe1be088cf9ca0bf22aabda466",

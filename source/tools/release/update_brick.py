@@ -91,7 +91,7 @@ def update_lock(app):
         raise RuntimeError('Update lock exists. Close the other updater. After interruption, verify the program and backup before removing this lock.') from None
     try:
         with os.fdopen(fd, 'w') as output:
-            output.write('Pocket Tracker Extreme program update\n')
+            output.write('TrackWerk program update\n')
             output.flush()
             os.fsync(output.fileno())
         yield

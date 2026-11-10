@@ -1,0 +1,73 @@
+{
+  "status": "PASS",
+  "repository": "kidbee85-beep/TrackWerk",
+  "release_id": 440271867,
+  "assets": 14,
+  "tag_unchanged": "b0bd53fd8af1b3730f5f61620f0e747420122022",
+  "software_assets": [
+    {
+      "file": "TrackWerk-0.9-Android.apk",
+      "bytes": 33293682,
+      "sha256": "25a836c310c3143406f5c2643814eb62584b3a30674a6c1c21b45709337005ef",
+      "application_id": "com.kidbunka.trackwerk",
+      "minimum_sdk": 26,
+      "abis": [
+        "arm64-v8a",
+        "armeabi-v7a",
+        "x86_64"
+      ],
+      "identity": "INDEPENDENT_PUBLIC_TRACKWERK"
+    },
+    {
+      "file": "SDL2-mmiyoo-f6319cf9-source.tar.gz",
+      "bytes": 17285143,
+      "sha256": "b4c2416b244ad5d9c208fa5939e865331880df9fb8f9e8fca3a5d2d5017af549"
+    },
+    {
+      "file": "TrackWerk-0.9-Miyoo-Mini-Onion.zip",
+      "bytes": 5236121,
+      "sha256": "015c457361e8f989029b4b4400902c267d3c529777c80360f6dd756c79c3d63f",
+      "entries": 2349
+    },
+    {
+      "file": "TrackWerk-0.9-Miyoo-Plus-Onion.zip",
+      "bytes": 5475021,
+      "sha256": "8a49e62addd6cff2960ec59ae6af7bc3e71670a18cc67f1ee2d843deb8ffe3b9",
+      "entries": 2351
+    },
+    {
+      "file": "TrackWerk-0.9-Brick-KNULLI.zip",
+      "bytes": 51012306,
+      "sha256": "3c5ad45c25cc3f8be690d781f4e07c268109d8e89153494cd69aa203b5616ab6",
+      "entries": 2390
+    },
+    {
+      "file": "TrackWerk-0.9-Brick-Program-Factory-Update.zip",
+      "bytes": 5266209,
+      "sha256": "0da18608248de9d7c1fa10ecacfaabbeccfc10ce056c3048bb469d5c9b5c9a31",
+      "entries": 2376
+    },
+    {
+      "file": "TrackWerk-0.9-Factory-Presets.zip",
+      "bytes": 1978974,
+      "sha256": "3d39c9ad4a84c93ae5b46b570199e9454525766428f51dbf18b89d6ad0a984f2",
+      "entries": 2309
+    },
+    {
+      "file": "TrackWerk-0.9-Source.zip",
+      "bytes": 171867187,
+      "sha256": "fb01cdaf7d93e79ce22360c1c9e31130d1664045bd009abef958699c67e63523",
+      "entries": 8055,
+      "frozen_production_files_verified": 6013,
+      "production_changes": "Identity/artwork plus documentation and launcher metadata; audio DSP and input logic unchanged"
+    }
+  ],
+  "source_manifest": "8e96634f5861295e4de9a823007b521b1ece502ac3b5eb213c89d18a9035a508",
+  "previous_engine_source_manifest": "27597fb255f6c500d66628992f4a1cce02fb5a2b83dd45ffab88672394c3c230",
+  "source_files_verified": 8054,
+  "website_source_sha256": "a7229d20e6e5bd36f80250984b398a0e92fe3dd179fb9d983d446754188ad804",
+  "compiled_audio_and_input_binaries_changed": false,
+  "private_data_included": false,
+  "website": "https://kidbee85-beep.github.io/TrackWerk/",
+  "run_id": "42841454843"
+}

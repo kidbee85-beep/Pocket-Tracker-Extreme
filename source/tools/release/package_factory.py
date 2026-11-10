@@ -29,7 +29,7 @@ def main():
                 'counts': dict(sorted(counts.items())), 'contains_audio_samples': False,
                 'files': [{'path': name, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
                           for name, data in sorted(items.items())]}
-    items['Pocket-Tracker-Extreme-Factory-Presets-README.txt'] = ('''POCKET TRACKER EXTREME — OPTIONAL FACTORY PRESETS
+    items['TrackWerk-Factory-Presets-README.txt'] = ('''TRACKWERK — OPTIONAL FACTORY PRESETS
 Version ''' + version + ''' · Kid Bunka
 2,304 original parameter presets; no third-party audio samples.
 2,048 instruments + 64 Reverb + 64 Delay + 96 Studio FX + 32 Master.
@@ -54,9 +54,9 @@ after a pack change; existing custom presets and edited files remain intact.
 
 See Effect-Collection-Guide.txt for controls and category descriptions.
 GPL-3.0-or-later; full source and notices accompany the matching app release.
-https://github.com/kidbee85-beep/Pocket-Tracker-Extreme
+https://github.com/kidbee85-beep/TrackWerk
 ''').encode('utf-8')
-    items['Pocket-Tracker-Extreme-Factory-Presets-LICENSE.txt'] = (source / 'LICENSE').read_bytes()
+    items['TrackWerk-Factory-Presets-LICENSE.txt'] = (source / 'LICENSE').read_bytes()
     for name in ['Effect-Collection-Guide.txt', 'Effect-Collection-Catalog.txt', 'effect-catalog.json', 'presets-pack.id']:
         items[name] = (source / 'factory' / name).read_bytes()
     items['factory-manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')

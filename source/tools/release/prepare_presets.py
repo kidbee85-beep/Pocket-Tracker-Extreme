@@ -18,7 +18,7 @@ def commit_new_file(temp, target):
                 'This mounted filesystem does not support the atomic no-replace '
                 'operation required for computer preparation. Existing presets '
                 'and the pack marker have been preserved. Safely eject the card '
-                'and start Pocket Tracker Extreme on the device; its first launch '
+                'and start TrackWerk on the device; its first launch '
                 'will prepare missing presets.'
             ) from error
         raise

@@ -1,4 +1,4 @@
-pte-iphone-pair — Pocket Tracker Extreme 0.1.0.8-Brick
+pte-iphone-pair — TrackWerk 0.1.0.8-Brick
 
 Purpose
 -------

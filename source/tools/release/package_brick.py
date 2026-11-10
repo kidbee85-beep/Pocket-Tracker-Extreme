@@ -126,10 +126,10 @@ def main():
             copy(source/'docs/brick/HOW-TO-FIRST-START.txt',app/'README.txt')
             copy(source/'docs/quick-start-guide.md',app/'QUICK-START.md')
             copy(source/'docs/HELPER-SOURCES.md',app/'HELPER-SOURCES.md')
-            (app/'VERSION.txt').write_text('Pocket Tracker Extreme '+version+'\n')
+            (app/'VERSION.txt').write_text('TrackWerk '+version+'\n')
             licenses(source,app/'licenses')
             (app/'licenses/packaged-helper-hashes.json').write_text(json.dumps(actual,indent=2)+'\n')
-        (stage/'SOURCE.txt').write_text('Matching source and build instructions:\nhttps://github.com/kidbee85-beep/Pocket-Tracker-Extreme/releases/download/v'+version+'/Pocket-Tracker-Extreme-'+version+'-Source.zip\n')
+        (stage/'SOURCE.txt').write_text('Matching source and build instructions:\nhttps://github.com/kidbee85-beep/TrackWerk/releases/download/v0.9.0-beta/TrackWerk-0.9-Source.zip\n')
         with zipfile.ZipFile(args.out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
             for p in sorted(stage.rglob('*')):
                 if not p.is_file():

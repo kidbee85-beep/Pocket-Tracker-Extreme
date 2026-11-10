@@ -1,4 +1,4 @@
-# Building Pocket Tracker Extreme
+# Building TrackWerk
 
 The public source contains the application, the frozen NewPipe Java sources, Mutable DSP sources, iPhone helper sources and the matching license notices. Version names come from `app/build.gradle.kts` for Android and the native shell.
 

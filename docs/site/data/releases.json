@@ -15,38 +15,38 @@
     "brick-first": {
       "file": "TrackWerk-0.9-Brick-KNULLI.zip",
       "ready": true,
-      "sha256": "20b7d5af274be8a6bfdecb3b0fc470844e85d72d266ecd716b07f0a2ec83a1c2",
-      "bytes": 50942030
+      "sha256": "3c5ad45c25cc3f8be690d781f4e07c268109d8e89153494cd69aa203b5616ab6",
+      "bytes": 51012306
     },
     "brick-update": {
       "file": "TrackWerk-0.9-Brick-Program-Factory-Update.zip",
       "ready": true,
-      "sha256": "b23aa771d77c052db91ba296cae8a5318ae433e3d99cde4f9a190a2c3eb8dfd9",
-      "bytes": 5193645
+      "sha256": "0da18608248de9d7c1fa10ecacfaabbeccfc10ce056c3048bb469d5c9b5c9a31",
+      "bytes": 5266209
     },
     "mini": {
       "file": "TrackWerk-0.9-Miyoo-Mini-Onion.zip",
       "ready": true,
-      "sha256": "e90ee4a24842be642a7a6526f12d29b9aa5d4ce5cb35a25db3fb8c37a78a86e5",
-      "bytes": 5224967
+      "sha256": "015c457361e8f989029b4b4400902c267d3c529777c80360f6dd756c79c3d63f",
+      "bytes": 5236121
     },
     "plus": {
       "file": "TrackWerk-0.9-Miyoo-Plus-Onion.zip",
       "ready": true,
-      "sha256": "5e868d794ee3d7d570a6bb643e2a988ac7dc4239c59119c56e5e252403923e38",
-      "bytes": 5462576
+      "sha256": "8a49e62addd6cff2960ec59ae6af7bc3e71670a18cc67f1ee2d843deb8ffe3b9",
+      "bytes": 5475021
     },
     "presets": {
       "file": "TrackWerk-0.9-Factory-Presets.zip",
       "ready": true,
-      "sha256": "36ec474f3210454038270011a0a4bf23c351b16066c339b1946cae7c8c226e19",
-      "bytes": 1975012
+      "sha256": "3d39c9ad4a84c93ae5b46b570199e9454525766428f51dbf18b89d6ad0a984f2",
+      "bytes": 1978974
     },
     "source": {
       "file": "TrackWerk-0.9-Source.zip",
       "ready": true,
-      "sha256": "0c7ec1615de39ef5d33540502c8233b4f320e753274fbf2347ec55f57aa52249",
-      "bytes": 169336250
+      "sha256": "fb01cdaf7d93e79ce22360c1c9e31130d1664045bd009abef958699c67e63523",
+      "bytes": 171867187
     },
     "sdl-source": {
       "file": "SDL2-mmiyoo-f6319cf9-source.tar.gz",
@@ -57,7 +57,7 @@
     "checksums": {
       "file": "SHA256SUMS.txt",
       "ready": true,
-      "sha256": "5c5462a1f7f49861e11b63a62132c74ab9cc9666fb483768c7f3a28f601677b1",
+      "sha256": "2e5fc58a45afb9c43665db1d5875c4dac12a14a02025328e67672bca5e0c149f",
       "bytes": 796
     }
   },

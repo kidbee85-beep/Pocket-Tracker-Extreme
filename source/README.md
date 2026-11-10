@@ -21,4 +21,4 @@ Optional ptLegacyApplicationId and ptLegacyPrivateUpdate Gradle settings are
 maintainer compatibility routes for existing private installs only. Their APKs
 are not included in the public release. Signing keys are never source assets.
 
-Public guide: https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/
+Public guide: https://kidbee85-beep.github.io/TrackWerk/
