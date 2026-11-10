@@ -92,8 +92,8 @@ jobs:
               },
               {
                 "file": "INSTALL-AND-UPDATE.md",
-                "bytes": 5847,
-                "sha256": "0a7dc011a34bddc86c9497a0f69c26c3869e675075ec8bdba86e2400917b5b32",
+                "bytes": 5829,
+                "sha256": "c2de0e00f4362ef5a6045257d9d87c48592a802dac7149efc53720039db32430",
                 "role": "guide"
               },
               {
@@ -110,8 +110,8 @@ jobs:
               },
               {
                 "file": "TrackWerk-0.9-Website-Source.zip",
-                "bytes": 11324697,
-                "sha256": "a7229d20e6e5bd36f80250984b398a0e92fe3dd179fb9d983d446754188ad804",
+                "bytes": 11324994,
+                "sha256": "b110d54d1eaf097b97dab9024a92db334c93370129112e115e62ffd92ec9c082",
                 "role": "website"
               }
             ]

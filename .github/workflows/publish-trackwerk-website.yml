@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Download the verified public website source
-        run: curl --fail --location --output "$RUNNER_TEMP/trackwerk-site.zip" 'https://github.com/kidbee85-beep/TrackWerk/releases/download/v0.9.0-beta/TrackWerk-0.9-Website-Source.zip?revision=a7229d20e6e5'
+        run: curl --fail --location --output "$RUNNER_TEMP/trackwerk-site.zip" 'https://github.com/kidbee85-beep/TrackWerk/releases/download/v0.9.0-beta/TrackWerk-0.9-Website-Source.zip?revision=b110d54d1eaf'
       - name: Verify and prepare only the website
         env:
           SITE_ARCHIVE: ${{ runner.temp }}/trackwerk-site.zip
@@ -42,14 +42,14 @@ jobs:
           from pathlib import Path
           import hashlib,html,json,os,re,shutil,tempfile,urllib.request,zipfile
           archive=Path(os.environ['SITE_ARCHIVE'])
-          digest='a7229d20e6e5bd36f80250984b398a0e92fe3dd179fb9d983d446754188ad804'
-          assert archive.stat().st_size==11324697
+          digest='b110d54d1eaf097b97dab9024a92db334c93370129112e115e62ffd92ec9c082'
+          assert archive.stat().st_size==11324994
           assert hashlib.sha256(archive.read_bytes()).hexdigest()==digest
           request=urllib.request.Request('https://api.github.com/repos/kidbee85-beep/TrackWerk/releases/tags/v0.9.0-beta',headers={'User-Agent':'TrackWerk-website-verifier'})
           with urllib.request.urlopen(request,timeout=60) as response: released=json.load(response)
           assert released['draft'] is False and released['prerelease'] is True
           actual={a['name']:a for a in released['assets']}
-          assert actual['TrackWerk-0.9-Website-Source.zip']['size']==11324697
+          assert actual['TrackWerk-0.9-Website-Source.zip']['size']==11324994
           if actual['TrackWerk-0.9-Website-Source.zip'].get('digest'):
               assert actual['TrackWerk-0.9-Website-Source.zip']['digest']=='sha256:'+digest
           with tempfile.TemporaryDirectory() as temp:
@@ -107,7 +107,7 @@ jobs:
           if publication.exists():
               p=json.loads(publication.read_text())
               for item in p['assets']:
-                  if item.get('role')=='website': item.update(bytes=11324697,sha256=digest)
+                  if item.get('role')=='website': item.update(bytes=11324994,sha256=digest)
               publication.write_text(json.dumps(p,indent=2)+'\n')
           shutil.copy2('source/LICENSE','LICENSE')
           for path in [Path('README.md'),*Path('.github').rglob('*')]:
