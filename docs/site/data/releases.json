@@ -66,6 +66,8 @@
     "file": "assets/video/trackwerk-09-film.mp4",
     "poster": "assets/images/film-poster.jpg",
     "sha256": "b4adb1d614f1a391853a5c05e8cf564ddd3bcdf68e2f46405329b1b20fda881a",
-    "bytes": 10453169
+    "bytes": 10453169,
+    "youtube_main": "https://youtu.be/zIzqFsDHWsA",
+    "youtube_short": "https://youtube.com/shorts/F6CImd_Fep0"
   }
 }
