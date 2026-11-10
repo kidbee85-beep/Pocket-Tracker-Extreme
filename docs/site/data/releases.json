@@ -3,7 +3,7 @@
   "version": "0.9",
   "tag": "v0.9.0-beta",
   "repository": "https://github.com/kidbee85-beep/Pocket-Tracker-Extreme",
-  "releaseReady": false,
+  "releaseReady": true,
   "plannedDate": "2026-11-10",
   "assets": {
     "android": {
