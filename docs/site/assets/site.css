@@ -30,9 +30,3 @@
 .origin-components { margin-top: 1.8rem; max-width: 76ch; font-size: .95rem; }
 @media (max-width: 700px) { .origin-grid { grid-template-columns: 1fr; gap: 1.2rem; } .origin-section { padding-bottom: 3rem; } }
 
-.upstream-exchange { margin-top: 2rem; padding: 1.6rem; border: 1px solid var(--line); background: var(--deep); }
-.upstream-exchange blockquote { margin: 1rem 0 1.2rem; }
-.upstream-exchange blockquote p { font-size: clamp(1.2rem,2vw,1.65rem); line-height: 1.45; max-width: 63ch; color: var(--paper); }
-.upstream-exchange footer { font-size: .82rem; line-height: 1.65; color: var(--muted); }
-.exchange-context { font-size: .92rem; line-height: 1.7; max-width: 90ch; color: var(--muted); margin-bottom: 0; }
-@media (max-width: 700px) { .upstream-exchange { padding: 1.1rem; } }
