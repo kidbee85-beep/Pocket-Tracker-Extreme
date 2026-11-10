@@ -1,0 +1,82 @@
+TRACKWERK 0.9 — UPDATE AN EXISTING BRICK INSTALLATION
+Version 0.9.0 / Android version code 90000 · Kid Bunka
+
+KEEP YOUR WORKING CARD AND MUSIC
+Use TrackWerk-0.9-Brick-Program-Factory-Update.zip. This is a program update for
+an existing installation. Keep KNULLI, the working launcher and existing data.
+Samples, projects, recordings, presets, custom themes, settings and controller
+mappings remain in place. Do not format, flash a new OS, delete app data, rename
+the existing folders or replace the complete application directory.
+
+The internal folder remains roms/ports/pockettracker_extreme. This legacy name
+keeps existing projects, controller mappings and updates working. The visible
+application name, icons and interface are TrackWerk.
+
+UPDATE
+1. Save your song, fully shut down the Brick and insert its card into the computer.
+   Finish any current copy operation before updating.
+2. Extract the complete program-update ZIP. Keep the updater, manifest, program
+   and factory directory together. The computer needs Python 3.
+3. Select the EXISTING pockettracker_extreme application folder, which contains
+   its native executable and data folder. New installations and symlinks are refused.
+4. macOS example, with the actual path to the extracted updater:
+   python3 "/path/to/update_brick.py" --target "/Volumes/SHARE/roms/ports/pockettracker_extreme"
+   Windows example, adjusting the drive letter:
+   py "C:\path\to\update_brick.py" --target "E:\roms\ports\pockettracker_extreme"
+   On Linux, use python3 and the actual mounted application folder.
+5. The updater checks hashes, backs up the old executable under
+   .pte-program-backups/<old-SHA256>.aarch64 and replaces only the program.
+   It adds verified missing factory assets and retains conflicting custom files.
+   Your data/Presets files are not replaced.
+6. To add missing factory files to the user library on the computer rather than
+   at first launch, run the supplied prepare_presets.py with the factory/Presets
+   directory and existing data folder. It adds missing files only; custom files stay.
+7. Safely eject the card. Insert it into the powered-off Brick and launch the
+   existing tracker entry. The preserved launcher may retain its earlier log header;
+   the running application reports TrackWerk 0.9.0.
+
+The supplied menu artwork is optional. Its safe menu updater changes only this
+tracker's display name/image in the Ports list, preserving its launcher path and
+all other entries. Keep any original menu artwork and the XML backup for rollback.
+
+INCLUDED FEATURES
+- Independent TrackWerk TW mark and animated demoscene introduction.
+- 17 typefaces, including Classic, six display faces and ten cleaner reading styles.
+- 50 palettes and 18 materials; palette, material and font can be selected separately.
+  Existing personal appearance/controller preferences remain selected after updating.
+- Storage-based preview and seeking for long mono/stereo WAVs. Mark IN/OUT, then
+  save only the selected excerpt as a new WAV and open it directly for slicing.
+  The original is retained. Editor range limits account for free RAM/Undo workspace.
+- Existing synth engines, categorized presets, punch effects, mastering, Drumlab,
+  global swing, sample-folder memory, contextual help and internal resampling retained.
+
+DEMO SONGS / PRESETS
+TrackWerk-0.9-Demos-Presets-PRIVATE.zip contains all 50 private demo projects with
+project media and all 2,359 preset files. Merge its Projects and Presets into the
+existing data home. Add missing files and retain any differing file you edited.
+The large personal sample library already on the card is not duplicated or removed.
+This private music-content pack is separate from the software/source-code release.
+
+ROLLBACK
+With the card in the computer:
+python3 update_brick.py --target "/Volumes/SHARE/roms/ports/pockettracker_extreme" --rollback <old-SHA256>
+Use the full hash printed by the updater. It verifies the backup and retains the
+current executable as another backup. Added presets and all music data remain.
+Without Python, keep a verified old executable and replace only
+pockettracker_extreme.aarch64 manually. Prefer the supplied checked updater.
+
+ANDROID
+Use TrackWerk-0.9-Android.apk for the public package or the matching-key
+TrackWerk-0.9-Android-Private-Test-Update.apk for the existing private test app.
+Install over the matching old app. Do not uninstall, clear storage or revoke its
+sample-folder access. Package identities/signatures are retained for in-place updates.
+
+DEVICE TESTS / INPUT
+Software and constrained ARM tests are supplied with the package; real controls,
+audio, display and networking still need confirmation on each physical handheld.
+Direct iPhone-to-Brick USB sampling did not work in the owner's repeated tests;
+0.9 does not certify that input route. External class-compliant input remains a
+separate device test. Internal resampling records the application's own output.
+
+Publication remains on hold. The former GitHub website is offline pending the
+independent TrackWerk redesign and review; use the included local guides.

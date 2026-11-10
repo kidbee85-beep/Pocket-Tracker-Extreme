@@ -1,0 +1,12 @@
+{
+  "name": "BRICK_CORNER",
+  "algo": 2,
+  "size": 32,
+  "decay": 27,
+  "damp": 108,
+  "pre": 7,
+  "width": 96,
+  "mod": 4,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

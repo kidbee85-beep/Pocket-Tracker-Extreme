@@ -1,0 +1,12 @@
+{
+  "name": "QUIET_THEATRE",
+  "algo": 1,
+  "size": 104,
+  "decay": 114,
+  "damp": 86,
+  "pre": 41,
+  "width": 146,
+  "mod": 19,
+  "category": "Chambers",
+  "description": "A defined pre-delay separates the source from a warm chamber tail."
+}

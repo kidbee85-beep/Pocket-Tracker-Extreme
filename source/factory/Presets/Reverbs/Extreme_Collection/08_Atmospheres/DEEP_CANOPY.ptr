@@ -1,0 +1,12 @@
+{
+  "name": "DEEP_CANOPY",
+  "algo": 1,
+  "size": 182,
+  "decay": 181,
+  "damp": 65,
+  "pre": 72,
+  "width": 192,
+  "mod": 24,
+  "category": "Atmospheres",
+  "description": "Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "SLOW_AFTERGLOW",
+  "algo": 1,
+  "size": 216,
+  "decay": 212,
+  "damp": 56,
+  "pre": 118,
+  "width": 190,
+  "mod": 39,
+  "category": "Atmospheres",
+  "description": "Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting."
+}

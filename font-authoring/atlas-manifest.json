@@ -1,0 +1,319 @@
+{
+  "styles": [
+    {
+      "id": 1,
+      "name": "TERMINAL89",
+      "grid2_sha256": "34df7cec60c0fde5a877e3a94a6b57b182fb1ee2e5cbddfcb48a52fcc0fc0db6",
+      "grid3_sha256": "abdd2529999467176a2ba4a30a31ec57037248af96b95066c1441d6b4c9355d8",
+      "label12_sha256": "7acbf0542d06733c421d948845916f104939125e816c48e62aeab81b65d11075",
+      "label18_sha256": "e061141f3a345e5aebc2dfedf86a0181fec0d4ae8639ac23097c475b41289f3b"
+    },
+    {
+      "id": 2,
+      "name": "RASTER91",
+      "grid2_sha256": "d149d140e33754280f1fe71b78e5db24ad8b0a66d294628521994a4f661d4420",
+      "grid3_sha256": "2e33be3ab756128144c9e02cd6b22c94bbda6d289bf894a203e664ab566ef133",
+      "label12_sha256": "140d7e5e213e27d8fef9617065dd3c7497c09becdc2b0581697c473f78a65eaf",
+      "label18_sha256": "857544da389046a07b228798a0a9ba181daaab836ac2b0b1ea3617f8d65d49ed"
+    },
+    {
+      "id": 3,
+      "name": "ACIDVECTOR",
+      "grid2_sha256": "dfda991b92fd601c5db9b63f55cb3b6dde421e243e46d76e1b6cc2dfb6c2458a",
+      "grid3_sha256": "ac36a07c187416b599db3858d1c6eca8f40744dc364a223a7ae3538f62b42bac",
+      "label12_sha256": "248e42b15eff7df3901f88ee88522e5970d6fe820034186d0586be82661ac59d",
+      "label18_sha256": "ea07c23e7b1084e16b12794cf9d604f89fd4ddadab250eb4b7fda9a52082c777"
+    },
+    {
+      "id": 4,
+      "name": "CRACKTRO",
+      "grid2_sha256": "afcf0cdde677d2450788d30c7852829ec07be2b211ad553c0cc29549e7525c6d",
+      "grid3_sha256": "15c217f505a7134ed61ba5457cbfc482b385a569d5e9f51ce8d9cd7aa5666ffe",
+      "label12_sha256": "67d7b5864774a2572e1ed0c718f26292696cddfbddeccdc9aae213dd5a45302d",
+      "label18_sha256": "622e133d23b2333b76f2b5b5081b6eb44e494343fbc0f3fe89343df264ab1cdb"
+    },
+    {
+      "id": 5,
+      "name": "BITROT",
+      "grid2_sha256": "1c241a11d85fe08cec6147c35d31d43bb02acd965596ea9f5a2ff826bcabe35e",
+      "grid3_sha256": "7e6573bec2f4c6e2bb2153a8d40696ab36b2ab7fbab291eb6c6e070c6334d0db",
+      "label12_sha256": "ac951733a590a5a91e1e633fe761ef6669160a57b768a7b94f01fe90817f806f",
+      "label18_sha256": "d4645b06df87faf5e33ea92f06e8cb189ca5c55b1dfd1a6ccbb9b333c1ffcfe1"
+    },
+    {
+      "id": 6,
+      "name": "NULLSIGNAL",
+      "grid2_sha256": "342e5db292d3417b6e70f3ff0d0ca1aec628233fdb07ecffe79a743850980e16",
+      "grid3_sha256": "3edf33477678155adaed848e21ae0e750dd69fe8e4e731df91f9fdedf82b81b0",
+      "label12_sha256": "124f726ddee01b8d489ea3f4ee99969983cbd70b487ad3f9d6fbc680f046ea9c",
+      "label18_sha256": "89bd53c36adabeea0565f5220b4af193dabe3e933bbbaffe347f2bf53a70fb33"
+    },
+    {
+      "id": 7,
+      "name": "CLEAR MONO",
+      "description": "Open humanist mono; double-storey a, flagged 1 and hooked l.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "07c9230e8d542ced322a6d3e32a4885971f302b37652072a3143b71eee731048",
+      "grid3_sha256": "4ed8a26174a607ded3f57f054d0e4fb0bbe3559cf67a3209baa092ee171b7139",
+      "label12_sha256": "d5cdb000025993602bb7e11a4be5acb7081244e0486d55edeb2f246de0b582fa",
+      "label18_sha256": "6b6b3c3d08cf7d799729aae35e5e59bf597aa5e1cc4a867f5b0e7727b30a49a9"
+    },
+    {
+      "id": 8,
+      "name": "STUDIO SANS",
+      "description": "Rounded studio sans; large counters, double-storey a/g, restrained terminals.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "8a0fbfcb6f473d17855c923f285f40008ff7daf3dc390588bfe0ba966115f1ef",
+      "grid3_sha256": "5d6aae05ee959119da271e2a48f02c015a8d37ad4d7e4e9f55279ea0efec3b78",
+      "label12_sha256": "131072706b8214e072c1e28067c2b8e44ac6a919640e4080f950ab981e916294",
+      "label18_sha256": "9625622e6e0cefb9ecf120fce340403d09ce4338d479b542023080ab8efe07b9"
+    },
+    {
+      "id": 9,
+      "name": "COMPACT GRID",
+      "description": "Narrow square grid; tall x-height, open 4 and compact shoulders.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "b7f1ac104dfd927b7da1a7971e115461ecd3c34ba5a5e28baa017961f8a1fd0a",
+      "grid3_sha256": "24087a3eba364a26a4160f03ec7c8eec03b8d3d875cbcbde470addf5a9ee6784",
+      "label12_sha256": "7d1502817faccee19c7cf1cb436c00e428e4d36c4cadc6fd2068e47dbbb665ed",
+      "label18_sha256": "6df7c437b0c68244bc21d077667fbedeb2b4c98d8d75e34bcb55b111a5471bdd"
+    },
+    {
+      "id": 10,
+      "name": "SOFT PIXEL",
+      "description": "Soft octagonal bowls; single-storey a/g and low rounded shoulders.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "1d440526006603214153d0c383aa5947d796bc89da88f076e536e8c96b04bc50",
+      "grid3_sha256": "d11d29428fb4f19d11c9e1bc716970c6a462224ca7e7f7a398cfdffbf9dfd9e0",
+      "label12_sha256": "8b57ee24e514c2ff9fa91e8dd832f2a14fc188cd9cfc662177e3e0130051a9d0",
+      "label18_sha256": "359d0f942dbf9fac899d6b498948fc0087ea7235e86fee43142875f24fdab6e5"
+    },
+    {
+      "id": 11,
+      "name": "ISO TERMINAL",
+      "description": "Technical chamfers; flat-topped A, straight-sided lowercase and crossbar 7.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "d208e862b6c7c544694bdd4e44b0303f5cc98125f432fd731caf6031f6efd832",
+      "grid3_sha256": "39123fd3755ba90b3497377ef9d87ee0f855a3508daf063fdd0828a3e24750cc",
+      "label12_sha256": "8269ec4cbae73df70337e509b64363d9107af3d67da44b3d785dd29ccfcbae47",
+      "label18_sha256": "b2b702c0ccdfbad2724b5e9c21855eed0443d0ae12f181fb71e233826631261f"
+    },
+    {
+      "id": 12,
+      "name": "WIDE SCREEN",
+      "description": "Extended low-profile alphabet; wide apertures and single-storey a.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "f72be2b4e543dd7085c1fdec6d70dfc715ca3434eccc42d2152de13207897c7f",
+      "grid3_sha256": "fc9070017101fe6fdd49bf5ad3517dce1679b536017057ae1ce52d11c2d5c145",
+      "label12_sha256": "32a6e1c3945b098d585d16cc0901ff6b7c0a375d855b04891e220fc3acd4dc30",
+      "label18_sha256": "8cc4499f8b935da4c9136662011741d31c700ac8dc6bcc1991b7cd262a89d490"
+    },
+    {
+      "id": 13,
+      "name": "PAPER TYPE",
+      "description": "Original small slab-serif; bracket-free feet, double-storey a/g.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "b887c6f4a0a6f90b544c2dcbdf6c2e401e656ff5a1daca84e77d1cca049df9e7",
+      "grid3_sha256": "cc63b4c50f5f05efd51af54e026c38c6e3c9a0f1a575cdad42b02400b6bde171",
+      "label12_sha256": "e906b1b8d8ab4cc2752a0ec1a97117bec80874b27d80753262b5c3504fea524f",
+      "label18_sha256": "22d7dec9c81cb4ea4f6ce1a09215252ee8e96827afe1fc89d15eb634fb8bbe3c"
+    },
+    {
+      "id": 14,
+      "name": "LCD CLEAN",
+      "description": "Continuous rectangular digital alphabet; unbroken stems, single-storey a.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "406a19e6cda101324b029985adc1eb26fe8c396dd837aea6bcfc598753a2ba8f",
+      "grid3_sha256": "2ea0b22e8a649266e7ded86af8addc18293f78ba57ecb29ef7318cf1689b485b",
+      "label12_sha256": "b3bca9d81f6c55daf67a17d0f30efc85480833d74d86ec326ad295a1bd5ec448",
+      "label18_sha256": "c96a4cfdb3a62f553b2d42ad2728dfe282ace4affe9bd2fd82cfdd44f3e28174"
+    },
+    {
+      "id": 15,
+      "name": "RAIL MONO",
+      "description": "Tall technical mono; high x-height, rising R leg and offset terminals.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "c85790e57f806e3016f6e998f8ad9d1cc8ca27863ba93bc2e4312980d4bab153",
+      "grid3_sha256": "573e06a29f570c97a85dd71952eeb788cc4507af6ecc1a9087252193d536eb79",
+      "label12_sha256": "cfa2cdee52c3253271840439c65880457e689ac3d637d57685cbc64887734d6a",
+      "label18_sha256": "21781412cce429b3f2a537d52e53f969be4501e0b6bb744e78bb265415c32a11"
+    },
+    {
+      "id": 16,
+      "name": "NIGHT EDITOR",
+      "description": "Medium upright stems with open bowls; high x-height and single-storey a.",
+      "glyphs": 95,
+      "all_nonspace_have_ink": true,
+      "true_lowercase_descenders": true,
+      "data_pairs": {
+        "0/O": true,
+        "1/I": true,
+        "I/l": true,
+        "1/l": true,
+        "B/8": true,
+        "S/5": true,
+        "E/F": true,
+        "F/#": true,
+        "n/h": true,
+        "a/o": true
+      },
+      "grid2_sha256": "22aa18c201ae92c40e7ad009bd5296ea5595e4ef99a7a61f937f813e8c8a3a72",
+      "grid3_sha256": "adc2aae286649252fe418b56b434194263b1d9c5d558370220c5ce972fe86e34",
+      "label12_sha256": "94c3c3b93048722cf2cdca6d4835af0ad78f1684dddf90b9494e6e163b174260",
+      "label18_sha256": "3a80c1acdb0d902dcc5779a95e607c2dcde0d2c5e1d7e3a2cb1b25a4d90ca92e"
+    }
+  ],
+  "atlas_bytes": 1420224,
+  "budget_bytes": 1572864,
+  "frozen_six_byte_exact": true,
+  "grid_cells": {
+    "scale2": [
+      10,
+      11
+    ],
+    "scale3": [
+      15,
+      17
+    ]
+  },
+  "label_metrics": {
+    "12": {
+      "height": 14,
+      "pixel_size": 17108,
+      "glyphs": 192
+    },
+    "18": {
+      "height": 21,
+      "pixel_size": 36981,
+      "glyphs": 192
+    }
+  },
+  "original_raster_font_input_used": false,
+  "layout_metrics_input_sha256": "efe57c9e9a1766c25e59b64ef73571ad8effd7958210b08d8f0b2e309b5b7734"
+}

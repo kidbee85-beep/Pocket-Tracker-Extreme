@@ -1,0 +1,12 @@
+{
+  "name": "WOOD_STUDIO",
+  "algo": 2,
+  "size": 48,
+  "decay": 34,
+  "damp": 62,
+  "pre": 6,
+  "width": 118,
+  "mod": 9,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "CLAP_SPREAD",
+  "pong": true,
+  "sync": false,
+  "time": 16,
+  "feedback": 42,
+  "tone": 143,
+  "wobble": 5,
+  "reverbSend": 9,
+  "category": "Slaps",
+  "description": "Short mono or stereo doubling. Modest feedback preserves rhythmic definition."
+}

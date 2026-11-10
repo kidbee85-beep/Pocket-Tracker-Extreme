@@ -1,0 +1,12 @@
+{
+  "name": "OLD_STAIRWELL",
+  "algo": 0,
+  "size": 117,
+  "decay": 109,
+  "damp": 51,
+  "pre": 26,
+  "width": 118,
+  "mod": 29,
+  "category": "Vintage",
+  "description": "Damped, gently moving vintage space; preserves a focused center image."
+}

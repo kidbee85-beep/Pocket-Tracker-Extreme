@@ -1,0 +1,12 @@
+{
+  "name": "NARROW_FILM",
+  "algo": 0,
+  "size": 106,
+  "decay": 98,
+  "damp": 61,
+  "pre": 22,
+  "width": 48,
+  "mod": 16,
+  "category": "Vintage",
+  "description": "Damped, gently moving vintage space; preserves a focused center image."
+}

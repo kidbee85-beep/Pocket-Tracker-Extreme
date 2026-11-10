@@ -1,0 +1,12 @@
+{
+  "name": "SPRINGY_PONG",
+  "pong": true,
+  "sync": true,
+  "time": 10,
+  "feedback": 188,
+  "tone": 89,
+  "wobble": 54,
+  "reverbSend": 46,
+  "category": "Dub",
+  "description": "Dark dub repeats with conservative regenerative gain. All feedback values stay below E0."
+}

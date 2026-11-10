@@ -1,0 +1,12 @@
+{
+  "name": "BRASS_STAGE",
+  "algo": 1,
+  "size": 143,
+  "decay": 116,
+  "damp": 127,
+  "pre": 38,
+  "width": 162,
+  "mod": 20,
+  "category": "Halls",
+  "description": "Broad stereo hall for chords and leads. Predelay keeps the central rhythm clear."
+}

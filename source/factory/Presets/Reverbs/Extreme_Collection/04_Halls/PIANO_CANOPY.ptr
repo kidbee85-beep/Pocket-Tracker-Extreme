@@ -1,0 +1,12 @@
+{
+  "name": "PIANO_CANOPY",
+  "algo": 1,
+  "size": 149,
+  "decay": 128,
+  "damp": 146,
+  "pre": 64,
+  "width": 178,
+  "mod": 22,
+  "category": "Halls",
+  "description": "Broad stereo hall for chords and leads. Predelay keeps the central rhythm clear."
+}

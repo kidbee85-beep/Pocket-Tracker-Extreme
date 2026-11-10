@@ -1,0 +1,12 @@
+{
+  "name": "NINTH_MIST",
+  "pong": true,
+  "sync": true,
+  "time": 8,
+  "feedback": 103,
+  "tone": 96,
+  "wobble": 11,
+  "reverbSend": 12,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

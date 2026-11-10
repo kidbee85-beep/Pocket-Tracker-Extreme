@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Broken Beat Snap",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    42,
+    166,
+    48,
+    199,
+    58,
+    123,
+    129,
+    226,
+    10
+  ],
+  "category": "Drum Buses",
+  "description": "Drum-bus contours balance transient length, release and low-end focus; adjust the input level to taste."
+}

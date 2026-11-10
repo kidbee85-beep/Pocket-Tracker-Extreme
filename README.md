@@ -1,106 +1,43 @@
-# Pocket Tracker Extreme
+# TrackWerk
 
-**A hands-on music studio for Android and TrimUI Brick / KNULLI.**
+**A free, open-source music studio for Android and Linux handhelds.**
 
-Public beta candidate **0.2.0-beta.2**, by **Kid Bunka** and contributors.
+TrackWerk **0.9 beta**, by **Kid Bunka** and contributors, brings tracker sequencing, sample editing, synthesis, performance effects and online digging into one button-driven studio.
 
-Pocket Tracker Extreme is an independent fork of [PocketTracker by conanizer and contributors](https://github.com/conanizer/pockettracker), with an expanded synthesis studio, punch-in performance effects, detailed sample editing, groove generation, mastering, and online digging. The original authors and all third-party copyright notices remain credited in [CREDITS.md](CREDITS.md).
+TrackWerk is an independent fork of **[PocketTracker by conanizer and contributors](https://github.com/conanizer/pockettracker)**. The upstream tracker, sampler, editor, mixer/export tools and established button workflow are its foundation. Kid Bunka’s TrackWerk work develops the expanded Studio, performance and archive workflows, visual identity and handheld fixes. Original authorship and component credits stay visible.
 
-[Illustrated website](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/) · [English tutorial](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html) · [Offline website source](docs/site/index.html) · [Community & press](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/community/) · [License](LICENSE) · [Third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md) · [Build instructions](docs/building.md)
+[Website](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/) · [Illustrated field guide](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html) · [Downloads](https://github.com/kidbee85-beep/Pocket-Tracker-Extreme/releases/tag/v0.9.0-beta) · [Watch the session](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/#film) · [Optional support](https://www.paypal.com/donate/?business=kidbee85%40gmail.com&currency_code=CHF)
 
-## Make music with your hands
+![TrackWerk Studio — actual native interface](docs/site/assets/images/synth.png)
 
-- **Tracker sequencing:** eight stereo tracks, pattern and song arrangement, note and effect editing, resampling, mix and stem export.
-- **Synthesis studio:** sound models and articulations using open DSP adapted from Mutable Instruments Braids, Plaits, Rings, Elements, Clouds and Warps, plus drum and other sound models. Model/articulation choices are not a claim of that many independent DSP engines.
-- **Live sound design:** engine-specific controls, preset browsing, live instrument updates and note audition.
-- **Punch-in performance:** 64 momentary gestures in eight visible eight-pad banks; L + SELECT opens Punch directly.
-- **Sample laboratory:** waveform editing, trim, zoom, transient-oriented slicing, slice markers, destructive tools and instrument loading.
-- **Drumlab and groove:** build patterns from a selected kit and distribute generated parts across tracker tracks.
-- **Mastering and tone:** equalization, dynamics, saturation, delay and reverb, with presets and mix/export tools.
-- **Digging:** search supported online sources, audition, place in/out markers and turn an excerpt into a local WAV for editing. Availability depends on the source, network and platform.
-- **Recording:** visible RECORD entries on Instrument and Sample Editor, frame/input diagnostics, Stop/Keep and Use Take into Edit & Slice. Android microphone/USB-audio paths and experimental Brick iPhone helpers remain hardware-dependent; see the status matrix.
-- **Personal appearance:** 32 palettes, 12 surface materials, visualizers and the animated Extreme splash. Existing theme IDs, defaults and custom controls are preserved.
-- **M8 import:** imports the supported sampler/arrangement subset, reports omissions and keeps source files intact. This is not a full M8 synth/effect emulator.
-- **Presets:** an extensive built-in studio library and an additional categorized 2,048-instrument factory pack. The Brick launcher prepares missing pack files on first launch, or you can use the optional computer-side preparer; Android users can extract the separately supplied pack into their selected media folder.
+## Make a track your way
 
-## Downloads
+- Eight tracker tracks, project swing, pattern/song arrangement and mix/stem export.
+- Distinct synthesis engines with relevant controls, live editing and audition; 2,048 categorized instrument presets, including drums.
+- Detailed sample editing, slicing, fades and declicking; long-WAV storage preview and range cropping into the editor.
+- Internet Archive search, preview, IN/OUT selection, WAV rendering and import on supported connected profiles.
+- Drumlab generation from your own selected sounds, followed by normal tracker editing.
+- 64 momentary Punch choices in eight banks, internal post-FX resampling and import of the saved take.
+- Categorized reverb, delay, Studio FX and mastering presets.
+- 17 typefaces, 50 palettes, 18 materials and an independent TrackWerk visual identity.
+- A supported M8 sampler/arrangement subset; unsupported engines/effects are reported and omitted.
 
-Each release provides these separate artifacts:
+## Platforms and updates
 
-| File | Purpose |
-| --- | --- |
-| `Pocket-Tracker-Extreme-0.2.0-beta.2-Android.apk` | Signed Android application: ARM64, ARMv7 (32-bit) and x86-64 |
-| `Pocket-Tracker-Extreme-0.2.0-beta.2-Brick.zip` | Complete native ARM64 package for a new Brick / KNULLI installation |
-| `Pocket-Tracker-Extreme-0.2.0-beta.2-Brick-Program-Update.zip` | One-program update with hash verification, backup and rollback; existing data and launcher retained |
-| `Pocket-Tracker-Extreme-0.2.0-beta.2-R36S-Community-Test.zip` | Separate Linux community-test build for R36S-class handhelds; hardware validation pending |
-| `Pocket-Tracker-Extreme-0.2.0-beta.2-Factory-Presets.zip` | Additional presets, particularly for Android storage folders |
-| `Pocket-Tracker-Extreme-0.2.0-beta.2-Source.zip` | Matching application, helper sources, notices and build instructions |
-| `Pocket-Tracker-Extreme-0.2.0-beta.2-Demo-Project.zip` | Original editable Mint Afterhours demonstration song and samples, CC BY 4.0 |
-| `HOW-TO-FIRST-START.txt` | Simple standalone Brick / KNULLI installation guide |
-| `SHA256SUMS.txt` | Integrity hashes for the published artifacts |
+Android 8+ (ARM64, ARMv7, x86_64); Trimui Brick with KNULLI; Miyoo Mini and Mini Plus with Onion. The original Mini is offline; Mini Plus uses its separate online profile. R36S and Polyend Tracker Mini are outside this 0.9 release.
 
-These packages do not contain KNULLI, PortMaster, SOLIS, proprietary Polyend libraries, another vendor's firmware or a personal sample library. A Polyend Tracker Mini version is not part of this beta.
+Linux program updates keep samples, projects, presets, themes, settings and controller mappings. Public TrackWerk Android has its own application identity and installs alongside earlier Pocket Tracker Extreme apps: export app-private work into a shared folder and leave the earlier app installed. The new app needs its own settings and folder grant. Future TrackWerk updates retain its identity and signature. **Do not uninstall, reflash or replace your whole data folder as an app-update step.** [Read the installation/update guide](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html#updates).
 
-## Updating without a reset
+This is a beta. Final device acceptance is ongoing. Physical microphone and class-compliant audio-interface recording depend on device tests. Miyoo physical input is disabled. Direct iPhone-to-Brick USB capture failed in the tested setup and is not a supported claim. Online providers and rights vary; use material you are permitted to sample.
 
-For an existing Brick installation, use the program-only update kit and [its instructions](docs/brick/UPDATE-EXISTING-INSTALL.txt). It replaces only the native executable. Keep the working KNULLI card, launcher, samples, projects, presets, themes, controller files and settings; no reflash, folder replacement or reset is needed. A verified previous-program backup supports rollback.
+## Source and build
 
-The signed public APK updates the public beta.1 identity in place. Earlier private `.studio.debug` builds need their own matching-key update, supplied separately to their owners. Do not uninstall or clear storage to force a mismatched APK installation. [The illustrated upgrade guide](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html#updating) explains the distinction.
+The complete application lives in [source/](source/). [BUILD-TRACKWERK-0.9.txt](BUILD-TRACKWERK-0.9.txt) explains Android, native Linux, preferred font/art sources and the Miyoo builders. Keep `source/`, `font-authoring/` and `brand-authoring/` together. The matching source ZIP and exact Miyoo SDL source accompany the release.
 
-## Install on Android
+The repository and legacy data namespace retain their earlier names to preserve existing links and user files. The public product name is **TrackWerk**. Old release history remains available for reference.
 
-1. Back up your existing media folder and projects.
-2. Install the Android APK. Allow installation from your chosen file manager if Android asks.
-3. Open the app, open a file browser and choose **ADD FOLDER…**. Select a writable media folder using Android's folder picker.
-4. Place your own audio under its `Samples` subfolder and projects under `Projects`.
-5. If using the optional factory pack, extract it into that media folder so that `Presets/Instruments/PocketStudio_MegaPack` exists.
-6. Choose **INSTRUMENT → LOAD → Samples / Audio** or **Instrument Presets (.pti)**.
+## Credits and license
 
-This public package has application ID `com.conanizer.pockettracker.studio` and a dedicated release signature. Earlier private test APKs used the separate `.debug` package and can remain installed alongside it. Select the desired media folder in each app; Android's folder grant is per application. Do not uninstall a private test build until you have backed up its settings and media.
+TrackWerk is an independent fork of [PocketTracker by conanizer and contributors](https://github.com/conanizer/pockettracker), under [GPL-3.0-or-later](source/LICENSE). Original authors and third-party notices retain their credits. Selected Mutable Instruments DSP by Emilie Gillet and dependencies keep their original licenses. These adaptations are not full hardware-module emulations. [Credits](source/CREDITS.md) · [Website credits](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/credits.html).
 
-## Install on TrimUI Brick / KNULLI
-
-1. Fully shut down the Brick, remove its microSD card and open the `SHARE` volume on your computer.
-2. Extract the Brick ZIP into `SHARE/roms/ports/`, preserving any existing `pockettracker_extreme/data` folder.
-3. Safely eject the card, return it to the powered-off Brick and boot KNULLI.
-4. Optionally run `tools/prepare_presets.py` from the extracted app folder on your computer with Python 3. It adds missing factory presets without replacing edits. Otherwise the first launch prepares 2,048 files before the native window/watchdog starts; no universal SD-card preparation time is claimed.
-5. Open **Ports → Pocket Tracker Extreme**. Refresh KNULLI's game list if the entry is missing.
-6. Copy your samples into `SHARE/roms/ports/pockettracker_extreme/data/Samples`.
-
-The native launcher does not require PortMaster scripts to start. It uses KNULLI's SDL2/audio support and retains the supplied controller mappings. Its display compatibility mode renders through an SDL software surface and clears the whole output, including the borders.
-
-## Beta feature and test status
-
-| Area | Status and practical limit |
-| --- | --- |
-| Brick launch and musical workflows | The preceding private build/startup path was user-tested with no errors reported. Beta.2 has software/VM validation; physical acceptance of this new version remains pending. |
-| Android | ARM64, ARMv7 (32-bit) and x86-64 libraries are packaged. Installation and release runtime checks passed on an ARM64 emulator; every handheld, OS/driver combination and interface is not certified. Android 8/API 26 or newer is required. |
-| R36S-class Linux handhelds | Separate community-test package. This is not Android; system SDL2 and the documented Linux ABI are required. Physical R36S controls/audio tests are pending. |
-| Synthesis, samples, effects and mastering | Shared native implementation. CPU load, polyphony and very long files remain device-dependent. |
-| Online digging | Implemented; online services may change or restrict access. Only material you are authorized to download/sample should be used. |
-| USB audio / class-compliant interfaces | Implemented input paths; compatibility with individual devices still needs hardware testing. |
-| Direct iPhone USB capture on Brick | Failed in the user's repeated hardware test with the current iPhone/Brick setup. Both USB ports were reported to charge only; the iPhone model/cable are unspecified. The experimental helper remains included, but direct capture is not working in this tested setup. Class-compliant interfaces require a separate, still-pending test. |
-| M8 songs | Supported sampler/arrangement subset only. Unsupported synths/effects are reported or omitted. |
-
-No DSP-latency, battery-life or maximum-polyphony claims are made from emulation alone.
-
-## Rights, sources and privacy
-
-The application is distributed under **GNU GPL version 3 or later**. Matching corresponding source and third-party notices must accompany redistributed binaries. See [LICENSE](LICENSE), [CREDITS.md](CREDITS.md), [THIRD-PARTY-NOTICES.md](docs/licenses/THIRD-PARTY-NOTICES.md), and [helper sources](docs/HELPER-SOURCES.md).
-
-Online access and permission to redistribute source code do not automatically grant rights to a song, sample, artwork or video. YouTube and archive services have their own terms. The application does not grant permission to bypass access restrictions or publish another person's work. The public packages contain no downloaded commercial music. Your own sample library is not included in the project.
-
-Android's microphone permission is used for recording. Online sources require internet access. The app has no project-operated analytics or account backend; external source providers receive requests when you use their services. Pairing records for experimental iPhone support remain local and must not be committed or shared.
-
-## Contributing
-
-Report your app version, device, OS version, the operation that failed and a minimal example you are allowed to share. Remove private file paths, pairing records and copyrighted media before uploading logs or projects. Feature reports should distinguish confirmed behavior from device-specific experiments.
-
-Keep the physical controls predictable and document changed key bindings. Preserve original credits and notices. Performance changes need measured evidence and a repeatable test. Public contributions and release notes should use the artist name **Kid Bunka** where a public author credit is needed.
-
-
-## Support the project
-
-All application features remain free. If you would like to support further development,
-[leave an optional PayPal contribution](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kidbee85%40gmail.com&currency_code=CHF&item_name=Pocket%20Tracker%20Extreme%20development&locale.x=en_US).
-Contributions support project development; this is not a charity claim and no payment is required to use or download the software.
+Public downloads exclude private sample libraries, private demo projects, signing keys and device identifiers. The new session film’s music/sample attribution is on the website and in its video description.

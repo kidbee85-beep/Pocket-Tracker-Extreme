@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gameList>
+  <game>
+    <path>./Pocket Tracker Extreme.sh</path>
+    <name>Pocket Tracker Extreme</name>
+    <desc>Pocket Tracker Extreme 0.2.0-beta.3 by Kid Bunka — independent GPL music studio for TrimUI Brick / KNULLI. Project swing, internal post-FX resampling, categorized effect/master libraries, branded materials, synthesis, sample editing, online digging, Drumlab and Punch. Earlier musical workflows user-tested; current-beta hardware acceptance remains open. Direct iPhone recording failed in the current user setup; interfaces are separately untested.</desc>
+    <image>./pockettracker_extreme/screenshot.png</image>
+    <releasedate>20261109T000000</releasedate>
+    <developer>PocketTracker contributors / Pocket Tracker Extreme</developer>
+    <publisher>Kid Bunka public beta</publisher>
+    <genre>Other</genre>
+    <players>1</players>
+  </game>
+</gameList>

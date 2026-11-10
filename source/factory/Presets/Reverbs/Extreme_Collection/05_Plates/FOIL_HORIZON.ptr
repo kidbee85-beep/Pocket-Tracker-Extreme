@@ -1,0 +1,12 @@
+{
+  "name": "FOIL_HORIZON",
+  "algo": 4,
+  "size": 0,
+  "decay": 122,
+  "damp": 151,
+  "pre": 54,
+  "width": 178,
+  "mod": 0,
+  "category": "Plates",
+  "description": "A light foil plate with a deliberate brightness and stereo footprint."
+}

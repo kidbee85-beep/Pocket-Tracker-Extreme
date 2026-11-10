@@ -1,0 +1,12 @@
+{
+  "name": "WHOLE_NOTE_MIST",
+  "pong": true,
+  "sync": true,
+  "time": 0,
+  "feedback": 123,
+  "tone": 94,
+  "wobble": 10,
+  "reverbSend": 24,
+  "category": "Straight",
+  "description": "Tempo-synchronized straight note echo; use as a send rather than a full mix insert."
+}

@@ -1,0 +1,379 @@
+POCKET TRACKER EXTREME / EXTREME EFFECT COLLECTION
+256 additional authored presets / Kid Bunka / GPL-3.0-or-later
+
+
+SEND REVERB
+===========
+
+01 Rooms
+Natural early reflections. Start with a low send; retain the dry attack.
+  WOOD_STUDIO
+  TILE_FOYER
+  SOFT_LIVING
+  BRICK_CORNER
+  OPEN_WORKSHOP
+  PERC_GALLERY
+  PIANO_ROOM
+  STEREO_LOFT
+
+02 Booths
+Short drum ambience without a long tail. Useful on individual percussion sends.
+  KICK_AIR
+  SNARE_CLOSET
+  FELT_BOOTH
+  TIGHT_BRUSH
+  CLAP_BOX
+  DRY_TIMBER
+  RIM_CABIN
+  MONO_CUBICLE
+
+03 Chambers
+A defined pre-delay separates the source from a warm chamber tail.
+  VELVET_CELLAR
+  JAZZ_CHAMBER
+  STRING_ANNEX
+  COPPER_VAULT
+  QUIET_THEATRE
+  DUSK_LOBBY
+  DEEP_PASSAGE
+  VOICE_BALCONY
+
+04 Halls
+Broad stereo hall for chords and leads. Predelay keeps the central rhythm clear.
+  CONCERT_WOOD
+  GLASS_HALL
+  WIDE_VELVET
+  BRASS_STAGE
+  STRING_HALL
+  NIGHT_CONCERT
+  PIANO_CANOPY
+  AMBER_AUDITOR
+
+05 Plates
+Dense plate reflections. Size and modulation are intentionally neutral for this algorithm.
+  SILVER_PLATE
+  DARK_PLATE
+  SNARE_PLATE
+  VOCAL_SHEEN
+  FOIL_TAP
+  FOIL_GLOW
+  FOIL_SILK
+  FOIL_HORIZON
+
+06 Modulated
+Moving ReverbSc texture for sustained material; use a restrained send on busy drums.
+  FLOATING_TAPE
+  SLOW_ORBIT
+  WOVEN_CLOUD
+  WARM_SWELL
+  GLASS_DRIFT
+  DUST_NEBULA
+  GENTLE_CHORUS
+  WANDER_PAD
+
+07 Vintage
+Damped, gently moving vintage space; preserves a focused center image.
+  SMALL_TAPE
+  OLD_STAIRWELL
+  DUSTED_KEYS
+  BROWN_VAULT
+  WOODEN_RADIO
+  SOUL_GALLERY
+  NARROW_FILM
+  LOFI_CHAMBER
+
+08 Atmospheres
+Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting.
+  DEEP_CANOPY
+  MIDNIGHT_AIR
+  SILK_HORIZON
+  DISTANT_GLASS
+  LOW_TIDE_HALL
+  LONG_FADE
+  NEBULA_STAGE
+  SLOW_AFTERGLOW
+
+SEND DELAY
+==========
+
+01 Slaps
+Short mono or stereo doubling. Modest feedback preserves rhythmic definition.
+  DUST_SLAP
+  BRUSH_SLAP
+  CLAP_SPREAD
+  VOICE_DOUBLE
+  RIM_REFLECT
+  BASS_DOUBLE
+  WOOD_SLAP
+  STEREO_FLICK
+
+02 Straight
+Tempo-synchronized straight note echo; use as a send rather than a full mix insert.
+  CLEAN_QUARTER
+  VELVET_EIGHTH
+  CRISP_SIXTEEN
+  SOFT_THIRTY2
+  HALF_NOTE_AIR
+  WHOLE_NOTE_MIST
+  KEYS_EIGHTH
+  BASS_QUARTER
+
+03 Dotted
+Dotted spacing creates a second interlocking pulse without moving the dry sequence.
+  DOTTED_GLASS
+  DOTTED_WOOD
+  DOTTED_DUST
+  DOTTED_CHORD
+  DOTTED_BELL
+  DOTTED_SILK
+  DOTTED_CLAP
+  DOTTED_VAULT
+
+04 Triplets
+Triplet and sixth-beat echoes add swing against a straight pattern.
+  TRIPLET_KEYS
+  TRIPLET_PERC
+  TRIPLET_TAPE
+  TRIPLET_AIR
+  SIXTH_BOUNCE
+  NINTH_MIST
+  TRIPLET_CHOP
+  TRIPLET_WARM
+
+05 Tape
+Filtered tape-style repeats with bounded wow and feedback below self-oscillation.
+  CASSETTE_KEYS
+  BROWN_ECHO
+  REEL_WARMTH
+  WORN_SLAPBACK
+  SLOW_REEL
+  DUSTED_PONG
+  FELT_DELAY
+  TAPE_BALCONY
+
+06 Dub
+Dark dub repeats with conservative regenerative gain. All feedback values stay below E0.
+  ROOTS_DUB
+  DUB_CORRIDOR
+  DUB_CLAVE
+  DEEP_OFFBEAT
+  DUB_GHOST
+  SPRINGY_PONG
+  SMOKY_THROW
+  LOWLIGHT_DUB
+
+07 Stereo
+Alternating stereo returns leave the center available for kick, bass and lead.
+  NARROW_PONG
+  PANORAMA_KEYS
+  CROSS_ROOM
+  WIDE_PERC
+  GLASS_PING
+  ORBIT_CHORD
+  FOCUS_BOUNCE
+  STEREO_DUSK
+
+08 Space
+Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos.
+  PAD_TRAIL
+  HORIZON_ECHO
+  DREAM_STEPS
+  SPACE_CHORD
+  MIDNIGHT_LOOP
+  DISTANT_KEY
+  WIDE_AFTERIMAGE
+  SLOW_MOTION
+
+STUDIO FX
+=========
+
+01 Modal
+Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body.
+  Felt Vessel
+  Wood Box
+  Glass Marimba
+  Ceramic Halo
+  Bell Shadow
+  Dust Chamber
+
+02 Sympathetic
+Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body.
+  Sympathetic Felt
+  Harmonic Timber
+  Bright String Air
+  Sympathetic Bloom
+  Muted Choir
+  Shadow Strings
+
+03 Strings
+Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body.
+  Nylon Halo
+  Plucked Cedar
+  Steel Shimmer
+  String Canopy
+  Rusty Zither
+  Quiet Damping
+
+04 FM Resonators
+Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body.
+  FM Felt
+  Copper Partial
+  FM Crystal
+  FM Vapor
+  Metallic Key
+  Dark FM Body
+
+05 Tuned Resonators
+Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body.
+  Tuned Reed
+  Tempered Wood
+  Tuned Glass
+  Harmonic Steps
+  Tuned Bell
+  Damped Steps
+
+06 String Spaces
+Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body.
+  Wooden Chamber
+  Fretboard Air
+  Silver Spring
+  Deep String Room
+  String Plate
+  Dusted Resonance
+
+07 Crossfade
+Warps input transformation with a deliberately restrained parallel mix. Texture sets the internal carrier pitch; feedback is unused.
+  Soft Crossfade
+  Stereo Mesh
+  Crossfade Contour
+  Air Crossfade
+
+08 Wavefold
+Warps input transformation with a deliberately restrained parallel mix. Texture sets the internal carrier pitch; feedback is unused.
+  Velvet Fold
+  Hollow Fold
+  Copper Edges
+  Folded Air
+
+09 Analog Ring
+Warps input transformation with a deliberately restrained parallel mix. Texture sets the internal carrier pitch; feedback is unused.
+  Warm Ring
+  Wooden Sidebands
+  Analog Bells
+  High Ring Air
+
+10 Digital Ring
+Warps input transformation with a deliberately restrained parallel mix. Texture sets the internal carrier pitch; feedback is unused.
+  Soft Digital Ring
+  Hollow Chime
+  Chrome Sidebands
+  Digital Halo
+
+11 Logic Color
+Warps input transformation with a deliberately restrained parallel mix. Texture sets the internal carrier pitch; feedback is unused.
+  Subtle XOR
+  Hollow Logic
+  Pixel Edges
+  Air Logic
+  Soft Comparator
+  Comparator Body
+  Hard Contour
+  Open Comparator
+
+12 Vocoder
+Warps input transformation with a deliberately restrained parallel mix. Texture sets the internal carrier pitch; feedback is unused.
+  Warm Carrier A
+  Vowel Carrier A
+  Metal Voice A
+  Air Choir A
+  Warm Carrier B
+  Vowel Carrier B
+  Metal Voice B
+  Air Choir B
+  Warm Carrier C
+  Vowel Carrier C
+  Metal Voice C
+  Air Choir C
+
+13 Granular
+Clouds texture with bounded feedback. Preserve dry rhythm and layer this parallel treatment behind it.
+  Grain Dust
+  Small Grain Veil
+  Wide Grain Bloom
+  Cloud Canopy
+  Soft Spray
+  Grain Rhythm
+
+14 Stretch
+Clouds texture with bounded feedback. Preserve dry rhythm and layer this parallel treatment behind it.
+  Soft Stretch
+  Stretch Tapestry
+  Long Stretch Air
+  Time Canopy
+  Stretch Mist
+  Stretched Flecks
+
+15 Loop Delay
+Clouds texture with bounded feedback. Preserve dry rhythm and layer this parallel treatment behind it.
+  Short Loop Lace
+  Loop Timber
+  Loop Panorama
+  Deep Loop Bed
+  Loop Vapor
+  Loop Fragments
+
+16 Spectral
+Clouds texture with bounded feedback. Preserve dry rhythm and layer this parallel treatment behind it.
+  Spectral Dust
+  Spectral Felt
+  Harmonic Glass
+  Spectral Canopy
+  Soft Frequency Veil
+  Spectral Flecks
+
+MASTERING
+=========
+
+01 Transparent
+A conservative mix starting point. Keep a little peak headroom and compare at matched loudness.
+  Open Mix
+  Gentle Stitch
+  Warm Center
+  Transient Room
+  Clear Mid Side
+  Low End Tidy
+  Soft Mix Anchor
+  Headroom First
+
+02 Drum Buses
+Drum-bus contours balance transient length, release and low-end focus; adjust the input level to taste.
+  Organic Drum Glue
+  Brush Detail
+  Broken Beat Snap
+  House Drum Focus
+  Kick And Wood
+  Percussion Silk
+  Breaks Control
+  Roomy Drum Bus
+
+03 Character
+Deliberate saturation with compensated output. These are color choices rather than automatic loudness maximizers.
+  Cassette Frame
+  Amber Console
+  Dusty Soul Bus
+  Copper Glue
+  Warm Mono Color
+  Soft Fold Mix
+  Velvet Parallel
+  Night Saturation
+
+04 Space Control
+Subtle stereo and dynamics shaping. Width is a mix decision; check the result in mono.
+  Wide Quiet Mix
+  Ambient Anchor
+  Deep House Polish
+  Dub Center
+  Granular Frame
+  Jazzy Keys Bus
+  Stereo Restraint
+  Air With Body

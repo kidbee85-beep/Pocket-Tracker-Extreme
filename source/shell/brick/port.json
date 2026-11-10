@@ -1,0 +1,33 @@
+{
+  "version": 4,
+  "name": "Pocket-Tracker-Extreme-0.2.0-beta.3-Brick.zip",
+  "items": [
+    "Pocket Tracker Extreme.sh",
+    "pockettracker_extreme"
+  ],
+  "items_opt": [],
+  "attr": {
+    "title": "Pocket Tracker Extreme",
+    "porter": [
+      "Kid Bunka"
+    ],
+    "desc": "Pocket Tracker Extreme 0.2.0-beta.3: native TrimUI Brick/KNULLI music studio with project swing, internal post-FX resampling, categorized effect/master libraries, expanded synthesis and 40 designs. Direct iPhone USB recording failed in current user tests; class-compliant interfaces remain separately untested.",
+    "desc_md": null,
+    "inst": "New installs: extract the full ZIP into roms/ports. Existing installs: use the verified Program-Factory-Update kit to preserve launcher, helpers, settings, controls and all user data. Factory additions copy only missing presets. No PortMaster startup dependency.",
+    "inst_md": null,
+    "genres": [
+      "other"
+    ],
+    "image": null,
+    "rtr": true,
+    "exp": true,
+    "runtime": [],
+    "store": [],
+    "availability": "full",
+    "reqs": [],
+    "arch": [
+      "aarch64"
+    ],
+    "min_glibc": "2.31"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "KICK_AIR",
+  "algo": 2,
+  "size": 18,
+  "decay": 10,
+  "damp": 69,
+  "pre": 0,
+  "width": 44,
+  "mod": 0,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

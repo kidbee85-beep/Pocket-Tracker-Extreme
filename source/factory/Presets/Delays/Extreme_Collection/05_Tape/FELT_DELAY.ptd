@@ -1,0 +1,12 @@
+{
+  "name": "FELT_DELAY",
+  "pong": false,
+  "sync": false,
+  "time": 34,
+  "feedback": 97,
+  "tone": 89,
+  "wobble": 38,
+  "reverbSend": 6,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

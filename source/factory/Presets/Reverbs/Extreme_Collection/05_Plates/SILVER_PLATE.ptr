@@ -1,0 +1,12 @@
+{
+  "name": "SILVER_PLATE",
+  "algo": 3,
+  "size": 0,
+  "decay": 88,
+  "damp": 171,
+  "pre": 19,
+  "width": 148,
+  "mod": 0,
+  "category": "Plates",
+  "description": "Dense plate reflections. Size and modulation are intentionally neutral for this algorithm."
+}

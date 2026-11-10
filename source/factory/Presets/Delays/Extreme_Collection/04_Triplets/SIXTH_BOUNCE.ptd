@@ -1,0 +1,12 @@
+{
+  "name": "SIXTH_BOUNCE",
+  "pong": true,
+  "sync": true,
+  "time": 7,
+  "feedback": 126,
+  "tone": 118,
+  "wobble": 9,
+  "reverbSend": 10,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

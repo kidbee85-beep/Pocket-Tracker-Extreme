@@ -1,0 +1,12 @@
+{
+  "name": "STRING_HALL",
+  "algo": 1,
+  "size": 162,
+  "decay": 139,
+  "damp": 112,
+  "pre": 59,
+  "width": 188,
+  "mod": 28,
+  "category": "Halls",
+  "description": "Broad stereo hall for chords and leads. Predelay keeps the central rhythm clear."
+}

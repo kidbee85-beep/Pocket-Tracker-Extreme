@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "effects",
+  "name": "Rusty Zither",
+  "master": [
+    1,
+    3,
+    121,
+    216,
+    91,
+    0,
+    0,
+    255,
+    0,
+    32,
+    96,
+    128,
+    128,
+    230,
+    0
+  ],
+  "category": "Strings",
+  "description": "Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body."
+}

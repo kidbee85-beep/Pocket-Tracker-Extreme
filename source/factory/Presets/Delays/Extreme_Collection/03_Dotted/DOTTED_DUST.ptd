@@ -1,0 +1,12 @@
+{
+  "name": "DOTTED_DUST",
+  "pong": false,
+  "sync": true,
+  "time": 11,
+  "feedback": 89,
+  "tone": 61,
+  "wobble": 23,
+  "reverbSend": 5,
+  "category": "Dotted",
+  "description": "Dotted spacing creates a second interlocking pulse without moving the dry sequence."
+}

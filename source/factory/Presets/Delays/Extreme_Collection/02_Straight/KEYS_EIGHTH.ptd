@@ -1,0 +1,12 @@
+{
+  "name": "KEYS_EIGHTH",
+  "pong": true,
+  "sync": true,
+  "time": 3,
+  "feedback": 129,
+  "tone": 168,
+  "wobble": 9,
+  "reverbSend": 15,
+  "category": "Straight",
+  "description": "Tempo-synchronized straight note echo; use as a send rather than a full mix insert."
+}

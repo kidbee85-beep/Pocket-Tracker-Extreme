@@ -1,0 +1,12 @@
+{
+  "name": "NEBULA_STAGE",
+  "algo": 1,
+  "size": 188,
+  "decay": 193,
+  "damp": 143,
+  "pre": 94,
+  "width": 214,
+  "mod": 28,
+  "category": "Atmospheres",
+  "description": "Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting."
+}

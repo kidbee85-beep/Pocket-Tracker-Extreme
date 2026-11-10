@@ -1,0 +1,12 @@
+{
+  "name": "DUST_NEBULA",
+  "algo": 0,
+  "size": 157,
+  "decay": 181,
+  "damp": 37,
+  "pre": 59,
+  "width": 161,
+  "mod": 104,
+  "category": "Modulated",
+  "description": "Moving ReverbSc texture for sustained material; use a restrained send on busy drums."
+}

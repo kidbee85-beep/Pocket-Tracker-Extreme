@@ -1,0 +1,12 @@
+{
+  "name": "DOTTED_VAULT",
+  "pong": true,
+  "sync": true,
+  "time": 9,
+  "feedback": 149,
+  "tone": 72,
+  "wobble": 16,
+  "reverbSend": 28,
+  "category": "Dotted",
+  "description": "Dotted spacing creates a second interlocking pulse without moving the dry sequence."
+}

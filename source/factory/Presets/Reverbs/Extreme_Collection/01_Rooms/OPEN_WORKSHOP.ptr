@@ -1,0 +1,12 @@
+{
+  "name": "OPEN_WORKSHOP",
+  "algo": 2,
+  "size": 79,
+  "decay": 62,
+  "damp": 124,
+  "pre": 16,
+  "width": 148,
+  "mod": 8,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

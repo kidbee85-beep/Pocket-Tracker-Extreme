@@ -1,0 +1,12 @@
+{
+  "name": "SNARE_PLATE",
+  "algo": 3,
+  "size": 0,
+  "decay": 64,
+  "damp": 139,
+  "pre": 8,
+  "width": 136,
+  "mod": 0,
+  "category": "Plates",
+  "description": "Dense plate reflections. Size and modulation are intentionally neutral for this algorithm."
+}

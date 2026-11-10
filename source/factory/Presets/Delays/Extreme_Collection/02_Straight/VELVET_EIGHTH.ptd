@@ -1,0 +1,12 @@
+{
+  "name": "VELVET_EIGHTH",
+  "pong": false,
+  "sync": true,
+  "time": 3,
+  "feedback": 106,
+  "tone": 115,
+  "wobble": 4,
+  "reverbSend": 10,
+  "category": "Straight",
+  "description": "Tempo-synchronized straight note echo; use as a send rather than a full mix insert."
+}

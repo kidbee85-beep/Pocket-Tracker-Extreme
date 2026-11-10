@@ -1,0 +1,12 @@
+{
+  "name": "TRIPLET_PERC",
+  "pong": false,
+  "sync": true,
+  "time": 8,
+  "feedback": 81,
+  "tone": 208,
+  "wobble": 0,
+  "reverbSend": 0,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

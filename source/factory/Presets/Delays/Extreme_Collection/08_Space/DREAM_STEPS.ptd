@@ -1,0 +1,12 @@
+{
+  "name": "DREAM_STEPS",
+  "pong": true,
+  "sync": true,
+  "time": 9,
+  "feedback": 171,
+  "tone": 139,
+  "wobble": 32,
+  "reverbSend": 54,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

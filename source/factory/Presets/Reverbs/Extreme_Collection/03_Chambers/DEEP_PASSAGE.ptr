@@ -1,0 +1,12 @@
+{
+  "name": "DEEP_PASSAGE",
+  "algo": 1,
+  "size": 113,
+  "decay": 126,
+  "damp": 31,
+  "pre": 46,
+  "width": 130,
+  "mod": 28,
+  "category": "Chambers",
+  "description": "A defined pre-delay separates the source from a warm chamber tail."
+}

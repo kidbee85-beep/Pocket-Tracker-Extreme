@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        ⚠️ No storage permission, by design: the user grants a folder in the system picker (Storage
+        Access Framework, `shell/android/saf-filesystem.cpp`), which needs no `uses-permission`. The
+        app's own files live in `filesDir`. Adding one back would make nothing work and re-open the
+        F-Droid review finding.
+    -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Requested only when Record is pressed; capture stops when the app leaves the foreground. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+    <!--
+        A song left playing off the screen keeps playing under a foreground service (PlaybackService).
+        POST_NOTIFICATIONS (Android 13+) only decides whether its notification, and STOP, shows.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+        Android 15+: tells the app a screen recording started, so it leaves the fast audio path, which
+        a recording does not hear. Granted at install, never asked for.
+    -->
+    <uses-permission android:name="android.permission.DETECT_SCREEN_RECORDING" />
+
+    <!--
+        MIDI needs no permission over USB or app-to-app (only BLE would). ⚠️ required="false": `true`
+        would hide the app from every device without a MIDI stack.
+    -->
+    <uses-feature android:name="android.software.midi" android:required="false" />
+
+    <!--
+      No largeHeap: the Java heap is the click clips (3.5 MB); a project's samples live in the native
+      heap, which largeHeap does not raise.
+    -->
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.TrackWerk">
+        <!-- singleTask, as SDL recommends: a relaunch must not start a second native SDL instance;
+             configChanges keeps a rotation from restarting the native thread. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.TrackWerk.Splash"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".PlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+    </application>
+
+</manifest>

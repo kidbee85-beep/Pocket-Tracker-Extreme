@@ -1,0 +1,12 @@
+{
+  "name": "SLOW_REEL",
+  "pong": false,
+  "sync": false,
+  "time": 86,
+  "feedback": 153,
+  "tone": 65,
+  "wobble": 57,
+  "reverbSend": 22,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

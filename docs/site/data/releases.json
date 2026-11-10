@@ -1,0 +1,71 @@
+{
+  "product": "TrackWerk",
+  "version": "0.9",
+  "tag": "v0.9.0-beta",
+  "repository": "https://github.com/kidbee85-beep/Pocket-Tracker-Extreme",
+  "releaseReady": false,
+  "plannedDate": "2026-11-10",
+  "assets": {
+    "android": {
+      "file": "TrackWerk-0.9-Android.apk",
+      "ready": true,
+      "sha256": "25a836c310c3143406f5c2643814eb62584b3a30674a6c1c21b45709337005ef",
+      "bytes": 33293682
+    },
+    "brick-first": {
+      "file": "TrackWerk-0.9-Brick-KNULLI.zip",
+      "ready": true,
+      "sha256": "20b7d5af274be8a6bfdecb3b0fc470844e85d72d266ecd716b07f0a2ec83a1c2",
+      "bytes": 50942030
+    },
+    "brick-update": {
+      "file": "TrackWerk-0.9-Brick-Program-Factory-Update.zip",
+      "ready": true,
+      "sha256": "b23aa771d77c052db91ba296cae8a5318ae433e3d99cde4f9a190a2c3eb8dfd9",
+      "bytes": 5193645
+    },
+    "mini": {
+      "file": "TrackWerk-0.9-Miyoo-Mini-Onion.zip",
+      "ready": true,
+      "sha256": "e90ee4a24842be642a7a6526f12d29b9aa5d4ce5cb35a25db3fb8c37a78a86e5",
+      "bytes": 5224967
+    },
+    "plus": {
+      "file": "TrackWerk-0.9-Miyoo-Plus-Onion.zip",
+      "ready": true,
+      "sha256": "5e868d794ee3d7d570a6bb643e2a988ac7dc4239c59119c56e5e252403923e38",
+      "bytes": 5462576
+    },
+    "presets": {
+      "file": "TrackWerk-0.9-Factory-Presets.zip",
+      "ready": true,
+      "sha256": "36ec474f3210454038270011a0a4bf23c351b16066c339b1946cae7c8c226e19",
+      "bytes": 1975012
+    },
+    "source": {
+      "file": "TrackWerk-0.9-Source.zip",
+      "ready": true,
+      "sha256": "0c7ec1615de39ef5d33540502c8233b4f320e753274fbf2347ec55f57aa52249",
+      "bytes": 169336250
+    },
+    "sdl-source": {
+      "file": "SDL2-mmiyoo-f6319cf9-source.tar.gz",
+      "ready": true,
+      "sha256": "b4c2416b244ad5d9c208fa5939e865331880df9fb8f9e8fca3a5d2d5017af549",
+      "bytes": 17285143
+    },
+    "checksums": {
+      "file": "SHA256SUMS.txt",
+      "ready": true,
+      "sha256": "5c5462a1f7f49861e11b63a62132c74ab9cc9666fb483768c7f3a28f601677b1",
+      "bytes": 796
+    }
+  },
+  "film": {
+    "ready": true,
+    "file": "assets/video/trackwerk-09-film.mp4",
+    "poster": "assets/images/film-poster.jpg",
+    "sha256": "b4adb1d614f1a391853a5c05e8cf564ddd3bcdf68e2f46405329b1b20fda881a",
+    "bytes": 10453169
+  }
+}

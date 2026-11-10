@@ -1,0 +1,12 @@
+{
+  "name": "PERC_GALLERY",
+  "algo": 2,
+  "size": 53,
+  "decay": 39,
+  "damp": 152,
+  "pre": 3,
+  "width": 140,
+  "mod": 7,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

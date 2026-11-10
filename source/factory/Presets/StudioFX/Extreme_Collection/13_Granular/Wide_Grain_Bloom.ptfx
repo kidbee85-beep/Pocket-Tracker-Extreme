@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "effects",
+  "name": "Wide Grain Bloom",
+  "master": [
+    1,
+    16,
+    126,
+    159,
+    183,
+    81,
+    0,
+    255,
+    0,
+    32,
+    96,
+    128,
+    128,
+    230,
+    0
+  ],
+  "category": "Granular",
+  "description": "Clouds texture with bounded feedback. Preserve dry rhythm and layer this parallel treatment behind it."
+}

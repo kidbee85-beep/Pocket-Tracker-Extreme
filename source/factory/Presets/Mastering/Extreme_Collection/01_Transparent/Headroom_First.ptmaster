@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Headroom First",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    0,
+    238,
+    5,
+    213,
+    161,
+    128,
+    121,
+    220,
+    4
+  ],
+  "category": "Transparent",
+  "description": "A conservative mix starting point. Keep a little peak headroom and compare at matched loudness."
+}

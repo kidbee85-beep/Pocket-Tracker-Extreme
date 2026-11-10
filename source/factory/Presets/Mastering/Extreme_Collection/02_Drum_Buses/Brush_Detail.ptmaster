@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Brush Detail",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    12,
+    210,
+    16,
+    210,
+    83,
+    129,
+    127,
+    228,
+    18
+  ],
+  "category": "Drum Buses",
+  "description": "Drum-bus contours balance transient length, release and low-end focus; adjust the input level to taste."
+}

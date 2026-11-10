@@ -1,0 +1,12 @@
+{
+  "name": "STEREO_LOFT",
+  "algo": 2,
+  "size": 88,
+  "decay": 69,
+  "damp": 141,
+  "pre": 14,
+  "width": 162,
+  "mod": 11,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

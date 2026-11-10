@@ -1,0 +1,26 @@
+{
+  "original_geometry": "TrackWerk-Mark-Geometry.json / B",
+  "original_pockettracker_mascot_used": false,
+  "assets": [
+    {
+      "file": "native/ui/mascot_sprite.h",
+      "dimensions": [
+        64,
+        64
+      ],
+      "bitmap_bytes": 512,
+      "lit_pixels": 1446,
+      "sha256": "cddb23069a3186b5bc04997971ed8f6f398b2c74ca66e8d3ce65fd4426c4a5fc"
+    },
+    {
+      "file": "native/ui/mascot_sprite_large.h",
+      "dimensions": [
+        128,
+        128
+      ],
+      "bitmap_bytes": 2048,
+      "lit_pixels": 5541,
+      "sha256": "0f31e7114b08fd55cb9a239f607ead6ef5c7d4276f0d81925b4f185aa3152ed5"
+    }
+  ]
+}

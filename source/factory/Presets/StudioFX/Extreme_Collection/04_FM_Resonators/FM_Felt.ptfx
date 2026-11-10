@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "effects",
+  "name": "FM Felt",
+  "master": [
+    1,
+    4,
+    54,
+    61,
+    109,
+    0,
+    0,
+    255,
+    0,
+    32,
+    96,
+    128,
+    128,
+    230,
+    0
+  ],
+  "category": "FM Resonators",
+  "description": "Input-excited resonator. Low wet balance keeps the original transient; color and texture tune the resonant body."
+}

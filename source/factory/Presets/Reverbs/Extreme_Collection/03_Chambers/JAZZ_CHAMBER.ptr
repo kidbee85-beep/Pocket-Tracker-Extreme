@@ -1,0 +1,12 @@
+{
+  "name": "JAZZ_CHAMBER",
+  "algo": 1,
+  "size": 78,
+  "decay": 87,
+  "damp": 79,
+  "pre": 25,
+  "width": 138,
+  "mod": 16,
+  "category": "Chambers",
+  "description": "A defined pre-delay separates the source from a warm chamber tail."
+}

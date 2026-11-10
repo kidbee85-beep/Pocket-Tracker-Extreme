@@ -1,0 +1,12 @@
+{
+  "name": "TIGHT_BRUSH",
+  "algo": 2,
+  "size": 15,
+  "decay": 17,
+  "damp": 96,
+  "pre": 1,
+  "width": 88,
+  "mod": 0,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "FLOATING_TAPE",
+  "algo": 0,
+  "size": 96,
+  "decay": 139,
+  "damp": 79,
+  "pre": 23,
+  "width": 155,
+  "mod": 54,
+  "category": "Modulated",
+  "description": "Moving ReverbSc texture for sustained material; use a restrained send on busy drums."
+}

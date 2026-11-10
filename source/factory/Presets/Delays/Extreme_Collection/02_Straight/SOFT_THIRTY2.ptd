@@ -1,0 +1,12 @@
+{
+  "name": "SOFT_THIRTY2",
+  "pong": false,
+  "sync": true,
+  "time": 5,
+  "feedback": 58,
+  "tone": 176,
+  "wobble": 0,
+  "reverbSend": 0,
+  "category": "Straight",
+  "description": "Tempo-synchronized straight note echo; use as a send rather than a full mix insert."
+}

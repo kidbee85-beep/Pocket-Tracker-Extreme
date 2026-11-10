@@ -1,0 +1,12 @@
+{
+  "name": "SPACE_CHORD",
+  "pong": true,
+  "sync": true,
+  "time": 2,
+  "feedback": 194,
+  "tone": 94,
+  "wobble": 41,
+  "reverbSend": 63,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

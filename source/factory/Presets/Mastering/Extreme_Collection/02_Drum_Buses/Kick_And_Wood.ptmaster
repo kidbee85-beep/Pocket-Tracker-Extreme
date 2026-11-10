@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Kick And Wood",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    36,
+    183,
+    29,
+    194,
+    86,
+    111,
+    126,
+    224,
+    7
+  ],
+  "category": "Drum Buses",
+  "description": "Drum-bus contours balance transient length, release and low-end focus; adjust the input level to taste."
+}

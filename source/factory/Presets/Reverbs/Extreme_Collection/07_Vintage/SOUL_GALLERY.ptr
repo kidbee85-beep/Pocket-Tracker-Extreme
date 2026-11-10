@@ -1,0 +1,12 @@
+{
+  "name": "SOUL_GALLERY",
+  "algo": 0,
+  "size": 126,
+  "decay": 121,
+  "damp": 88,
+  "pre": 31,
+  "width": 134,
+  "mod": 27,
+  "category": "Vintage",
+  "description": "Damped, gently moving vintage space; preserves a focused center image."
+}

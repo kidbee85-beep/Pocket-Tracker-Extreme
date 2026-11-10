@@ -1,0 +1,12 @@
+{
+  "name": "FOIL_SILK",
+  "algo": 4,
+  "size": 0,
+  "decay": 97,
+  "damp": 68,
+  "pre": 27,
+  "width": 126,
+  "mod": 0,
+  "category": "Plates",
+  "description": "A light foil plate with a deliberate brightness and stereo footprint."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "MIDNIGHT_LOOP",
+  "pong": false,
+  "sync": false,
+  "time": 173,
+  "feedback": 185,
+  "tone": 53,
+  "wobble": 58,
+  "reverbSend": 47,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

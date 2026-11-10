@@ -1,0 +1,12 @@
+{
+  "name": "WOVEN_CLOUD",
+  "algo": 0,
+  "size": 121,
+  "decay": 158,
+  "damp": 118,
+  "pre": 32,
+  "width": 167,
+  "mod": 70,
+  "category": "Modulated",
+  "description": "Moving ReverbSc texture for sustained material; use a restrained send on busy drums."
+}

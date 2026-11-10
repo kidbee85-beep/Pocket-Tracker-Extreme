@@ -1,0 +1,12 @@
+{
+  "name": "DRY_TIMBER",
+  "algo": 2,
+  "size": 28,
+  "decay": 25,
+  "damp": 54,
+  "pre": 4,
+  "width": 80,
+  "mod": 1,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "DUB_GHOST",
+  "pong": false,
+  "sync": true,
+  "time": 7,
+  "feedback": 162,
+  "tone": 54,
+  "wobble": 86,
+  "reverbSend": 26,
+  "category": "Dub",
+  "description": "Dark dub repeats with conservative regenerative gain. All feedback values stay below E0."
+}

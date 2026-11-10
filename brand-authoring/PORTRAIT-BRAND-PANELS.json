@@ -1,0 +1,26 @@
+{
+  "original_new_art": true,
+  "legacy_pixel_input": false,
+  "assets": [
+    {
+      "skin_id": "amiga",
+      "path": "app/src/main/assets/themes/amiga/bg_branding_panel.png",
+      "size": [
+        1080,
+        181
+      ],
+      "sha256": "f94a3012a72df5d58e36b01b90c554c46fae9a126c774a7fc6c7a90afd130f33",
+      "button_assets_and_positions_unchanged": true
+    },
+    {
+      "skin_id": "amiga-2",
+      "path": "app/src/main/assets/themes/amiga-2/bg_branding_panel.png",
+      "size": [
+        1080,
+        181
+      ],
+      "sha256": "9962429d3c6d74c3917f2b5e648c9542b49eb8c8e77f563e7e8ca0e5e32e3bb2",
+      "button_assets_and_positions_unchanged": true
+    }
+  ]
+}

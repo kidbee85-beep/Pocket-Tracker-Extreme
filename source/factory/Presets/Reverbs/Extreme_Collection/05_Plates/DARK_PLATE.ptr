@@ -1,0 +1,12 @@
+{
+  "name": "DARK_PLATE",
+  "algo": 3,
+  "size": 0,
+  "decay": 116,
+  "damp": 42,
+  "pre": 31,
+  "width": 120,
+  "mod": 0,
+  "category": "Plates",
+  "description": "Dense plate reflections. Size and modulation are intentionally neutral for this algorithm."
+}

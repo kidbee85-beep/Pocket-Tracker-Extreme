@@ -1,0 +1,12 @@
+{
+  "name": "CLAP_BOX",
+  "algo": 2,
+  "size": 37,
+  "decay": 33,
+  "damp": 160,
+  "pre": 3,
+  "width": 112,
+  "mod": 3,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Low End Tidy",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    7,
+    209,
+    16,
+    161,
+    103,
+    120,
+    127,
+    228,
+    20
+  ],
+  "category": "Transparent",
+  "description": "A conservative mix starting point. Keep a little peak headroom and compare at matched loudness."
+}

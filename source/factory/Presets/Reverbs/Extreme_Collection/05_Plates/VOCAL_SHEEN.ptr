@@ -1,0 +1,12 @@
+{
+  "name": "VOCAL_SHEEN",
+  "algo": 3,
+  "size": 0,
+  "decay": 109,
+  "damp": 207,
+  "pre": 46,
+  "width": 160,
+  "mod": 0,
+  "category": "Plates",
+  "description": "Dense plate reflections. Size and modulation are intentionally neutral for this algorithm."
+}

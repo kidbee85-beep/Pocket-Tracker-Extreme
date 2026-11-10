@@ -1,0 +1,12 @@
+{
+  "name": "HORIZON_ECHO",
+  "pong": true,
+  "sync": true,
+  "time": 1,
+  "feedback": 182,
+  "tone": 112,
+  "wobble": 17,
+  "reverbSend": 58,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

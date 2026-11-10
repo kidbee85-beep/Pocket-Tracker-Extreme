@@ -1,0 +1,12 @@
+{
+  "name": "TRIPLET_KEYS",
+  "pong": true,
+  "sync": true,
+  "time": 7,
+  "feedback": 99,
+  "tone": 181,
+  "wobble": 0,
+  "reverbSend": 7,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

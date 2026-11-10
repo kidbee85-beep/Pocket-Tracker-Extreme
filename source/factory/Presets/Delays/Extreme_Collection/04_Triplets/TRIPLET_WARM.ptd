@@ -1,0 +1,12 @@
+{
+  "name": "TRIPLET_WARM",
+  "pong": false,
+  "sync": true,
+  "time": 7,
+  "feedback": 141,
+  "tone": 77,
+  "wobble": 27,
+  "reverbSend": 17,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

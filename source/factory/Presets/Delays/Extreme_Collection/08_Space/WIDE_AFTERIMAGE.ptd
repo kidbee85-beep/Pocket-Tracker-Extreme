@@ -1,0 +1,12 @@
+{
+  "name": "WIDE_AFTERIMAGE",
+  "pong": true,
+  "sync": true,
+  "time": 0,
+  "feedback": 207,
+  "tone": 65,
+  "wobble": 35,
+  "reverbSend": 76,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

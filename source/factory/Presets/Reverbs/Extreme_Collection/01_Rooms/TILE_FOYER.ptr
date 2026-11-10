@@ -1,0 +1,12 @@
+{
+  "name": "TILE_FOYER",
+  "algo": 2,
+  "size": 37,
+  "decay": 43,
+  "damp": 174,
+  "pre": 4,
+  "width": 132,
+  "mod": 5,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

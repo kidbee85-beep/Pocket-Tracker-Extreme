@@ -1,0 +1,12 @@
+{
+  "name": "SNARE_CLOSET",
+  "algo": 2,
+  "size": 24,
+  "decay": 22,
+  "damp": 120,
+  "pre": 2,
+  "width": 94,
+  "mod": 0,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

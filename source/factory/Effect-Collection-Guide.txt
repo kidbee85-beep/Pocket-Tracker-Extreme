@@ -1,0 +1,75 @@
+POCKET TRACKER EXTREME / KID BUNKA
+EXTREME EFFECT COLLECTION / BETA .3
+
+256 additional authored presets: 64 send reverbs, 64 send delays, 96 Studio FX
+and 32 mastering settings. These are parameter presets, with no audio samples.
+The existing factory bank and all saved custom slots remain in place.
+
+GETTING TO THE LIBRARY
+
+Send reverb / send delay:
+Open the tracker EFFECTS page, select the REVERB or DELAY preset row, then LOAD.
+Open Extreme_Collection and choose a category. A loads the selected .ptr or .ptd
+file; B returns. The same new presets are appended to the native preset cycle.
+The project's existing send amounts are preserved when a preset loads. Raise an
+instrument's send to hear its space; a reverb preset does not create a send.
+
+Studio FX / Master:
+R + Select opens Studio. B + Left / Right selects FX Rack or Master.
+Up / Down selects a row. Choose FX LIBRARY or MASTER LIBRARY at the bottom,
+then press A. Open Extreme_Collection and choose a category. A loads the file
+and returns to Studio. B cancels without applying. Playback can keep running.
+
+The factory preset row also contains every new preset; hold A + Left / Right
+to choose, release, then press A to apply. Its category and short description
+are shown above the controls. Browsing a choice does not apply it automatically.
+
+CUSTOM SETTINGS
+
+Existing SAVE CUSTOM / LOAD CUSTOM and all 16 slots per Studio section continue
+to work. Loading an FX file preserves the mastering controls; loading a master
+file preserves the FX algorithm/macros. ACTIVE is shared, as in earlier builds.
+A malformed or wrong-kind file keeps the current mix. User preset files are not
+overwritten by the factory installation; only missing factory paths are added.
+
+CATEGORIES
+
+Reverb: Rooms, Booths, Chambers, Halls, Plates, Modulated, Vintage, Atmospheres.
+Short booths suit percussion; plates can sit behind snares or leads; chambers
+and halls leave pre-delay before the tail. Modulated and atmosphere categories
+are designed for sparse sends and sustained notes. Plate SIZE/MOD are neutral
+because those algorithms do not read them. No new reverb uses infinite decay.
+
+Delay: Slaps, Straight, Dotted, Triplets, Tape, Dub, Stereo, Space.
+Synced presets follow project tempo. The existing delay line supports about two
+seconds at 48 kHz; long divisions at slow tempos may reach that limit. New dub
+feedback stays below the self-oscillating region. Tape wobble and reverb feed
+are deliberate tonal choices. The send and return level remain yours to mix.
+
+Studio FX: Modal, Sympathetic, Strings, FM Resonators, Tuned Resonators, String
+Spaces, Crossfade, Wavefold, Analog Ring, Digital Ring, Logic Color, Vocoder,
+Granular, Stretch, Loop Delay, Spectral.
+Resonators are excited by incoming audio. Warps textures set an internal carrier
+pitch; feedback is unused there. Clouds variants use bounded feedback and a
+parallel mix, keeping the dry attack in front of the transformed texture.
+
+Mastering: Transparent, Drum Buses, Character, Space Control.
+The new settings favor useful headroom, moderate dynamics and compensated color.
+They are starting points rather than automatic mastering. Compare at matched
+loudness, keep the low end focused and check wide settings in mono.
+
+FILES AND PORTABILITY
+
+Presets/Reverbs/Extreme_Collection/<category>/*.ptr
+Presets/Delays/Extreme_Collection/<category>/*.ptd
+Presets/StudioFX/Extreme_Collection/<category>/*.ptfx
+Presets/Mastering/Extreme_Collection/<category>/*.ptmaster
+
+The .ptfx and .ptmaster files use the existing version-1 rack-array schema plus
+an explicit kind. The two file types cannot be interchanged accidentally.
+Names, category and descriptions are included. Factory IDs are append-only:
+Reverb 20-83; Delay 20-83; Studio FX 160-255; Master 32-63 (zero based).
+Total native banks: 84 reverbs, 84 delays, 256 Studio FX and 64 masters.
+
+Original preset settings and descriptions for Pocket Tracker Extreme.
+GPL-3.0-or-later, like the application. No personal samples are included.

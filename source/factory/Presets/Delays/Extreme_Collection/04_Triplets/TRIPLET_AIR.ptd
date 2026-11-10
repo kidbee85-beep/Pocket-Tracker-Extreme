@@ -1,0 +1,12 @@
+{
+  "name": "TRIPLET_AIR",
+  "pong": true,
+  "sync": true,
+  "time": 6,
+  "feedback": 109,
+  "tone": 145,
+  "wobble": 5,
+  "reverbSend": 19,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

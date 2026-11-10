@@ -1,6 +1,0 @@
-<resources>
-    <string name="app_name">Pocket Tracker Extreme</string>
-    <string name="playback_channel">Playback</string>
-    <string name="playback_playing">Playing</string>
-    <string name="playback_stop">Stop</string>
-</resources>

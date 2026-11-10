@@ -1,0 +1,12 @@
+{
+  "name": "PIANO_ROOM",
+  "algo": 2,
+  "size": 74,
+  "decay": 56,
+  "damp": 98,
+  "pre": 18,
+  "width": 122,
+  "mod": 14,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

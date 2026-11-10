@@ -1,0 +1,12 @@
+{
+  "name": "DOTTED_BELL",
+  "pong": true,
+  "sync": true,
+  "time": 11,
+  "feedback": 112,
+  "tone": 227,
+  "wobble": 2,
+  "reverbSend": 6,
+  "category": "Dotted",
+  "description": "Dotted spacing creates a second interlocking pulse without moving the dry sequence."
+}

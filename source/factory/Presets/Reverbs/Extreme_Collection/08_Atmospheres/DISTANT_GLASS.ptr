@@ -1,0 +1,12 @@
+{
+  "name": "DISTANT_GLASS",
+  "algo": 1,
+  "size": 213,
+  "decay": 209,
+  "damp": 157,
+  "pre": 112,
+  "width": 208,
+  "mod": 36,
+  "category": "Atmospheres",
+  "description": "Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting."
+}

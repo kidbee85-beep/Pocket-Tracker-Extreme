@@ -1,0 +1,56 @@
+{
+  "status": "FROZEN_FOR_OWNER_INTEGRATION",
+  "styles": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "files": {
+    "clean-author.py": {
+      "bytes": 12724,
+      "sha256": "9f8062dd62c134a200f03444fc8b4d99582cac661df6f42bfc5a67efd40f0545"
+    },
+    "clean-generate.py": {
+      "bytes": 11122,
+      "sha256": "ab22253458961c8d7b3c6c97e71c6381851830551039478e15e567ef7726ca19"
+    },
+    "clean-masters.json": {
+      "bytes": 246679,
+      "sha256": "2ba5c9f01498618409d8967ab19c4895312bed05ce66932138f8332af8c471b4"
+    },
+    "clean-atlas-manifest.json": {
+      "bytes": 16017,
+      "sha256": "58f7fefb73143a62ab9a0f9e3bbf14561bf95dc6fe8b163ff961db855776c202"
+    },
+    "clean-atlas-grid2.bin": {
+      "bytes": 104500,
+      "sha256": "26efd88b81c34b8be3de3f40c8d70056feeb51edbb9d7f8a3991962a66a3ee99"
+    },
+    "clean-atlas-grid3.bin": {
+      "bytes": 242250,
+      "sha256": "46dffb59baca55ed85c68aba1264d670d4537e2137317310d02b3304f44f7710"
+    },
+    "clean-atlas-label12.bin": {
+      "bytes": 171080,
+      "sha256": "6a800fbb4f0e3fa86963ee35989e52430e983c0b5f5ca034962b6547007585b6"
+    },
+    "clean-atlas-label18.bin": {
+      "bytes": 369810,
+      "sha256": "7736f2fb3846fe0bd7f148e182d81fafe94d8fecef61027e20cf20facc68f55b"
+    },
+    "clean-INTEGRATION.txt": {
+      "bytes": 2618,
+      "sha256": "64abddf512e30d756e575bf859df82e80b5731cdfee324d108c4ef83de2bdb3a"
+    }
+  },
+  "old_six_untouched": true,
+  "root_owned_files_edited": false,
+  "production_canvas_integration_pending": true
+}

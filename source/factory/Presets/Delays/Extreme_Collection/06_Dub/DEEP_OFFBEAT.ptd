@@ -1,0 +1,12 @@
+{
+  "name": "DEEP_OFFBEAT",
+  "pong": true,
+  "sync": true,
+  "time": 3,
+  "feedback": 178,
+  "tone": 38,
+  "wobble": 73,
+  "reverbSend": 33,
+  "category": "Dub",
+  "description": "Dark dub repeats with conservative regenerative gain. All feedback values stay below E0."
+}

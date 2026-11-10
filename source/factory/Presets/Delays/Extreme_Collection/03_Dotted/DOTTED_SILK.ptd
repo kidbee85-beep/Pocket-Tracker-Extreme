@@ -1,0 +1,12 @@
+{
+  "name": "DOTTED_SILK",
+  "pong": true,
+  "sync": true,
+  "time": 10,
+  "feedback": 142,
+  "tone": 105,
+  "wobble": 19,
+  "reverbSend": 16,
+  "category": "Dotted",
+  "description": "Dotted spacing creates a second interlocking pulse without moving the dry sequence."
+}

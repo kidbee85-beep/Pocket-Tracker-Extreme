@@ -1,0 +1,12 @@
+{
+  "name": "RIM_CABIN",
+  "algo": 2,
+  "size": 39,
+  "decay": 36,
+  "damp": 137,
+  "pre": 2,
+  "width": 100,
+  "mod": 2,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

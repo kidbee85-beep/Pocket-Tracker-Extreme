@@ -1,0 +1,12 @@
+{
+  "name": "VELVET_CELLAR",
+  "algo": 1,
+  "size": 62,
+  "decay": 77,
+  "damp": 36,
+  "pre": 18,
+  "width": 122,
+  "mod": 11,
+  "category": "Chambers",
+  "description": "A defined pre-delay separates the source from a warm chamber tail."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "DUST_SLAP",
+  "pong": false,
+  "sync": false,
+  "time": 8,
+  "feedback": 17,
+  "tone": 64,
+  "wobble": 11,
+  "reverbSend": 0,
+  "category": "Slaps",
+  "description": "Short mono or stereo doubling. Modest feedback preserves rhythmic definition."
+}

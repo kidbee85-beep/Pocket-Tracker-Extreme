@@ -1,0 +1,12 @@
+{
+  "name": "DISTANT_KEY",
+  "pong": true,
+  "sync": false,
+  "time": 141,
+  "feedback": 163,
+  "tone": 172,
+  "wobble": 26,
+  "reverbSend": 51,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

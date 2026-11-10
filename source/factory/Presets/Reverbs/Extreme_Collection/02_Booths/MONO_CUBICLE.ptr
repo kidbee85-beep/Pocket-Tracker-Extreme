@@ -1,0 +1,12 @@
+{
+  "name": "MONO_CUBICLE",
+  "algo": 2,
+  "size": 22,
+  "decay": 14,
+  "damp": 87,
+  "pre": 0,
+  "width": 0,
+  "mod": 0,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

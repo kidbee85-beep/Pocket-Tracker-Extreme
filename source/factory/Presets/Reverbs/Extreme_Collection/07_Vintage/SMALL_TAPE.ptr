@@ -1,0 +1,12 @@
+{
+  "name": "SMALL_TAPE",
+  "algo": 0,
+  "size": 72,
+  "decay": 64,
+  "damp": 39,
+  "pre": 10,
+  "width": 94,
+  "mod": 18,
+  "category": "Vintage",
+  "description": "Damped, gently moving vintage space; preserves a focused center image."
+}

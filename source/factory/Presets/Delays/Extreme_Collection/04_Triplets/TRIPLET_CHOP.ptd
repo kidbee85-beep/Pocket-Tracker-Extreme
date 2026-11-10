@@ -1,0 +1,12 @@
+{
+  "name": "TRIPLET_CHOP",
+  "pong": false,
+  "sync": true,
+  "time": 8,
+  "feedback": 67,
+  "tone": 144,
+  "wobble": 0,
+  "reverbSend": 2,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

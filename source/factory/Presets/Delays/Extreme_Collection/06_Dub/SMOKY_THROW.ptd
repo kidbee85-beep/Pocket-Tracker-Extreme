@@ -1,0 +1,12 @@
+{
+  "name": "SMOKY_THROW",
+  "pong": false,
+  "sync": false,
+  "time": 58,
+  "feedback": 196,
+  "tone": 35,
+  "wobble": 111,
+  "reverbSend": 31,
+  "category": "Dub",
+  "description": "Dark dub repeats with conservative regenerative gain. All feedback values stay below E0."
+}

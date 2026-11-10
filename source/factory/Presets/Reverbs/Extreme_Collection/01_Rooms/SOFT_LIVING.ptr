@@ -1,0 +1,12 @@
+{
+  "name": "SOFT_LIVING",
+  "algo": 2,
+  "size": 64,
+  "decay": 48,
+  "damp": 76,
+  "pre": 12,
+  "width": 106,
+  "mod": 12,
+  "category": "Rooms",
+  "description": "Natural early reflections. Start with a low send; retain the dry attack."
+}

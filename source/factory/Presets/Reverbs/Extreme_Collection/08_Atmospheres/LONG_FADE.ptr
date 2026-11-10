@@ -1,0 +1,12 @@
+{
+  "name": "LONG_FADE",
+  "algo": 1,
+  "size": 221,
+  "decay": 218,
+  "damp": 79,
+  "pre": 124,
+  "width": 196,
+  "mod": 33,
+  "category": "Atmospheres",
+  "description": "Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting."
+}

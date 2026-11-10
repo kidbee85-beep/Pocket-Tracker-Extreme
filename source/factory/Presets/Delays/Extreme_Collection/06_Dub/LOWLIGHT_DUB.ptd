@@ -1,0 +1,12 @@
+{
+  "name": "LOWLIGHT_DUB",
+  "pong": true,
+  "sync": true,
+  "time": 9,
+  "feedback": 203,
+  "tone": 62,
+  "wobble": 69,
+  "reverbSend": 38,
+  "category": "Dub",
+  "description": "Dark dub repeats with conservative regenerative gain. All feedback values stay below E0."
+}

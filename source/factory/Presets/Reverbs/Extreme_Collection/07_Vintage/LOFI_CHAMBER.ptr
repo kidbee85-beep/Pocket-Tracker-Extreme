@@ -1,0 +1,12 @@
+{
+  "name": "LOFI_CHAMBER",
+  "algo": 0,
+  "size": 137,
+  "decay": 144,
+  "damp": 43,
+  "pre": 42,
+  "width": 112,
+  "mod": 35,
+  "category": "Vintage",
+  "description": "Damped, gently moving vintage space; preserves a focused center image."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "BROWN_ECHO",
+  "pong": false,
+  "sync": false,
+  "time": 53,
+  "feedback": 137,
+  "tone": 48,
+  "wobble": 79,
+  "reverbSend": 12,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

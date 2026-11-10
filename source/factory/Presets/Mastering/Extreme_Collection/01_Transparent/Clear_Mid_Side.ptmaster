@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Clear Mid Side",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    4,
+    219,
+    11,
+    185,
+    121,
+    142,
+    124,
+    224,
+    14
+  ],
+  "category": "Transparent",
+  "description": "A conservative mix starting point. Keep a little peak headroom and compare at matched loudness."
+}

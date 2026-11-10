@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Night Saturation",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    88,
+    207,
+    18,
+    171,
+    132,
+    116,
+    117,
+    222,
+    6
+  ],
+  "category": "Character",
+  "description": "Deliberate saturation with compensated output. These are color choices rather than automatic loudness maximizers."
+}

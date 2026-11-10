@@ -1,0 +1,12 @@
+{
+  "name": "STRING_ANNEX",
+  "algo": 1,
+  "size": 96,
+  "decay": 103,
+  "damp": 106,
+  "pre": 35,
+  "width": 150,
+  "mod": 24,
+  "category": "Chambers",
+  "description": "A defined pre-delay separates the source from a warm chamber tail."
+}

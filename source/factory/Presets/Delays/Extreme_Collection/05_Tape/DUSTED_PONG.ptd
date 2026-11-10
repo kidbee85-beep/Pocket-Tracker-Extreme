@@ -1,0 +1,12 @@
+{
+  "name": "DUSTED_PONG",
+  "pong": true,
+  "sync": false,
+  "time": 62,
+  "feedback": 139,
+  "tone": 45,
+  "wobble": 103,
+  "reverbSend": 10,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

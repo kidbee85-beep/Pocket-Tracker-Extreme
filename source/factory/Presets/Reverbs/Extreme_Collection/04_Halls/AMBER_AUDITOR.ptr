@@ -1,0 +1,12 @@
+{
+  "name": "AMBER_AUDITOR",
+  "algo": 1,
+  "size": 164,
+  "decay": 149,
+  "damp": 73,
+  "pre": 82,
+  "width": 180,
+  "mod": 26,
+  "category": "Halls",
+  "description": "Broad stereo hall for chords and leads. Predelay keeps the central rhythm clear."
+}

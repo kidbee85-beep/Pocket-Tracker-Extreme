@@ -1,0 +1,55 @@
+{
+  "original_header_sha256": "0e9132ba29508b3c8e76fe2a017c02acd07e696c85e14bc1391a26e80e7cfca8",
+  "pixel_masters_sha256": "2d99792f7169a6bff8c3257a77b76c72f10af0434e7be9cf908e1c83bafc79f2",
+  "styles": [
+    {
+      "id": 1,
+      "name": "TERMINAL89",
+      "grid2_sha256": "34df7cec60c0fde5a877e3a94a6b57b182fb1ee2e5cbddfcb48a52fcc0fc0db6",
+      "grid3_sha256": "abdd2529999467176a2ba4a30a31ec57037248af96b95066c1441d6b4c9355d8",
+      "label12_sha256": "7acbf0542d06733c421d948845916f104939125e816c48e62aeab81b65d11075",
+      "label18_sha256": "e061141f3a345e5aebc2dfedf86a0181fec0d4ae8639ac23097c475b41289f3b"
+    },
+    {
+      "id": 2,
+      "name": "RASTER91",
+      "grid2_sha256": "d149d140e33754280f1fe71b78e5db24ad8b0a66d294628521994a4f661d4420",
+      "grid3_sha256": "2e33be3ab756128144c9e02cd6b22c94bbda6d289bf894a203e664ab566ef133",
+      "label12_sha256": "140d7e5e213e27d8fef9617065dd3c7497c09becdc2b0581697c473f78a65eaf",
+      "label18_sha256": "857544da389046a07b228798a0a9ba181daaab836ac2b0b1ea3617f8d65d49ed"
+    },
+    {
+      "id": 3,
+      "name": "ACIDVECTOR",
+      "grid2_sha256": "dfda991b92fd601c5db9b63f55cb3b6dde421e243e46d76e1b6cc2dfb6c2458a",
+      "grid3_sha256": "ac36a07c187416b599db3858d1c6eca8f40744dc364a223a7ae3538f62b42bac",
+      "label12_sha256": "248e42b15eff7df3901f88ee88522e5970d6fe820034186d0586be82661ac59d",
+      "label18_sha256": "ea07c23e7b1084e16b12794cf9d604f89fd4ddadab250eb4b7fda9a52082c777"
+    },
+    {
+      "id": 4,
+      "name": "CRACKTRO",
+      "grid2_sha256": "afcf0cdde677d2450788d30c7852829ec07be2b211ad553c0cc29549e7525c6d",
+      "grid3_sha256": "15c217f505a7134ed61ba5457cbfc482b385a569d5e9f51ce8d9cd7aa5666ffe",
+      "label12_sha256": "67d7b5864774a2572e1ed0c718f26292696cddfbddeccdc9aae213dd5a45302d",
+      "label18_sha256": "622e133d23b2333b76f2b5b5081b6eb44e494343fbc0f3fe89343df264ab1cdb"
+    },
+    {
+      "id": 5,
+      "name": "BITROT",
+      "grid2_sha256": "1c241a11d85fe08cec6147c35d31d43bb02acd965596ea9f5a2ff826bcabe35e",
+      "grid3_sha256": "7e6573bec2f4c6e2bb2153a8d40696ab36b2ab7fbab291eb6c6e070c6334d0db",
+      "label12_sha256": "ac951733a590a5a91e1e633fe761ef6669160a57b768a7b94f01fe90817f806f",
+      "label18_sha256": "d4645b06df87faf5e33ea92f06e8cb189ca5c55b1dfd1a6ccbb9b333c1ffcfe1"
+    },
+    {
+      "id": 6,
+      "name": "NULLSIGNAL",
+      "grid2_sha256": "342e5db292d3417b6e70f3ff0d0ca1aec628233fdb07ecffe79a743850980e16",
+      "grid3_sha256": "3edf33477678155adaed848e21ae0e750dd69fe8e4e731df91f9fdedf82b81b0",
+      "label12_sha256": "124f726ddee01b8d489ea3f4ee99969983cbd70b487ad3f9d6fbc680f046ea9c",
+      "label18_sha256": "89bd53c36adabeea0565f5220b4af193dabe3e933bbbaffe347f2bf53a70fb33"
+    }
+  ],
+  "atlas_bytes": 532584
+}

@@ -1,0 +1,12 @@
+{
+  "name": "COPPER_VAULT",
+  "algo": 1,
+  "size": 69,
+  "decay": 92,
+  "damp": 58,
+  "pre": 21,
+  "width": 128,
+  "mod": 14,
+  "category": "Chambers",
+  "description": "A defined pre-delay separates the source from a warm chamber tail."
+}

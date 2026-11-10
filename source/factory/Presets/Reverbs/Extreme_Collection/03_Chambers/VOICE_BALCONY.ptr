@@ -1,0 +1,12 @@
+{
+  "name": "VOICE_BALCONY",
+  "algo": 1,
+  "size": 91,
+  "decay": 98,
+  "damp": 102,
+  "pre": 37,
+  "width": 142,
+  "mod": 21,
+  "category": "Chambers",
+  "description": "A defined pre-delay separates the source from a warm chamber tail."
+}

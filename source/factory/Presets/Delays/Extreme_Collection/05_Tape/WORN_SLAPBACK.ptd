@@ -1,0 +1,12 @@
+{
+  "name": "WORN_SLAPBACK",
+  "pong": false,
+  "sync": false,
+  "time": 21,
+  "feedback": 83,
+  "tone": 57,
+  "wobble": 91,
+  "reverbSend": 4,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

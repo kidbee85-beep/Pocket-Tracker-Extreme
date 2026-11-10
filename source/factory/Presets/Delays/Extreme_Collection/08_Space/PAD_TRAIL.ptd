@@ -1,0 +1,12 @@
+{
+  "name": "PAD_TRAIL",
+  "pong": true,
+  "sync": true,
+  "time": 0,
+  "feedback": 167,
+  "tone": 78,
+  "wobble": 21,
+  "reverbSend": 67,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

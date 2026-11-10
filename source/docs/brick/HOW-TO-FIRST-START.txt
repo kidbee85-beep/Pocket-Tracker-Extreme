@@ -1,0 +1,104 @@
+POCKET TRACKER EXTREME — FIRST START ON TRIMUI BRICK
+Public beta 0.2.0-beta.3 · Kid Bunka
+
+ALREADY RUNNING KNULLI?
+Start at step 3. Do not reflash or format a working card just to install the tracker.
+
+1. CHOOSE THE CORRECT OPERATING SYSTEM
+This package is for the original TrimUI Brick / Brick Hammer with KNULLI.
+The working reference is KNULLI Scarab, official release 20260511.
+Official release and device-specific downloads:
+https://github.com/knulli-cfw/knulli-linux/releases/tag/20260511
+Original Brick/Hammer image:
+https://github.com/knulli-cfw/knulli-linux/releases/download/20260511/knulli-a133-trimui-brick-scarab-20260511.img.gz
+
+Use the correct image for your device; other handhelds need their own image.
+KNULLI is a separate project, supplied unmodified through its official download.
+It is not inside the Pocket Tracker ZIP.
+
+2. PREPARE A NEW CARD ONLY IF YOU NEED KNULLI
+Back up any card you intend to reuse. Writing an OS image erases that card.
+Use Raspberry Pi Imager or a compatible image writer, choose the downloaded
+image and the correct spare microSD card, write/verify, then boot it in the
+Brick. Allow its first-boot setup to finish.
+https://www.raspberrypi.com/software/
+
+For direct copying from macOS/Windows, the SHARE data partition must be in a
+format your computer can read, such as exFAT. A Linux ext4 SHARE is not natively
+readable in Finder/Explorer. KNULLI can prepare a data partition, but formatting
+it erases the data: do this only on a new/spare card or after a complete backup.
+Do not format the small KNULLI boot partition or your working sample library.
+
+On a NEW/spare card only, after the first KNULLI boot, the data-format menu is:
+START > System Settings > Frontend Developer Options > Format a disk >
+Device: Internal > File system: exFAT > Format now. Reboot when it finishes.
+This erases the selected data partition. Verify the card/device selection and
+back up anything important first; leave an already working card unchanged.
+Official SD-card and storage guidance:
+https://knulli.org/play/add-games/formatting/
+https://knulli.org/play/add-games/accessing-sd-card/
+https://knulli.org/play/add-games/game-storage/
+
+3. INSTALL POCKET TRACKER
+Unzip Pocket-Tracker-Extreme-0.2.0-beta.3-Brick.zip into:
+SHARE/roms/ports/
+
+After extracting, you should have:
+roms/ports/Pocket Tracker Extreme.sh
+roms/ports/pockettracker_extreme/pockettracker_extreme.aarch64
+roms/ports/pockettracker_extreme/factory/Presets/
+
+Keep any existing pockettracker_extreme/data folder. Your projects, samples,
+recordings and edited presets belong there. PortMaster installation or updating
+is not required to start this standalone tracker.
+
+4. OPTIONAL: PREPARE THE 2,048 PRESETS ON YOUR COMPUTER
+This optional step avoids doing thousands of small file operations before the
+first app window opens. It requires Python 3 only; no Android SDK or build tools.
+Run it after copying has finished, while the card is still in the computer.
+
+macOS example:
+python3 "/Volumes/SHARE/roms/ports/pockettracker_extreme/tools/prepare_presets.py"
+
+Windows example (replace E: with the actual SHARE drive):
+py "E:\roms\ports\pockettracker_extreme\tools\prepare_presets.py"
+
+Linux: run python3 followed by the script's path on your mounted card.
+The script locates the adjacent factory/data folders automatically. It verifies
+the pack, adds missing files and keeps existing/edited presets. Its marker is
+committed only after preparation finishes. There is no need to run it every time.
+
+Without this optional step, the normal launcher prepares missing presets on
+its first launch. During that preparation the screen can remain black. This
+happens BEFORE the native first-frame 25-second watchdog starts; we do not have a
+measured universal SD-card setup time. The setup log is:
+roms/ports/pockettracker_extreme/log.txt
+Later launches skip preparation when the same factory pack is already ready.
+
+5. START
+Wait for all computer copies to finish, safely eject the card, insert it into
+the powered-off Brick and turn it on. Choose Ports > Pocket Tracker Extreme.
+If it is absent, refresh KNULLI's game list. The package keeps the proven SDL
+software-surface compatibility mode and the existing physical controls.
+
+6. ADD YOUR SAMPLES
+Copy your audio and category folders into:
+SHARE/roms/ports/pockettracker_extreme/data/Samples
+
+In the app choose INSTRUMENT > LOAD > Samples / Audio.
+Up/Down selects; A opens a folder or loads a sound; START auditions it.
+R+Left or the '..' row opens the parent folder; B closes the browser.
+You do not need Android-style folder permissions or a library scan on KNULLI.
+
+7. FOLLOW THE ILLUSTRATED ENGLISH GUIDE
+https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html
+
+This is beta software. The preceding private build/startup path was user-tested
+on a Brick with no errors reported. Beta.2 has software/VM validation; physical
+acceptance of this new version is still pending. USB
+interfaces require separate hardware tests. Direct iPhone-to-Brick recording
+failed in the user's repeated hardware test with the current setup. Both ports
+were reported to charge only; the iPhone model and cable were not specified.
+The experimental helper is included, but direct capture is not working in this
+tested setup. Start with a short known WAV and save a test project before an important
+session. Back up your data folder regularly.

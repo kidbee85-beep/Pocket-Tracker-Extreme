@@ -1,0 +1,12 @@
+{
+  "name": "WOODEN_RADIO",
+  "algo": 0,
+  "size": 82,
+  "decay": 76,
+  "damp": 47,
+  "pre": 13,
+  "width": 76,
+  "mod": 12,
+  "category": "Vintage",
+  "description": "Damped, gently moving vintage space; preserves a focused center image."
+}

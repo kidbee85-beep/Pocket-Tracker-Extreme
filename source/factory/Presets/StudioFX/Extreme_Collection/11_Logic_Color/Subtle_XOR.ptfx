@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "effects",
+  "name": "Subtle XOR",
+  "master": [
+    1,
+    11,
+    43,
+    45,
+    54,
+    0,
+    0,
+    255,
+    0,
+    32,
+    96,
+    128,
+    128,
+    230,
+    0
+  ],
+  "category": "Logic Color",
+  "description": "Warps input transformation with a deliberately restrained parallel mix. Texture sets the internal carrier pitch; feedback is unused."
+}

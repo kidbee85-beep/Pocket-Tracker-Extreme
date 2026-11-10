@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Copper Glue",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    46,
+    196,
+    24,
+    188,
+    125,
+    132,
+    124,
+    226,
+    10
+  ],
+  "category": "Character",
+  "description": "Deliberate saturation with compensated output. These are color choices rather than automatic loudness maximizers."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "GLASS_DRIFT",
+  "algo": 0,
+  "size": 136,
+  "decay": 163,
+  "damp": 154,
+  "pre": 48,
+  "width": 182,
+  "mod": 92,
+  "category": "Modulated",
+  "description": "Moving ReverbSc texture for sustained material; use a restrained send on busy drums."
+}

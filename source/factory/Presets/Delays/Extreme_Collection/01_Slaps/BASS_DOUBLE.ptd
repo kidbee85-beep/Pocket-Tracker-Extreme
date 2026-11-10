@@ -1,0 +1,12 @@
+{
+  "name": "BASS_DOUBLE",
+  "pong": false,
+  "sync": false,
+  "time": 11,
+  "feedback": 12,
+  "tone": 48,
+  "wobble": 0,
+  "reverbSend": 0,
+  "category": "Slaps",
+  "description": "Short mono or stereo doubling. Modest feedback preserves rhythmic definition."
+}

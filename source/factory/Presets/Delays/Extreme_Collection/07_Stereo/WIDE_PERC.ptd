@@ -1,0 +1,12 @@
+{
+  "name": "WIDE_PERC",
+  "pong": true,
+  "sync": true,
+  "time": 8,
+  "feedback": 98,
+  "tone": 213,
+  "wobble": 0,
+  "reverbSend": 4,
+  "category": "Stereo",
+  "description": "Alternating stereo returns leave the center available for kick, bass and lead."
+}

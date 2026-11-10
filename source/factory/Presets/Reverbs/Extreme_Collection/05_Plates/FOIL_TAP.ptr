@@ -1,0 +1,12 @@
+{
+  "name": "FOIL_TAP",
+  "algo": 4,
+  "size": 0,
+  "decay": 53,
+  "damp": 113,
+  "pre": 5,
+  "width": 106,
+  "mod": 0,
+  "category": "Plates",
+  "description": "A light foil plate with a deliberate brightness and stereo footprint."
+}

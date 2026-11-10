@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Air With Body",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    17,
+    222,
+    9,
+    225,
+    146,
+    155,
+    121,
+    224,
+    20
+  ],
+  "category": "Space Control",
+  "description": "Subtle stereo and dynamics shaping. Width is a mix decision; check the result in mono."
+}

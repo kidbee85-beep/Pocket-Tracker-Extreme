@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Stereo Restraint",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    11,
+    218,
+    11,
+    195,
+    152,
+    91,
+    127,
+    228,
+    13
+  ],
+  "category": "Space Control",
+  "description": "Subtle stereo and dynamics shaping. Width is a mix decision; check the result in mono."
+}

@@ -1,0 +1,58 @@
+{
+  "archive-search": {
+    "ready": true,
+    "file": "assets/images/source-search.png",
+    "alt": "TrackWerk Source Sampler showing archive search results and metadata",
+    "sha256": "0ca7b01ea721e9a011796c55dcaf46ada8860b7bcc91b814cb1a2f044c0244e9",
+    "caption": "Actual TrackWerk 0.9 native renderer capture from a genuine Internet Archive session. Selected source: Modern Jazz Samba, Kevin MacLeod, CC BY4.0."
+  },
+  "archive-preview": {
+    "ready": true,
+    "file": "assets/images/source-preview.png",
+    "alt": "TrackWerk Source Sampler previewing a selected archive track",
+    "sha256": "45c1793167df02620eb7f782eb3d5de6dd95792167f5edc72acab54fa4898753",
+    "caption": "Actual TrackWerk 0.9 native renderer capture from a genuine Internet Archive session. Selected source: Modern Jazz Samba, Kevin MacLeod, CC BY4.0."
+  },
+  "archive-region": {
+    "ready": true,
+    "file": "assets/images/source-region.png",
+    "alt": "TrackWerk Source Sampler with IN and OUT markers around a selected audio region",
+    "sha256": "51d1a1440b0455a3ae45b3dfca96cb7ed1a6a43555c3a9862895c9ef2daf08bc",
+    "caption": "Actual TrackWerk 0.9 native renderer capture from a genuine Internet Archive session. Selected source: Modern Jazz Samba, Kevin MacLeod, CC BY4.0. IN 00:11.334 / OUT 00:33.922; complete 22.588-second phrase."
+  },
+  "sample-editor": {
+    "ready": true,
+    "file": "assets/images/sample-editor.png",
+    "alt": "TrackWerk sample editor showing the imported archive excerpt waveform and editing controls",
+    "sha256": "add97101ed1a596491af24a42ead6fb9668165979bfd356e29033c4cc8da2947",
+    "caption": "The actual 22.588-second archive excerpt in the native editor, before selecting a slice mode. The BPM readout follows the chosen DURATION value; it is not automatic beat detection. Desktop-rendered 0.9 screen."
+  },
+  "effects": {
+    "ready": true,
+    "file": "assets/images/effects.png",
+    "alt": "TrackWerk FX Rack with the effect library, wet/dry and sound-shaping controls",
+    "sha256": "75f6feb0f6c0112e8c95f131887ea1c839e1efb04d73ee10d8502b312cce78b2",
+    "caption": "Native TrackWerk 0.9 renderer capture; physical device acceptance is separate."
+  },
+  "mastering": {
+    "ready": true,
+    "file": "assets/images/mastering.png",
+    "alt": "TrackWerk Master page with dynamics, width and output controls",
+    "sha256": "48bb392927884db209946cc8f6de82d2314ff94a23b76f65912bc41132662234",
+    "caption": "Native TrackWerk 0.9 renderer capture; physical device acceptance is separate."
+  },
+  "drumlab": {
+    "ready": true,
+    "file": "assets/images/drumlab.png",
+    "alt": "TrackWerk Drumlab with instrument roles, style and groove-generation settings",
+    "sha256": "87c9cb6e9437b97eb2b9d21ba0b40427bfb50b1cd7bb49c176b5f39b6fd112b2",
+    "caption": "Native TrackWerk 0.9 renderer capture; physical device acceptance is separate."
+  },
+  "presets": {
+    "ready": true,
+    "file": "assets/images/presets.png",
+    "alt": "TrackWerk categorized preset browser",
+    "sha256": "bf4bffb76bf26bf99d501a664101c1f0bb7fc9b0e1f59f3a6f2730c9b5e564fc",
+    "caption": "Native TrackWerk 0.9 renderer capture; physical device acceptance is separate."
+  }
+}

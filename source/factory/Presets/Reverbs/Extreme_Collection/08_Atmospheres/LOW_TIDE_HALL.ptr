@@ -1,0 +1,12 @@
+{
+  "name": "LOW_TIDE_HALL",
+  "algo": 1,
+  "size": 207,
+  "decay": 203,
+  "damp": 43,
+  "pre": 101,
+  "width": 180,
+  "mod": 27,
+  "category": "Atmospheres",
+  "description": "Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting."
+}

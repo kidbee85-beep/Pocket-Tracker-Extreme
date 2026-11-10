@@ -1,0 +1,12 @@
+{
+  "name": "NIGHT_CONCERT",
+  "algo": 1,
+  "size": 172,
+  "decay": 158,
+  "damp": 42,
+  "pre": 74,
+  "width": 170,
+  "mod": 31,
+  "category": "Halls",
+  "description": "Broad stereo hall for chords and leads. Predelay keeps the central rhythm clear."
+}

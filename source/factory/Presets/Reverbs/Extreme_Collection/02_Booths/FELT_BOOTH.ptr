@@ -1,0 +1,12 @@
+{
+  "name": "FELT_BOOTH",
+  "algo": 2,
+  "size": 30,
+  "decay": 29,
+  "damp": 42,
+  "pre": 5,
+  "width": 72,
+  "mod": 2,
+  "category": "Booths",
+  "description": "Short drum ambience without a long tail. Useful on individual percussion sends."
+}

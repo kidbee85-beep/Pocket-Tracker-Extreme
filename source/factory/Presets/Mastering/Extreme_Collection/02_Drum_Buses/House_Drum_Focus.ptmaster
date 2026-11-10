@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "House Drum Focus",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    28,
+    172,
+    41,
+    177,
+    65,
+    126,
+    128,
+    225,
+    14
+  ],
+  "category": "Drum Buses",
+  "description": "Drum-bus contours balance transient length, release and low-end focus; adjust the input level to taste."
+}

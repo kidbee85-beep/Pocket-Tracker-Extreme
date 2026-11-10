@@ -1,206 +1,166 @@
 {
-  "capture_note": "Primary UI illustrations are canonical beta renderer output. Android is a current signed-beta emulator capture. Input is a representative earlier actual app capture.",
-  "hero": "Project artwork created with image generation; not a device photograph.",
-  "personal_device_photo": false,
-  "beta_capture": {
-    "renderer": "Canonical public-beta shipping TrackerLayout and EngineFeed; scripted navigation of real project",
-    "theme": "ULTRAVIOLET",
-    "visualizer": "OCTA",
-    "physical_camera_footage": false,
-    "assets": {
-      "synth.png": {
-        "phase": 4,
-        "sha256": "377c129025ec3124efa1c9eeee93816cde14669c697b4e6597ae1e6d5ce6de01"
-      },
-      "presets.png": {
-        "phase": 6,
-        "sha256": "27dc48dd386bb78da897f358cdfbd096df2b329c98a94d5e320599562d67fc3a"
-      },
-      "sample-editor.png": {
-        "phase": 10,
-        "sha256": "e1ab05f3c41866f96d136a16cfbce855c7e7e2de1f497dc83306a9949d7ffaeb"
-      },
-      "sample-detail.png": {
-        "phase": 18,
-        "sha256": "f672f9d5c1b29d3d699b2b9a16946f132f4e6504b356990193f0bdb9ea62d370"
-      },
-      "effects.png": {
-        "phase": 21,
-        "sha256": "cf4521c18f175897e49fc777c1f2ccde0e66e21edd1f4deccc6f3c143eab5eef"
-      },
-      "mastering.png": {
-        "phase": 22,
-        "sha256": "6862b3aa39409ec87c2ccb4f8d4665f4db4c548d115ba8aead36c0e22666b8ff"
-      },
-      "punch.png": {
-        "phase": 19,
-        "sha256": "a426e0680aad90fe3869644071bc68835e719bbde3441a967bf81922ecd026ee"
-      },
-      "drumlab.png": {
-        "phase": 8,
-        "sha256": "d60608fd64c8052dc113e5bcec76cab8995d5cfacd5cbfab717a575424ca9f46"
-      },
-      "digging.png": {
-        "phase": 14,
-        "sha256": "d24ba4bfa96963ef4837be8338e6ee448202d9126020911a6082590cd38dfe3a"
-      },
-      "digging-region.png": {
-        "phase": 15,
-        "sha256": "ae8c52d1d1de5c9e909f90ea7651c600f61caf3ba738bf9879fd2761a64b3e55"
-      }
+  "project": "TrackWerk0.9 website",
+  "artist": "Kid Bunka",
+  "images": [
+    {
+      "file": "assets/images/app-icon.png",
+      "sha256": "19bb56fb208aabc3015dea23dd0ea5c8ef43621d302886fa57893c9b1895d1da",
+      "origin": "Original TrackWerk B mark/wordmark, code/vector authoring in the independent brand review.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/app-icon.svg",
+      "sha256": "3af15d9661f8db5a3774d1eeb12fdf5dc8c2c0109e53a17993bcf6076aa3d5e8",
+      "origin": "Original TrackWerk B mark/wordmark, code/vector authoring in the independent brand review.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/browser.png",
+      "sha256": "88f723cdd8d29902c7b6b3115548c78d2efa9e99aa870da0127ed42653c28eaf",
+      "origin": "Frozen TrackWerk0.9 native renderer, Native-UI-Final review capture; controlled demonstration state.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/drumlab.png",
+      "sha256": "87c9cb6e9437b97eb2b9d21ba0b40427bfb50b1cd7bb49c176b5f39b6fd112b2",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/effects.png",
+      "sha256": "75f6feb0f6c0112e8c95f131887ea1c839e1efb04d73ee10d8502b312cce78b2",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/long-wav.png",
+      "sha256": "7d9d57d4e7d6a617ca02acd5b816a6ca96be92db361eb15b285bf63989ab073d",
+      "origin": "Frozen TrackWerk0.9 native renderer, Native-UI-Final review capture; controlled demonstration state.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/mastering.png",
+      "sha256": "48bb392927884db209946cc8f6de82d2314ff94a23b76f65912bc41132662234",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/presets.png",
+      "sha256": "bf4bffb76bf26bf99d501a664101c1f0bb7fc9b0e1f59f3a6f2730c9b5e564fc",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/punch.png",
+      "sha256": "05e9140b177977fd89b4765c3456233e263b464f262d18f9cd6fc40676325f24",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/sample-editor.png",
+      "sha256": "add97101ed1a596491af24a42ead6fb9668165979bfd356e29033c4cc8da2947",
+      "origin": "Frozen TrackWerk 0.9 native renderer, genuine 22.588-second ArchiveSampler import in revision 2 capture. Actual 996131frames/44100Hz/stereo16-bit; not physical-device footage.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/social-card.png",
+      "sha256": "9d6bc212939d8fd6a95025b866235fc2b0a4a6688a7a00f82d3551948f070ceb",
+      "origin": "Authored composition from build_social_card.py, own mark, licensed fonts and actual native synth screenshot.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/source-preview.png",
+      "sha256": "45c1793167df02620eb7f782eb3d5de6dd95792167f5edc72acab54fa4898753",
+      "origin": "Frozen TrackWerk0.9 native renderer, genuine revision2ArchiveSampler HTTPS session. Actual source preview and11.334–33.922second region selection.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/source-region.png",
+      "sha256": "51d1a1440b0455a3ae45b3dfca96cb7ed1a6a43555c3a9862895c9ef2daf08bc",
+      "origin": "Frozen TrackWerk0.9 native renderer, genuine revision2ArchiveSampler HTTPS session. Actual source preview and11.334–33.922second region selection.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/source-search.png",
+      "sha256": "0ca7b01ea721e9a011796c55dcaf46ada8860b7bcc91b814cb1a2f044c0244e9",
+      "origin": "Frozen TrackWerk0.9 native renderer, genuine revision2ArchiveSampler HTTPS session. Actual source preview and11.334–33.922second region selection.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/splash.png",
+      "sha256": "1313770a32f4421a7d9e67328f23c48c5badc3ab493fa1547148510647727ab6",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/style.png",
+      "sha256": "7507fd681882b53544e5b92591464ca6a82845b56941bb01eb01841e4f4b7042",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/synth.png",
+      "sha256": "8ca095c277c9bc3dc5d38f29b5a18ea7efe5f09a673dd69f7298ab722949a328",
+      "origin": "Frozen TrackWerk0.9 native renderer, launch capture/stills; real Archive response/import where relevant.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/tracker.png",
+      "sha256": "57efc839ebc53d6ff0d5ba0e0d9b41b973f25dada9559ef8de93f48227ba5673",
+      "origin": "Frozen TrackWerk 0.9 native renderer, actual Chrome Crate v2 playback, populated kick phrase following the transport playhead. Not physical-device footage.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/wordmark.svg",
+      "sha256": "049ec1bd6077ce67185f9ee774c67f3bb9f43c0bd89299655dca105b9bc315b0",
+      "origin": "Original TrackWerk B mark/wordmark, code/vector authoring in the independent brand review.",
+      "physical_handheld_capture": false
+    },
+    {
+      "file": "assets/images/film-poster.jpg",
+      "sha256": "e82814c35e8de2a56c59355afa1ba0acf193119554accf55a1ad19b3f65e2e06",
+      "origin": "Poster from the revised 136-second session film: actual native UI in an authored illustrated Brick frame. Music revision 2 approved; video review pending.",
+      "physical_handheld_capture": false
     }
+  ],
+  "music_credit": {
+    "title": "Modern Jazz Samba",
+    "creator": "Kevin MacLeod (incompetech.com)",
+    "license": "CC BY4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "composer_guidance": "https://incompetech.com/music/royalty-free/faq.html",
+    "archive_item": "https://archive.org/details/modern-jazz-samba-by-kevin-macleod",
+    "changes": "Eight-bar excerpt at11.334–33.922seconds, gently tempo-matched externally from85to86BPM with pitch preserved, filtered and sequenced in native TrackWerk arrangements; additional drum arrangements by Kid Bunka. Original source bass and harmony retained."
   },
-  "internet_source": {
-    "title": "Cloud rap beat",
-    "creator": "Zanahary",
-    "license": "CC0-1.0",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Cloud_rap_beat.ogg",
-    "evidence": "Real HTTPS Commons search, preview PCM and IN1second/OUT11second region rendered to441000frames at44.1kHz.",
-    "physical_device_capture": false
+  "fonts": {
+    "LiberationSans-Regular.ttf": "SIL OFL1.1",
+    "LiberationMono-Bold.ttf": "SIL OFL1.1",
+    "license_file": "assets/fonts/LICENSE-OFL-1.1.txt"
   },
-  "original_asset_sources": {
-    "hero.png": "Pocket-Tracker-Extreme-Kid-Bunka-Menuebild.png",
-    "app-logo.png": "Pocket-Tracker-Extreme-App-Logo.png",
-    "synth.png": "Pocket-Tracker-Extreme-0.1.0.6-Synth-Plaits.png",
-    "granular.png": "Pocket-Tracker-Extreme-0.1.0.6-Synth-Granular.png",
-    "presets.png": "Pocket-Tracker-Extreme-0.1.0.6-Preset-Browser.png",
-    "sample-editor.png": "Pocket-Tracker-Extreme-0.1.0.6-Sample-Editor.png",
-    "sample-detail.png": "Pocket-Tracker-Extreme-0.1.0.6-Sample-Detail.png",
-    "effects.png": "Pocket-Tracker-Extreme-0.1.0.6-Effekte.png",
-    "mastering.png": "Pocket-Tracker-Extreme-0.1.0.6-Master.png",
-    "punch.png": "Pocket-Tracker-Extreme-0.1.0.6-Punch.png",
-    "drumlab.png": "Pocket-Tracker-Extreme-0.1.0.6-Drumlab.png",
-    "digging.png": "Pocket-Tracker-Extreme-0.1.0.6-Digging-Random.png",
-    "digging-region.png": "Pocket-Tracker-Extreme-0.1.0.6-Digging-Marker.png",
-    "input.png": "Pocket-Tracker-Extreme-0.1.0.6-Input.png",
-    "instrument-load.png": "Pocket-Tracker-Extreme-0.1.0.6-Instrument-LOAD.png",
-    "style.png": "Pocket-Tracker-Extreme-0.1.0.6-Style.png",
-    "splash.png": "Pocket-Tracker-Extreme-0.1.0.6-Splash.png",
-    "android.png": "Pocket-Tracker-Extreme-0.1.0.6-Android.png"
+  "references_checked": [
+    "https://knulli.org/play/install/",
+    "https://knulli.org/play/add-games/accessing-sd-card/",
+    "https://onionui.github.io/docs/installation",
+    "https://github.com/conanizer/pockettracker",
+    "https://incompetech.com/music/royalty-free/faq.html"
+  ],
+  "publication": "LOCAL_ONLY; existing GitHub Pages remains unpublished",
+  "film": {
+    "file": "assets/video/trackwerk-09-film.mp4",
+    "sha256": "b4adb1d614f1a391853a5c05e8cf564ddd3bcdf68e2f46405329b1b20fda881a",
+    "bytes": 10453169,
+    "duration_seconds": 136,
+    "interface": "Real frozen0.9 native UI",
+    "device_frame": "Authored illustrated Brick; not a physical-device recording",
+    "reencoded_for_website": false,
+    "music_credit": "See credits.html#music",
+    "publication": "LOCAL_PREVIEW_ONLY_PENDING_OWNER_VIDEO_REVIEW",
+    "music_revision": 2,
+    "audio_owner_approved": true,
+    "old_v1_video_superseded": true,
+    "revision_2_video_pending": false,
+    "video_owner_approved": false
   },
-  "current_assets": {
-    "hero.png": {
-      "kind": "representative actual app capture or project brand artwork",
-      "original_source": "Pocket-Tracker-Extreme-Kid-Bunka-Menuebild.png"
-    },
-    "app-logo.png": {
-      "kind": "representative actual app capture or project brand artwork",
-      "original_source": "Pocket-Tracker-Extreme-App-Logo.png"
-    },
-    "synth.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 4,
-      "sha256": "377c129025ec3124efa1c9eeee93816cde14669c697b4e6597ae1e6d5ce6de01"
-    },
-    "granular.png": {
-      "kind": "representative actual app capture or project brand artwork",
-      "original_source": "Pocket-Tracker-Extreme-0.1.0.6-Synth-Granular.png"
-    },
-    "presets.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 6,
-      "sha256": "27dc48dd386bb78da897f358cdfbd096df2b329c98a94d5e320599562d67fc3a"
-    },
-    "sample-editor.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 10,
-      "sha256": "e1ab05f3c41866f96d136a16cfbce855c7e7e2de1f497dc83306a9949d7ffaeb"
-    },
-    "sample-detail.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 18,
-      "sha256": "f672f9d5c1b29d3d699b2b9a16946f132f4e6504b356990193f0bdb9ea62d370"
-    },
-    "effects.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 21,
-      "sha256": "cf4521c18f175897e49fc777c1f2ccde0e66e21edd1f4deccc6f3c143eab5eef"
-    },
-    "mastering.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 22,
-      "sha256": "6862b3aa39409ec87c2ccb4f8d4665f4db4c548d115ba8aead36c0e22666b8ff"
-    },
-    "punch.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 19,
-      "sha256": "a426e0680aad90fe3869644071bc68835e719bbde3441a967bf81922ecd026ee"
-    },
-    "drumlab.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 8,
-      "sha256": "d60608fd64c8052dc113e5bcec76cab8995d5cfacd5cbfab717a575424ca9f46"
-    },
-    "digging.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 14,
-      "sha256": "d24ba4bfa96963ef4837be8338e6ee448202d9126020911a6082590cd38dfe3a"
-    },
-    "digging-region.png": {
-      "kind": "canonical beta render",
-      "capture_phase": 15,
-      "sha256": "ae8c52d1d1de5c9e909f90ea7651c600f61caf3ba738bf9879fd2761a64b3e55"
-    },
-    "input.png": {
-      "kind": "representative actual app capture or project brand artwork",
-      "original_source": "Pocket-Tracker-Extreme-0.1.0.6-Input.png"
-    },
-    "instrument-load.png": {
-      "kind": "canonical beta render",
-      "sha256": "8cd736db06df082d66d3e7a5fe6d48ae1e336b5424a40b78167e6ae866bfe1dd"
-    },
-    "style.png": {
-      "kind": "canonical beta render",
-      "sha256": "1a2dff755be0d3bd5f6d97384a8cd9fc86ff9de8d24ae5786e93971e381eb26f"
-    },
-    "splash.png": {
-      "kind": "canonical beta render",
-      "sha256": "fbd085f801d7d9cf44e327bfbb60ba93d704be741c3f6510f7a85ee812cf2848"
-    },
-    "android.png": {
-      "kind": "actual signed0.2.0-beta.2 APK running in Android emulator",
-      "physical_device_capture": false,
-      "sha256": "a8a8c43a0a7e89653243f3ba24047659ce39b61968cc5da580a9f602511f4b63"
-    },
-    "project.png": {
-      "kind": "canonical beta render",
-      "sha256": "743dc64fc9084757df505650226514373254fb2352db7d27ffa0720cb0a69e7a"
-    },
-    "groove.png": {
-      "kind": "canonical beta render",
-      "sha256": "139006d86a9b50ac5c555de22de24243a952c1c331288d9c71d976412763220a"
-    },
-    "film-poster.png": {
-      "kind": "canonical ULTRAVIOLET native UI inside original dark-violet Brick illustration; final film poster pending approval",
-      "physical_device_photo": false,
-      "sha256": "07837e5481ce4296c9236f990cdd9580b4414dfd80e5a6384d121d4443f17ebb"
-    }
-  },
-  "extra_canonical_stills": {
-    "style.png": {
-      "renderer": "Canonical beta native UI, ULTRAVIOLET theme, Mint Afterhours project",
-      "sha256": "1a2dff755be0d3bd5f6d97384a8cd9fc86ff9de8d24ae5786e93971e381eb26f"
-    },
-    "splash.png": {
-      "renderer": "Canonical beta native UI, ULTRAVIOLET theme, Mint Afterhours project",
-      "sha256": "fbd085f801d7d9cf44e327bfbb60ba93d704be741c3f6510f7a85ee812cf2848"
-    },
-    "project.png": {
-      "renderer": "Canonical beta native UI, ULTRAVIOLET theme, Mint Afterhours project",
-      "sha256": "743dc64fc9084757df505650226514373254fb2352db7d27ffa0720cb0a69e7a"
-    },
-    "groove.png": {
-      "renderer": "Canonical beta native UI, ULTRAVIOLET theme, Mint Afterhours project",
-      "sha256": "139006d86a9b50ac5c555de22de24243a952c1c331288d9c71d976412763220a"
-    },
-    "instrument-load.png": {
-      "renderer": "Canonical beta native UI, ULTRAVIOLET theme, Mint Afterhours project",
-      "sha256": "8cd736db06df082d66d3e7a5fe6d48ae1e336b5424a40b78167e6ae866bfe1dd"
-    }
-  },
-  "android_beta_capture": {
-    "kind": "actual signed0.2.0-beta.2 APK running in Android emulator",
-    "physical_device_capture": false,
-    "sha256": "a8a8c43a0a7e89653243f3ba24047659ce39b61968cc5da580a9f602511f4b63"
-  }
+  "private_raw_sample_library_in_website": false,
+  "contains_rendered_demo_music": true
 }

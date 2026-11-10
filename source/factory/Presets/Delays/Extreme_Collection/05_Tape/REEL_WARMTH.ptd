@@ -1,0 +1,12 @@
+{
+  "name": "REEL_WARMTH",
+  "pong": true,
+  "sync": false,
+  "time": 47,
+  "feedback": 146,
+  "tone": 98,
+  "wobble": 46,
+  "reverbSend": 16,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

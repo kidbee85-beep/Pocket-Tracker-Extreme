@@ -1,0 +1,86 @@
+name: Handheld compatibility report
+description: Share a test result from an Android or Linux handheld.
+title: "[Handheld] Model / operating system"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping map real device compatibility. A partial result is useful.
+        Test playback and controls first, then test any recording route separately.
+  - type: input
+    id: device
+    attributes:
+      label: Device brand and exact model
+      placeholder: Anbernic RG405V, Retroid model, R36S hardware revision…
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform and package
+      options:
+        - Android APK
+        - TrimUI Brick / KNULLI package
+        - R36S / Linux community-test package
+        - Other native Linux handheld
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system or firmware name and version
+      placeholder: Android version and custom OS, or Linux firmware/version
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Pocket Tracker Extreme version
+      value: 0.2.0-beta.1
+    validations:
+      required: true
+  - type: dropdown
+    id: launch
+    attributes:
+      label: Installation and launch
+      options:
+        - Installs and starts
+        - Installs but does not start
+        - Does not install
+        - Other result described below
+    validations:
+      required: true
+  - type: textarea
+    id: controls
+    attributes:
+      label: Buttons and display
+      description: Check D-pad, A/B, shoulders, Start/Select, touch fallback and your usual orientation.
+      placeholder: Which controls work? Are any reversed, missing or stuck? Does the screen fit?
+    validations:
+      required: true
+  - type: textarea
+    id: playback
+    attributes:
+      label: Sample and synth playback
+      placeholder: Short sample/phrase result; audio output used; any clicks, delay or slowdowns
+    validations:
+      required: true
+  - type: textarea
+    id: recording
+    attributes:
+      label: Recording or USB test, if attempted
+      description: Include microphone/interface model, connection, host cable and power arrangement.
+      placeholder: Not tested / exact route and result
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Result and reproducible steps
+      description: Include the visible error or a minimal set of steps where possible.
+      placeholder: Expected result, actual result and steps to repeat
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Optional logs or screenshots
+      description: Share only material you want in a public issue; remove account tokens and private paths first.

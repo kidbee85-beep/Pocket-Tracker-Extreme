@@ -1,0 +1,12 @@
+{
+  "name": "HALF_NOTE_AIR",
+  "pong": true,
+  "sync": true,
+  "time": 1,
+  "feedback": 116,
+  "tone": 128,
+  "wobble": 7,
+  "reverbSend": 18,
+  "category": "Straight",
+  "description": "Tempo-synchronized straight note echo; use as a send rather than a full mix insert."
+}

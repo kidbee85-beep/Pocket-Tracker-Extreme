@@ -1,0 +1,12 @@
+{
+  "name": "GENTLE_CHORUS",
+  "algo": 0,
+  "size": 84,
+  "decay": 124,
+  "damp": 106,
+  "pre": 17,
+  "width": 139,
+  "mod": 39,
+  "category": "Modulated",
+  "description": "Moving ReverbSc texture for sustained material; use a restrained send on busy drums."
+}

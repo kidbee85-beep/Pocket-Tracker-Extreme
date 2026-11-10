@@ -1,0 +1,12 @@
+{
+  "name": "WOOD_SLAP",
+  "pong": false,
+  "sync": false,
+  "time": 18,
+  "feedback": 38,
+  "tone": 81,
+  "wobble": 24,
+  "reverbSend": 4,
+  "category": "Slaps",
+  "description": "Short mono or stereo doubling. Modest feedback preserves rhythmic definition."
+}

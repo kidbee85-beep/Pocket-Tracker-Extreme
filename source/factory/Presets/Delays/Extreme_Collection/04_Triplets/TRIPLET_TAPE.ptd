@@ -1,0 +1,12 @@
+{
+  "name": "TRIPLET_TAPE",
+  "pong": false,
+  "sync": true,
+  "time": 6,
+  "feedback": 133,
+  "tone": 69,
+  "wobble": 31,
+  "reverbSend": 14,
+  "category": "Triplets",
+  "description": "Triplet and sixth-beat echoes add swing against a straight pattern."
+}

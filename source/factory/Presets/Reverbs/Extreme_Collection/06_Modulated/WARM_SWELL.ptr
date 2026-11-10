@@ -1,0 +1,12 @@
+{
+  "name": "WARM_SWELL",
+  "algo": 0,
+  "size": 108,
+  "decay": 149,
+  "damp": 52,
+  "pre": 36,
+  "width": 144,
+  "mod": 47,
+  "category": "Modulated",
+  "description": "Moving ReverbSc texture for sustained material; use a restrained send on busy drums."
+}

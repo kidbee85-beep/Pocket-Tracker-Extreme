@@ -1,0 +1,12 @@
+{
+  "name": "BASS_QUARTER",
+  "pong": false,
+  "sync": true,
+  "time": 2,
+  "feedback": 75,
+  "tone": 62,
+  "wobble": 1,
+  "reverbSend": 0,
+  "category": "Straight",
+  "description": "Tempo-synchronized straight note echo; use as a send rather than a full mix insert."
+}

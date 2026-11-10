@@ -1,0 +1,12 @@
+{
+  "name": "CASSETTE_KEYS",
+  "pong": false,
+  "sync": false,
+  "time": 39,
+  "feedback": 112,
+  "tone": 71,
+  "wobble": 68,
+  "reverbSend": 8,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

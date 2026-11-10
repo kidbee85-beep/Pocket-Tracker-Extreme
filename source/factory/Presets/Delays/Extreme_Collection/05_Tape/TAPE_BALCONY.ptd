@@ -1,0 +1,12 @@
+{
+  "name": "TAPE_BALCONY",
+  "pong": true,
+  "sync": false,
+  "time": 72,
+  "feedback": 157,
+  "tone": 113,
+  "wobble": 64,
+  "reverbSend": 27,
+  "category": "Tape",
+  "description": "Filtered tape-style repeats with bounded wow and feedback below self-oscillation."
+}

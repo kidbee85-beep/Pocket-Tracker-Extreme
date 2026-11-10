@@ -1,0 +1,12 @@
+{
+  "name": "DOTTED_CHORD",
+  "pong": true,
+  "sync": true,
+  "time": 9,
+  "feedback": 136,
+  "tone": 126,
+  "wobble": 8,
+  "reverbSend": 22,
+  "category": "Dotted",
+  "description": "Dotted spacing creates a second interlocking pulse without moving the dry sequence."
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Roomy Drum Bus",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    18,
+    188,
+    27,
+    204,
+    141,
+    145,
+    124,
+    222,
+    16
+  ],
+  "category": "Drum Buses",
+  "description": "Drum-bus contours balance transient length, release and low-end focus; adjust the input level to taste."
+}

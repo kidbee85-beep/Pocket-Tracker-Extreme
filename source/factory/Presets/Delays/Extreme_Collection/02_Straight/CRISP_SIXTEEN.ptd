@@ -1,0 +1,12 @@
+{
+  "name": "CRISP_SIXTEEN",
+  "pong": true,
+  "sync": true,
+  "time": 4,
+  "feedback": 87,
+  "tone": 224,
+  "wobble": 0,
+  "reverbSend": 3,
+  "category": "Straight",
+  "description": "Tempo-synchronized straight note echo; use as a send rather than a full mix insert."
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Original TrackWerk TW geometry / GPL-3.0-or-later. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M32.2,31.8L77,31.8L75.4,39.8L59.4,39.8L56.2,55.8L48.2,55.8L51.4,39.8L30.6,39.8Z" android:fillColor="#63E7EF" />
+    <path android:pathData="M32.2,49.4L40.2,49.4L45,67L54.6,55.8L62.6,67L70.6,49.4L78.6,49.4L69,75L61,75L54.6,67L46.6,75L38.6,75Z" android:fillColor="#EF61CE" />
+</vector>

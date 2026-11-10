@@ -1,0 +1,12 @@
+{
+  "name": "SLOW_ORBIT",
+  "algo": 0,
+  "size": 143,
+  "decay": 171,
+  "damp": 92,
+  "pre": 44,
+  "width": 174,
+  "mod": 86,
+  "category": "Modulated",
+  "description": "Moving ReverbSc texture for sustained material; use a restrained send on busy drums."
+}

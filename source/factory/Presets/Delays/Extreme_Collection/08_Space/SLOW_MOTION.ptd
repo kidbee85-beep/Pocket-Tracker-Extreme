@@ -1,0 +1,12 @@
+{
+  "name": "SLOW_MOTION",
+  "pong": false,
+  "sync": false,
+  "time": 119,
+  "feedback": 192,
+  "tone": 86,
+  "wobble": 48,
+  "reverbSend": 59,
+  "category": "Space",
+  "description": "Long decaying echoes and a reverb feed. Tempo divisions may reach the 2-second delay limit at slow tempos."
+}

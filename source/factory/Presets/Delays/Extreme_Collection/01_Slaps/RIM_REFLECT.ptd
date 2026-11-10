@@ -1,0 +1,12 @@
+{
+  "name": "RIM_REFLECT",
+  "pong": true,
+  "sync": false,
+  "time": 7,
+  "feedback": 34,
+  "tone": 122,
+  "wobble": 3,
+  "reverbSend": 0,
+  "category": "Slaps",
+  "description": "Short mono or stereo doubling. Modest feedback preserves rhythmic definition."
+}

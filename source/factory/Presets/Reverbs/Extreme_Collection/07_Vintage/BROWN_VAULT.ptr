@@ -1,0 +1,12 @@
+{
+  "name": "BROWN_VAULT",
+  "algo": 0,
+  "size": 141,
+  "decay": 134,
+  "damp": 29,
+  "pre": 38,
+  "width": 122,
+  "mod": 32,
+  "category": "Vintage",
+  "description": "Damped, gently moving vintage space; preserves a focused center image."
+}

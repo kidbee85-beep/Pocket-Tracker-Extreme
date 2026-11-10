@@ -1,0 +1,12 @@
+{
+  "name": "CROSS_ROOM",
+  "pong": true,
+  "sync": false,
+  "time": 31,
+  "feedback": 111,
+  "tone": 132,
+  "wobble": 13,
+  "reverbSend": 11,
+  "category": "Stereo",
+  "description": "Alternating stereo returns leave the center available for kick, bass and lead."
+}

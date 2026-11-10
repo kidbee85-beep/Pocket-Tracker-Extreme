@@ -1,0 +1,33 @@
+Mutable Instruments DSP integration in PocketTracker Studio
+
+Original DSP author: Emilie Gillet.
+Original per-file copyright and permission notices are retained in the source.
+Mutable-Instruments-MIT.txt contains the collected original notices.
+Mutable-stmlib-LICENSE contains the original stmlib license overview.
+PocketTracker's integration code remains under GPL-3.0-or-later.
+
+Recorded vendor revisions (native/vendor/mutable/PROVENANCE.json):
+eurorack: f4cfa7697095a28d292bff758beb51deb49b5a86
+stmlib:   e3bd7c9cc00e4364166f9905c0509b6ffd0535ec
+
+Compiled upstream implementation scope, native/studio/CMakeLists.txt:
+  Plaits:   37 C++ implementation/resource files
+  Rings:     6 C++ implementation/resource files
+  Elements:  9 C++ implementation/resource files
+  Warps:     5 C++ implementation/resource files
+  Clouds:    7 C++ implementation/resource files
+  Braids:    4 C++ implementation/resource files
+  stmlib:    3 C++ implementation files (random, units, atan)
+Total: 71 upstream C++ implementation/resource files, plus included headers.
+All 71 retain their original MIT permission notices.
+
+This is a software integration of selected DSP algorithms. It is not the
+complete firmware or hardware behavior of the original modules. Parameter
+mapping, sample-rate adaptation, preset banks and the application interface
+are supplied by PocketTracker Studio. Their behavior can differ from the
+original hardware.
+
+The vendor tree also retains upstream embedded hardware, bootloader and
+development support files. These are not compiled by the studio target.
+Their original notices remain with those source files; no claim that every
+file in the vendor tree is MIT-licensed is intended.

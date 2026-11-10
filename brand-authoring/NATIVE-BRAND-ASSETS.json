@@ -1,0 +1,106 @@
+{
+  "original_vector_source": "TrackWerk B / Raster Cracktro",
+  "identity_and_storage_unchanged": true,
+  "assets": [
+    {
+      "path": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "sha256": "4607bde1bf3efce37c644e09b9493337d3f4b1374a625ad6a65ecca2527a91dd",
+      "bytes": 2393
+    },
+    {
+      "path": "app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+      "sha256": "4607bde1bf3efce37c644e09b9493337d3f4b1374a625ad6a65ecca2527a91dd",
+      "bytes": 2393
+    },
+    {
+      "path": "app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "sha256": "e8ee668ce878efa2407f9a16273d14bc746a9d2f8df841915d5e6258d159fb0a",
+      "bytes": 3337
+    },
+    {
+      "path": "app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+      "sha256": "e8ee668ce878efa2407f9a16273d14bc746a9d2f8df841915d5e6258d159fb0a",
+      "bytes": 3337
+    },
+    {
+      "path": "app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "sha256": "d87012d1e73970f247c881dd4f9683728d207997522bd03af47ef730d533e10d",
+      "bytes": 4094
+    },
+    {
+      "path": "app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+      "sha256": "d87012d1e73970f247c881dd4f9683728d207997522bd03af47ef730d533e10d",
+      "bytes": 4094
+    },
+    {
+      "path": "app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "sha256": "8244dae73ab10d860ca2a0829782010fc1bb86e0cf8414b3a92c612b0d47b9e3",
+      "bytes": 5564
+    },
+    {
+      "path": "app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+      "sha256": "8244dae73ab10d860ca2a0829782010fc1bb86e0cf8414b3a92c612b0d47b9e3",
+      "bytes": 5564
+    },
+    {
+      "path": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "sha256": "47b5ac7fad218472d732c93a91486518a8929c935dcfc79279d6a9a5e6e1e63a",
+      "bytes": 6203
+    },
+    {
+      "path": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+      "sha256": "47b5ac7fad218472d732c93a91486518a8929c935dcfc79279d6a9a5e6e1e63a",
+      "bytes": 6203
+    },
+    {
+      "path": "app/src/main/res/drawable-mdpi/ic_splash_logo.png",
+      "sha256": "1b7d951f011dbaaf0b017a56dd1bb82e5a04d6fea17fea4e97b7a74325c0699c",
+      "bytes": 8410
+    },
+    {
+      "path": "app/src/main/res/drawable-hdpi/ic_splash_logo.png",
+      "sha256": "444ec40ebe47d43b94215654a3c968d8e49b51bf148612e51ac843759720b0db",
+      "bytes": 11644
+    },
+    {
+      "path": "app/src/main/res/drawable-xhdpi/ic_splash_logo.png",
+      "sha256": "99f7c0bd7415990a9c4f773a650437b02e9cf44f348d2977a51740f8d3d15710",
+      "bytes": 12795
+    },
+    {
+      "path": "app/src/main/res/drawable-xxhdpi/ic_splash_logo.png",
+      "sha256": "ad5bd608d415e414ddca6df0edc33d59ea53713de658638e41c7acab2ebedc6f",
+      "bytes": 22975
+    },
+    {
+      "path": "app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "sha256": "a24e4a57f9d9d61431616ea67f6bd2c9f959d7f36777c2a43f8703b98e589c5f",
+      "bytes": 581
+    },
+    {
+      "path": "app/src/main/res/drawable/ic_launcher_monochrome.xml",
+      "sha256": "8b199b623a97d4f7d3940dd4214f1a5b25d3d661ec5ce447cc8bdf63dacb0ec8",
+      "bytes": 585
+    },
+    {
+      "path": "app/src/main/res/drawable/ic_launcher_background.xml",
+      "sha256": "89914f519c6a6e8a21ac219eeada61862cd031e535be261699f046c92045d737",
+      "bytes": 446
+    },
+    {
+      "path": "app/src/main/res/values/ic_launcher_background.xml",
+      "sha256": "b567306f590c2003b1d8d405f12a44b7a3da87be6aae231c9394519a58b7b22a",
+      "bytes": 115
+    },
+    {
+      "path": "shell/sdl/window_icon.h",
+      "sha256": "7d9e289bdae3024da2245cf040a2fc8cbd440c8f0ffa8ab124d25634cdc5022b",
+      "bytes": 25638
+    },
+    {
+      "path": "docs/images/trackwerk-app.png",
+      "sha256": "19bb56fb208aabc3015dea23dd0ea5c8ef43621d302886fa57893c9b1895d1da",
+      "bytes": 8589
+    }
+  ]
+}

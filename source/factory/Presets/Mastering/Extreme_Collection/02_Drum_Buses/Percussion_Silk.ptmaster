@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "kind": "master",
+  "name": "Percussion Silk",
+  "master": [
+    1,
+    0,
+    0,
+    128,
+    128,
+    32,
+    21,
+    194,
+    24,
+    224,
+    95,
+    136,
+    125,
+    228,
+    21
+  ],
+  "category": "Drum Buses",
+  "description": "Drum-bus contours balance transient length, release and low-end focus; adjust the input level to taste."
+}

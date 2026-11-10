@@ -1,0 +1,1812 @@
+{
+  "format": 1,
+  "creator": "Kid Bunka / Pocket Tracker Extreme",
+  "license": "GPL-3.0-or-later",
+  "new_presets": 256,
+  "counts": {
+    "reverbs": 64,
+    "delays": 64,
+    "studio_fx": 96,
+    "masters": 32
+  },
+  "native_totals": {
+    "send_reverb": 84,
+    "send_delay": 84,
+    "studio_fx": 256,
+    "mastering": 64
+  },
+  "files": [
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/WOOD_STUDIO.ptr",
+      "kind": "reverbs",
+      "name": "WOOD_STUDIO",
+      "category": "Rooms",
+      "sha256": "9e5e19be9fcee8527ced91ff128eb21ba50e9f814677861ab3d3312c1d577cc1"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/TILE_FOYER.ptr",
+      "kind": "reverbs",
+      "name": "TILE_FOYER",
+      "category": "Rooms",
+      "sha256": "a6538206d3693ad39eb7b2927e6431480809cfd41cfd8b552ae9a408b0b05879"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/SOFT_LIVING.ptr",
+      "kind": "reverbs",
+      "name": "SOFT_LIVING",
+      "category": "Rooms",
+      "sha256": "867628fe8586fe4411026f9d23f7ca1017e3cf660322227dff6e7c12661d9fdc"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/BRICK_CORNER.ptr",
+      "kind": "reverbs",
+      "name": "BRICK_CORNER",
+      "category": "Rooms",
+      "sha256": "3a8a331019e0ffaae32badc83b6c0927b2127d3953e4b90d7e2d8f0b2cdbb292"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/OPEN_WORKSHOP.ptr",
+      "kind": "reverbs",
+      "name": "OPEN_WORKSHOP",
+      "category": "Rooms",
+      "sha256": "2e5dd4a256e1592c27b178e4cfe38c4688ea949be88540f6d64a2f101430e57b"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/PERC_GALLERY.ptr",
+      "kind": "reverbs",
+      "name": "PERC_GALLERY",
+      "category": "Rooms",
+      "sha256": "d00e7e4995e7fd46889d4d32fc97351bc71505cb2f53ae9714084056d688e4a4"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/PIANO_ROOM.ptr",
+      "kind": "reverbs",
+      "name": "PIANO_ROOM",
+      "category": "Rooms",
+      "sha256": "5856e95e9e4de5af44288274f5c5696340bbd899526fa52a7d1dc75a8a23ed7a"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/01_Rooms/STEREO_LOFT.ptr",
+      "kind": "reverbs",
+      "name": "STEREO_LOFT",
+      "category": "Rooms",
+      "sha256": "8230df644274e48e069bd3cca10b0f0ee540b0e914602073a469850620b672b2"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/KICK_AIR.ptr",
+      "kind": "reverbs",
+      "name": "KICK_AIR",
+      "category": "Booths",
+      "sha256": "18c5ee79f22f2696d87ef6fc4a7a1d9760992d7b089be34454ea976fa1cc1f5d"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/SNARE_CLOSET.ptr",
+      "kind": "reverbs",
+      "name": "SNARE_CLOSET",
+      "category": "Booths",
+      "sha256": "e2d1dbc73d63c661f033dd4d48c0f21f5fce90d8ccca8f82b2d7f2a1782cdb23"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/FELT_BOOTH.ptr",
+      "kind": "reverbs",
+      "name": "FELT_BOOTH",
+      "category": "Booths",
+      "sha256": "48ce89e607a628ef749200647241f34a7d4b520ad266c99225d39767add5a0cf"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/TIGHT_BRUSH.ptr",
+      "kind": "reverbs",
+      "name": "TIGHT_BRUSH",
+      "category": "Booths",
+      "sha256": "619cc4cd280686b49e48cb09fd6305f8a95df727253350dda27394b8fa08ec6d"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/CLAP_BOX.ptr",
+      "kind": "reverbs",
+      "name": "CLAP_BOX",
+      "category": "Booths",
+      "sha256": "4063c20d27df04ca6ed35a8ccf505d6d9eb90fb5ad13e0f93c24c19e989e93f5"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/DRY_TIMBER.ptr",
+      "kind": "reverbs",
+      "name": "DRY_TIMBER",
+      "category": "Booths",
+      "sha256": "65f8e497cc27610560f1e8bc13ce325bd4cfb44cffe896bfad3614b42d2350fe"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/RIM_CABIN.ptr",
+      "kind": "reverbs",
+      "name": "RIM_CABIN",
+      "category": "Booths",
+      "sha256": "f0eb7b972027eded20fdf6794028d3e7558cf43ebd866a405d066e304e397d2e"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/02_Booths/MONO_CUBICLE.ptr",
+      "kind": "reverbs",
+      "name": "MONO_CUBICLE",
+      "category": "Booths",
+      "sha256": "7d588c32cae93a57a746bbc5e1ec1e15375759249f341c0a976509363e7c0e6d"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/VELVET_CELLAR.ptr",
+      "kind": "reverbs",
+      "name": "VELVET_CELLAR",
+      "category": "Chambers",
+      "sha256": "c60f97dfbed0781a9cae02f18d1c4ef5054158b1b56e6c138dc21edd58d63056"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/JAZZ_CHAMBER.ptr",
+      "kind": "reverbs",
+      "name": "JAZZ_CHAMBER",
+      "category": "Chambers",
+      "sha256": "0edb6b1b5f596ead29f7f663ba218503856aac263942f4e7eb6731c2023fd0a8"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/STRING_ANNEX.ptr",
+      "kind": "reverbs",
+      "name": "STRING_ANNEX",
+      "category": "Chambers",
+      "sha256": "ba65ee264d71719d105496a7bf0a96d44c6ab7a7bd5f6016bba53a251f4b98de"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/COPPER_VAULT.ptr",
+      "kind": "reverbs",
+      "name": "COPPER_VAULT",
+      "category": "Chambers",
+      "sha256": "4afa2905b9e5d7e5031c67d87e09bed857af6745e6fe61337137dae52a82efac"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/QUIET_THEATRE.ptr",
+      "kind": "reverbs",
+      "name": "QUIET_THEATRE",
+      "category": "Chambers",
+      "sha256": "37618c716d433e8f806104ca1a4cef9a78dd449bf5945e373b8737056b601f54"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/DUSK_LOBBY.ptr",
+      "kind": "reverbs",
+      "name": "DUSK_LOBBY",
+      "category": "Chambers",
+      "sha256": "69710fde6b45a23df3c01ac2c9e70d797cd4fd650ab56bdda9c7b9ee81c57efc"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/DEEP_PASSAGE.ptr",
+      "kind": "reverbs",
+      "name": "DEEP_PASSAGE",
+      "category": "Chambers",
+      "sha256": "d0378c041304481e71f491b974cc667a3c6a09cb4514e222a34dd17422e3dca7"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/03_Chambers/VOICE_BALCONY.ptr",
+      "kind": "reverbs",
+      "name": "VOICE_BALCONY",
+      "category": "Chambers",
+      "sha256": "14a197664ebd22d69521d647921c623f4b481f82db41c38da5393c51dff523a5"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/CONCERT_WOOD.ptr",
+      "kind": "reverbs",
+      "name": "CONCERT_WOOD",
+      "category": "Halls",
+      "sha256": "faf3568d3724113816d4a09ee8effbb4ddaafae9c5e661bd865b377df87cc285"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/GLASS_HALL.ptr",
+      "kind": "reverbs",
+      "name": "GLASS_HALL",
+      "category": "Halls",
+      "sha256": "1fc805816f196409a636067b7a81fdd4c4c607ae16911062e98a5bac0da23517"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/WIDE_VELVET.ptr",
+      "kind": "reverbs",
+      "name": "WIDE_VELVET",
+      "category": "Halls",
+      "sha256": "1e3d233cd430f5926c2f831620e0358c630144ea0652065daa160fd65543a2c5"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/BRASS_STAGE.ptr",
+      "kind": "reverbs",
+      "name": "BRASS_STAGE",
+      "category": "Halls",
+      "sha256": "8c5d7621a4d205088d2c8ac5f3685f125e6c24eaadfbe4ec3f5efebe10dada66"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/STRING_HALL.ptr",
+      "kind": "reverbs",
+      "name": "STRING_HALL",
+      "category": "Halls",
+      "sha256": "4de843eb370a1a02e665d226010df9c4f06a2bc9ac81de2e1c582d6afd3b0cd4"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/NIGHT_CONCERT.ptr",
+      "kind": "reverbs",
+      "name": "NIGHT_CONCERT",
+      "category": "Halls",
+      "sha256": "07d30e116b39e971030044eaf548e6c05161391653515e1d7dfc8be4027e87d0"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/PIANO_CANOPY.ptr",
+      "kind": "reverbs",
+      "name": "PIANO_CANOPY",
+      "category": "Halls",
+      "sha256": "a0b06d4fe435a6d91906c3161de9e3ebfeb45e3e8a02e7f5e95341c367f59f34"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/04_Halls/AMBER_AUDITOR.ptr",
+      "kind": "reverbs",
+      "name": "AMBER_AUDITOR",
+      "category": "Halls",
+      "sha256": "2d2bce699fdc036c0dec5713a811acf6cd3f6f9ab25dc4607aedc29bdc7c1660"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/SILVER_PLATE.ptr",
+      "kind": "reverbs",
+      "name": "SILVER_PLATE",
+      "category": "Plates",
+      "sha256": "92f18d8c487b5b3bf12500c84f1396cd613fd27a414324d5303326eb699ca6e8"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/DARK_PLATE.ptr",
+      "kind": "reverbs",
+      "name": "DARK_PLATE",
+      "category": "Plates",
+      "sha256": "215bd7a90bbd5b105b2d53497f207a2e419319276f887d1baeaeeda90f078c85"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/SNARE_PLATE.ptr",
+      "kind": "reverbs",
+      "name": "SNARE_PLATE",
+      "category": "Plates",
+      "sha256": "68cf3ef6eba139d5d54d4352b8a12aec499c11036426ef7213fd550b69c7f357"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/VOCAL_SHEEN.ptr",
+      "kind": "reverbs",
+      "name": "VOCAL_SHEEN",
+      "category": "Plates",
+      "sha256": "eb51b880383aa62906833136d053be72a8c51a530becabf08e9257f0c36a2006"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/FOIL_TAP.ptr",
+      "kind": "reverbs",
+      "name": "FOIL_TAP",
+      "category": "Plates",
+      "sha256": "eda6d4a090301f84371c87c5b2196d6650149e1c0549cf9369a710bbeeb73fab"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/FOIL_GLOW.ptr",
+      "kind": "reverbs",
+      "name": "FOIL_GLOW",
+      "category": "Plates",
+      "sha256": "ba55663c2dba3e59665bb6c62952c3f5a78934d1945b34a74f372a58cda9dfba"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/FOIL_SILK.ptr",
+      "kind": "reverbs",
+      "name": "FOIL_SILK",
+      "category": "Plates",
+      "sha256": "59615755c4482a78fd68144f7f43d503efd14f329389f6ebdef403fbdfd9572e"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/05_Plates/FOIL_HORIZON.ptr",
+      "kind": "reverbs",
+      "name": "FOIL_HORIZON",
+      "category": "Plates",
+      "sha256": "69c7586846084e0a30d4d2e03335ff8c3c164eaeb70b8f388eca31f22f64dfb6"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/FLOATING_TAPE.ptr",
+      "kind": "reverbs",
+      "name": "FLOATING_TAPE",
+      "category": "Modulated",
+      "sha256": "55f9fc0e84e02303e62097a478bdabbcb4a4e622c6c7c4399074232c6b5ae892"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/SLOW_ORBIT.ptr",
+      "kind": "reverbs",
+      "name": "SLOW_ORBIT",
+      "category": "Modulated",
+      "sha256": "1d6b0af9883935288c5ae473ffe5aace329a855dcdae7c85fa603860b831f6b1"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/WOVEN_CLOUD.ptr",
+      "kind": "reverbs",
+      "name": "WOVEN_CLOUD",
+      "category": "Modulated",
+      "sha256": "346f66e2309f24cde0c8ee60785b3238eb3e3f65e5f6a296e1d4bb9285e706b1"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/WARM_SWELL.ptr",
+      "kind": "reverbs",
+      "name": "WARM_SWELL",
+      "category": "Modulated",
+      "sha256": "16950a0c5c218e5f2cf3d8ce7ba79dd47d24c8c706d5a433063debd009e75223"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/GLASS_DRIFT.ptr",
+      "kind": "reverbs",
+      "name": "GLASS_DRIFT",
+      "category": "Modulated",
+      "sha256": "adcdfbf7da57086454e9c30e10839e36b80b95b59e2d7a08ba663689ea4f3e15"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/DUST_NEBULA.ptr",
+      "kind": "reverbs",
+      "name": "DUST_NEBULA",
+      "category": "Modulated",
+      "sha256": "6606429c73a2211f1c61c00f0d8ba9c98eba90a69dd9e4a322ad75e34a8fee4d"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/GENTLE_CHORUS.ptr",
+      "kind": "reverbs",
+      "name": "GENTLE_CHORUS",
+      "category": "Modulated",
+      "sha256": "94d93f486096d08a81fe537b1a86f5537e6a9b842f3f267991f317825d2aa141"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/06_Modulated/WANDER_PAD.ptr",
+      "kind": "reverbs",
+      "name": "WANDER_PAD",
+      "category": "Modulated",
+      "sha256": "92c84f6c695e5387e4dfba40dbd64ef6ee8f1c1db8e4dd095e37f4505087e0f6"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/SMALL_TAPE.ptr",
+      "kind": "reverbs",
+      "name": "SMALL_TAPE",
+      "category": "Vintage",
+      "sha256": "fc279e2f284635a8d274c4d10c33457e367bc0f4a44ef234f06de0e0fde9f264"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/OLD_STAIRWELL.ptr",
+      "kind": "reverbs",
+      "name": "OLD_STAIRWELL",
+      "category": "Vintage",
+      "sha256": "7b201a4adb9386c9a070ef1e459cee5129e907a87dfeb12265e8429ea08c521d"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/DUSTED_KEYS.ptr",
+      "kind": "reverbs",
+      "name": "DUSTED_KEYS",
+      "category": "Vintage",
+      "sha256": "b101e4eaf4f245ef201415b36e7884a4ef95a72eaa6243beb6aa4d92b061ecb4"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/BROWN_VAULT.ptr",
+      "kind": "reverbs",
+      "name": "BROWN_VAULT",
+      "category": "Vintage",
+      "sha256": "05ef5ab9ac28fc721d3d870a8aae5df588a193409b2f6e5f1109e6c150464415"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/WOODEN_RADIO.ptr",
+      "kind": "reverbs",
+      "name": "WOODEN_RADIO",
+      "category": "Vintage",
+      "sha256": "1f6fef29cf8eab82a1fc585a88a69e560c0c7a09e96953fa59e1ff142d1e3c8e"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/SOUL_GALLERY.ptr",
+      "kind": "reverbs",
+      "name": "SOUL_GALLERY",
+      "category": "Vintage",
+      "sha256": "bdc45c6dcd03ba72a9df175540f1cbabd9503981b7db2cb79f3565d8565de8c0"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/NARROW_FILM.ptr",
+      "kind": "reverbs",
+      "name": "NARROW_FILM",
+      "category": "Vintage",
+      "sha256": "3849f8b18499db48ccfe35eb2c000a9510f580b6fd7387f002f86d1ed03d130e"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/07_Vintage/LOFI_CHAMBER.ptr",
+      "kind": "reverbs",
+      "name": "LOFI_CHAMBER",
+      "category": "Vintage",
+      "sha256": "45c3237089091ef30f052f26777ee3f7772775eed181d7b91e3872c8cb365fd1"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/DEEP_CANOPY.ptr",
+      "kind": "reverbs",
+      "name": "DEEP_CANOPY",
+      "category": "Atmospheres",
+      "sha256": "80fc0575327135026390474e5819efa072d290ee7fc0a3c2e81db0db7fb14ca5"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/MIDNIGHT_AIR.ptr",
+      "kind": "reverbs",
+      "name": "MIDNIGHT_AIR",
+      "category": "Atmospheres",
+      "sha256": "9a2791ed2789077d586f8bf30e5f58b2bd8dec5572a3971b79d01c1b165b9817"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/SILK_HORIZON.ptr",
+      "kind": "reverbs",
+      "name": "SILK_HORIZON",
+      "category": "Atmospheres",
+      "sha256": "3d0220716fd1cfb46f15025e5ceae47c3df7280274c21436f6cbe1af04913ae0"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/DISTANT_GLASS.ptr",
+      "kind": "reverbs",
+      "name": "DISTANT_GLASS",
+      "category": "Atmospheres",
+      "sha256": "efba9501ee399886106f8dd6d064b2ad9ee4175c36817819aeae627f8dcf7c32"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/LOW_TIDE_HALL.ptr",
+      "kind": "reverbs",
+      "name": "LOW_TIDE_HALL",
+      "category": "Atmospheres",
+      "sha256": "e292868fd633255a837ffaf7be9b770c1f7bc405d9c49820ff6c496d5edbea93"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/LONG_FADE.ptr",
+      "kind": "reverbs",
+      "name": "LONG_FADE",
+      "category": "Atmospheres",
+      "sha256": "4e53f46112728339fb798c8f086fb7251281cb9ae884d0e41628475ce39a6478"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/NEBULA_STAGE.ptr",
+      "kind": "reverbs",
+      "name": "NEBULA_STAGE",
+      "category": "Atmospheres",
+      "sha256": "8840dade875aa383e689e21dff5c44d4f9817a1a8f9a2526d68da3a2983d4516"
+    },
+    {
+      "path": "Presets/Reverbs/Extreme_Collection/08_Atmospheres/SLOW_AFTERGLOW.ptr",
+      "kind": "reverbs",
+      "name": "SLOW_AFTERGLOW",
+      "category": "Atmospheres",
+      "sha256": "17ae0be783d549409e871dcb8d97d99ba363bb362cea7fab98292d3cb694b80a"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/DUST_SLAP.ptd",
+      "kind": "delays",
+      "name": "DUST_SLAP",
+      "category": "Slaps",
+      "sha256": "6b50ce4a77096c8fb6de8cf124e31875ff4dcd62bbfcb13fcdc7e6e0eaa6bc44"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/BRUSH_SLAP.ptd",
+      "kind": "delays",
+      "name": "BRUSH_SLAP",
+      "category": "Slaps",
+      "sha256": "ef38f2fc0018710e6ba2c1de6946bf99b4e9c9de257378ef6d98f3db0a1397f3"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/CLAP_SPREAD.ptd",
+      "kind": "delays",
+      "name": "CLAP_SPREAD",
+      "category": "Slaps",
+      "sha256": "d1f0b91d3dbe066871aecaf0666646a52c6f0cf0b4e0485de6f149be9700d741"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/VOICE_DOUBLE.ptd",
+      "kind": "delays",
+      "name": "VOICE_DOUBLE",
+      "category": "Slaps",
+      "sha256": "f1f063c9c255606c9ceb6caa75e11593957af201802c05b512f28d76eea44207"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/RIM_REFLECT.ptd",
+      "kind": "delays",
+      "name": "RIM_REFLECT",
+      "category": "Slaps",
+      "sha256": "02f8de62d6b59466884b6b5980a89dc514ee2d1acaecede27dcee933acd63ec7"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/BASS_DOUBLE.ptd",
+      "kind": "delays",
+      "name": "BASS_DOUBLE",
+      "category": "Slaps",
+      "sha256": "e7f20742068845393ee47a5a2729c28b9ca2e99d70d255c8f3c4bbb2ece1ac99"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/WOOD_SLAP.ptd",
+      "kind": "delays",
+      "name": "WOOD_SLAP",
+      "category": "Slaps",
+      "sha256": "fff37c1b738ee819dd73e167fee27aafb17c0f6deed2c30e9a1ef6aa0065a30e"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/01_Slaps/STEREO_FLICK.ptd",
+      "kind": "delays",
+      "name": "STEREO_FLICK",
+      "category": "Slaps",
+      "sha256": "33f8033c8edeb799baf306fbf6a0e49210b167b6ca6b2a355348f34feee295ad"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/CLEAN_QUARTER.ptd",
+      "kind": "delays",
+      "name": "CLEAN_QUARTER",
+      "category": "Straight",
+      "sha256": "f03dd9a319d5832234816cd8e013e79848b3a00c92c388e48643e23c0c3b0246"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/VELVET_EIGHTH.ptd",
+      "kind": "delays",
+      "name": "VELVET_EIGHTH",
+      "category": "Straight",
+      "sha256": "5bb13fe5bd4cedd00a18350f299271ca8d7f94053dd439f7c6110e96275772c8"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/CRISP_SIXTEEN.ptd",
+      "kind": "delays",
+      "name": "CRISP_SIXTEEN",
+      "category": "Straight",
+      "sha256": "ddd9669d8e52f9f8866e3bfc74049c09bd033dfb7328e26ef7109904b5393c34"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/SOFT_THIRTY2.ptd",
+      "kind": "delays",
+      "name": "SOFT_THIRTY2",
+      "category": "Straight",
+      "sha256": "cc9ec7bf3d5d126585bab493ec08cd0db7cb36980416c01b4edc15a1fb4a5655"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/HALF_NOTE_AIR.ptd",
+      "kind": "delays",
+      "name": "HALF_NOTE_AIR",
+      "category": "Straight",
+      "sha256": "6d5d780fe7eb14e973c274d01dc79c1b5229d6011b6311946feea6380445b4b3"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/WHOLE_NOTE_MIST.ptd",
+      "kind": "delays",
+      "name": "WHOLE_NOTE_MIST",
+      "category": "Straight",
+      "sha256": "024210248610705513f278fccd071349ed29ff0fa0e35255e3cd58257fda2c70"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/KEYS_EIGHTH.ptd",
+      "kind": "delays",
+      "name": "KEYS_EIGHTH",
+      "category": "Straight",
+      "sha256": "ea01c6258cb91c455b84d215c7d610910aa7af2f1a956a4ae3b70ac6e330d29e"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/02_Straight/BASS_QUARTER.ptd",
+      "kind": "delays",
+      "name": "BASS_QUARTER",
+      "category": "Straight",
+      "sha256": "629a7e43b8d8e7c05a243342e2ff25fa5452787a1591db6813dd852478d61f54"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_GLASS.ptd",
+      "kind": "delays",
+      "name": "DOTTED_GLASS",
+      "category": "Dotted",
+      "sha256": "3a44151f5cac54d515c5be2a222f7bcd436267ce2f2f387bdd1947fbbc49220f"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_WOOD.ptd",
+      "kind": "delays",
+      "name": "DOTTED_WOOD",
+      "category": "Dotted",
+      "sha256": "8a1d52b7346fcd0a41b56812f97220ebf24137fa75ba1d1720dab09ab1c49316"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_DUST.ptd",
+      "kind": "delays",
+      "name": "DOTTED_DUST",
+      "category": "Dotted",
+      "sha256": "e9b6bd5750e5b228525ade96ede6993e9f3b339a37abd55b32e421bd4390ee32"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_CHORD.ptd",
+      "kind": "delays",
+      "name": "DOTTED_CHORD",
+      "category": "Dotted",
+      "sha256": "53285259cd19db5e31d7fe604bb3f8e337ae372b305094a8f408eb7b41e95f9f"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_BELL.ptd",
+      "kind": "delays",
+      "name": "DOTTED_BELL",
+      "category": "Dotted",
+      "sha256": "5e4998ebc1b9105c6e1251349236550c9e8d86ab2976e3f0e22dfa3bf5c56087"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_SILK.ptd",
+      "kind": "delays",
+      "name": "DOTTED_SILK",
+      "category": "Dotted",
+      "sha256": "78226836675d2e524752e99155aeda3b190b53923662443b38bfa0d7059204d6"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_CLAP.ptd",
+      "kind": "delays",
+      "name": "DOTTED_CLAP",
+      "category": "Dotted",
+      "sha256": "793e92e95de2f07aabe7d7b5987855cd2f4cc3270420c1629b2fdc22c797b474"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/03_Dotted/DOTTED_VAULT.ptd",
+      "kind": "delays",
+      "name": "DOTTED_VAULT",
+      "category": "Dotted",
+      "sha256": "39fec92e6c43450fbd8bd6857e55220a7df66dc12dce6facd122b6191d3a5235"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/TRIPLET_KEYS.ptd",
+      "kind": "delays",
+      "name": "TRIPLET_KEYS",
+      "category": "Triplets",
+      "sha256": "a863f2d3fba4006e92f70ad1ebccdbc4f3799934731486c48a997656d1f788b0"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/TRIPLET_PERC.ptd",
+      "kind": "delays",
+      "name": "TRIPLET_PERC",
+      "category": "Triplets",
+      "sha256": "5d6e2a681f012b6736772253df40ed5be42366a58aff4c376af24aef2cd9212e"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/TRIPLET_TAPE.ptd",
+      "kind": "delays",
+      "name": "TRIPLET_TAPE",
+      "category": "Triplets",
+      "sha256": "a57166c6efb7bbe3062820dac0392b0accddfa5eabfcf71aff828b612c4d45f5"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/TRIPLET_AIR.ptd",
+      "kind": "delays",
+      "name": "TRIPLET_AIR",
+      "category": "Triplets",
+      "sha256": "ac30e6277dfb75062084052512b2de7e5a1049aa8a1a2e21a2b8d45828b02461"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/SIXTH_BOUNCE.ptd",
+      "kind": "delays",
+      "name": "SIXTH_BOUNCE",
+      "category": "Triplets",
+      "sha256": "3d2f91e6c27511d9d94f1ddc2e5d85efd8a3d684124fcd26a6ffe64f1bc7f049"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/NINTH_MIST.ptd",
+      "kind": "delays",
+      "name": "NINTH_MIST",
+      "category": "Triplets",
+      "sha256": "bde2958a5c9590f73b4b83ba61d4ed5b2468398e2371afde3c61e8c759ca3141"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/TRIPLET_CHOP.ptd",
+      "kind": "delays",
+      "name": "TRIPLET_CHOP",
+      "category": "Triplets",
+      "sha256": "f2340d1b861d5b98ec5aa2558102a9ae8e94eb95b13ce963d0b13acdab5409c5"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/04_Triplets/TRIPLET_WARM.ptd",
+      "kind": "delays",
+      "name": "TRIPLET_WARM",
+      "category": "Triplets",
+      "sha256": "c9ba2fbdfa2d5277111d5dd9e1ecf5782e3cda8ca7383b228ead54af46ec0874"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/CASSETTE_KEYS.ptd",
+      "kind": "delays",
+      "name": "CASSETTE_KEYS",
+      "category": "Tape",
+      "sha256": "d17da5552b636a6598d74b00f5de6f6030d1e993cb45f813c7694e1694e6f562"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/BROWN_ECHO.ptd",
+      "kind": "delays",
+      "name": "BROWN_ECHO",
+      "category": "Tape",
+      "sha256": "f6f1b27bf592af940dd09385bdfff5ff082550b9ee293c34f28b2f0bdccf349e"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/REEL_WARMTH.ptd",
+      "kind": "delays",
+      "name": "REEL_WARMTH",
+      "category": "Tape",
+      "sha256": "1dfd990b51c25b446ef467a512488cee552585c0c7368bbc21d1a458184cfd99"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/WORN_SLAPBACK.ptd",
+      "kind": "delays",
+      "name": "WORN_SLAPBACK",
+      "category": "Tape",
+      "sha256": "21fee49998598beaf9296a49bacfd404cad0ba1771190fb49707b918f92c60ec"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/SLOW_REEL.ptd",
+      "kind": "delays",
+      "name": "SLOW_REEL",
+      "category": "Tape",
+      "sha256": "d1d75189ea9c69a874b44d9cca20ae1e5ec5dcdb3c30335c363b17269ec3d847"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/DUSTED_PONG.ptd",
+      "kind": "delays",
+      "name": "DUSTED_PONG",
+      "category": "Tape",
+      "sha256": "44a16b8e700f15685819aecdab93bf12c1fd9db1273a8dbda0902395de3b0532"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/FELT_DELAY.ptd",
+      "kind": "delays",
+      "name": "FELT_DELAY",
+      "category": "Tape",
+      "sha256": "a7d21d528e25039696d54ed4f66eca6b967340e34028b0ea0ca4aa87c69193ad"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/05_Tape/TAPE_BALCONY.ptd",
+      "kind": "delays",
+      "name": "TAPE_BALCONY",
+      "category": "Tape",
+      "sha256": "0fc6e17ef112f2481f37fc2f6861845974e8dc3a8c2192a5908fd1a5ab4289cb"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/ROOTS_DUB.ptd",
+      "kind": "delays",
+      "name": "ROOTS_DUB",
+      "category": "Dub",
+      "sha256": "82aeba34d8705cc702b8f3bb20825ba99cb927a6d603fe21c85d107a146bcf28"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/DUB_CORRIDOR.ptd",
+      "kind": "delays",
+      "name": "DUB_CORRIDOR",
+      "category": "Dub",
+      "sha256": "5a2949d7b0d6065987cf6b758c8af2aed885b8f208e4fc73cf34d23b73ce4e13"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/DUB_CLAVE.ptd",
+      "kind": "delays",
+      "name": "DUB_CLAVE",
+      "category": "Dub",
+      "sha256": "2eb1e5d0d9e4ba578a9cf3c85af9007df4ebdba11e622eb00036d9668b7016db"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/DEEP_OFFBEAT.ptd",
+      "kind": "delays",
+      "name": "DEEP_OFFBEAT",
+      "category": "Dub",
+      "sha256": "c83bfd51fe4f5a8768c636c251198cd00fe481acf2a5f8d6606dc452859d9818"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/DUB_GHOST.ptd",
+      "kind": "delays",
+      "name": "DUB_GHOST",
+      "category": "Dub",
+      "sha256": "d21d1b76e08ac6321f750c1990c62638de7209155b64a886a212334cddff7337"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/SPRINGY_PONG.ptd",
+      "kind": "delays",
+      "name": "SPRINGY_PONG",
+      "category": "Dub",
+      "sha256": "7b1b8e9311829ad44c7a01c6f19580f8f9ca78bc5d1a8c0869e7c2adcb1f9578"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/SMOKY_THROW.ptd",
+      "kind": "delays",
+      "name": "SMOKY_THROW",
+      "category": "Dub",
+      "sha256": "97cf09ad3ae27f9f7b9932deac689e50f15557e6f67594b67260e4a0829bfa6f"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/06_Dub/LOWLIGHT_DUB.ptd",
+      "kind": "delays",
+      "name": "LOWLIGHT_DUB",
+      "category": "Dub",
+      "sha256": "2d0da35df240a2b60a651841ff33c049357953447c4b9583cd86b36507fb9065"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/NARROW_PONG.ptd",
+      "kind": "delays",
+      "name": "NARROW_PONG",
+      "category": "Stereo",
+      "sha256": "759072cc7d87049c3fd651e3fa4fc1dc2c960f5c4bbe6f87761d8d28697adb76"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/PANORAMA_KEYS.ptd",
+      "kind": "delays",
+      "name": "PANORAMA_KEYS",
+      "category": "Stereo",
+      "sha256": "aae0b026bd958480490370abe6a7aa257acb3a548a1e6fdf94e22271220e9635"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/CROSS_ROOM.ptd",
+      "kind": "delays",
+      "name": "CROSS_ROOM",
+      "category": "Stereo",
+      "sha256": "50124bc59720da44aa3826728bae9a000bd497d926d2684cd9325ceff6c13a7e"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/WIDE_PERC.ptd",
+      "kind": "delays",
+      "name": "WIDE_PERC",
+      "category": "Stereo",
+      "sha256": "f9c0e1c41aaec51934152f166349a1c8f47644d6b246b379124ba3db31f8ade2"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/GLASS_PING.ptd",
+      "kind": "delays",
+      "name": "GLASS_PING",
+      "category": "Stereo",
+      "sha256": "5542398f0d65118938df9277d08f07ffa7d96a27b046e9ee03abd893abbb2c4c"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/ORBIT_CHORD.ptd",
+      "kind": "delays",
+      "name": "ORBIT_CHORD",
+      "category": "Stereo",
+      "sha256": "046c1a7ec0f4037ab1b8d777a9b4aa20fdbd8427ad252cc5e46b2f6b75a00b60"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/FOCUS_BOUNCE.ptd",
+      "kind": "delays",
+      "name": "FOCUS_BOUNCE",
+      "category": "Stereo",
+      "sha256": "07fd874fe8e69c6512e4411ff97aa00e5650bc564720aab8064dc4a603703a0e"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/07_Stereo/STEREO_DUSK.ptd",
+      "kind": "delays",
+      "name": "STEREO_DUSK",
+      "category": "Stereo",
+      "sha256": "6f79af46e7c830be15b0231b405c345c55f5d57cd2de7f67f5b37fac575a95e4"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/PAD_TRAIL.ptd",
+      "kind": "delays",
+      "name": "PAD_TRAIL",
+      "category": "Space",
+      "sha256": "40704d9fa05c7bf641034ca225f49b636e02cdf46e80170b100043d5c5ef0a9a"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/HORIZON_ECHO.ptd",
+      "kind": "delays",
+      "name": "HORIZON_ECHO",
+      "category": "Space",
+      "sha256": "f52e62901845d1235b97f344c3a732f9162500c5c11c961400c55a21f4d37f55"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/DREAM_STEPS.ptd",
+      "kind": "delays",
+      "name": "DREAM_STEPS",
+      "category": "Space",
+      "sha256": "cc7c1bb57534d0543f069fae8a9079e702e1487dacbdb6efa46749cafb84125f"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/SPACE_CHORD.ptd",
+      "kind": "delays",
+      "name": "SPACE_CHORD",
+      "category": "Space",
+      "sha256": "9bc5d816d36633c56632d0d085ce82ffbf5521684bb8a93213c07a5e6d013e90"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/MIDNIGHT_LOOP.ptd",
+      "kind": "delays",
+      "name": "MIDNIGHT_LOOP",
+      "category": "Space",
+      "sha256": "176e9f60384a8081dbfda028e09f30fb6bd1e31ebfd66182ad5425e1c392a430"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/DISTANT_KEY.ptd",
+      "kind": "delays",
+      "name": "DISTANT_KEY",
+      "category": "Space",
+      "sha256": "8c9b70365db9c16be4b554aa3dac7fae2db2718275b9c2d8e9ec44ac1d9c433a"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/WIDE_AFTERIMAGE.ptd",
+      "kind": "delays",
+      "name": "WIDE_AFTERIMAGE",
+      "category": "Space",
+      "sha256": "a6e484e57f256fb53a2ac7ddeec729131f9d9b561a0d2f1b4559e83018f727ea"
+    },
+    {
+      "path": "Presets/Delays/Extreme_Collection/08_Space/SLOW_MOTION.ptd",
+      "kind": "delays",
+      "name": "SLOW_MOTION",
+      "category": "Space",
+      "sha256": "caf4a870dd64c22272d9aa6f19ec4335883b41315e63474e09ecc937162308b8"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/01_Modal/Felt_Vessel.ptfx",
+      "kind": "studio_fx",
+      "name": "Felt Vessel",
+      "category": "Modal",
+      "sha256": "af11173200638585246d883c8c786032c21e3db8fe8f4dd5cc58cee1e2f8625e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/01_Modal/Wood_Box.ptfx",
+      "kind": "studio_fx",
+      "name": "Wood Box",
+      "category": "Modal",
+      "sha256": "9a3c0e10edcb6dcd6d3faa468b5e2240a99315b6cb53c7c1f163b03c82375656"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/01_Modal/Glass_Marimba.ptfx",
+      "kind": "studio_fx",
+      "name": "Glass Marimba",
+      "category": "Modal",
+      "sha256": "d627c69f2c05517de51d39ee9f781fd3e65092d344785e2fbda15e94473a3cbb"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/01_Modal/Ceramic_Halo.ptfx",
+      "kind": "studio_fx",
+      "name": "Ceramic Halo",
+      "category": "Modal",
+      "sha256": "d18832006c45a2999fe6858c5b28a91635d8545dc43ca62996a6226a20f9ad45"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/01_Modal/Bell_Shadow.ptfx",
+      "kind": "studio_fx",
+      "name": "Bell Shadow",
+      "category": "Modal",
+      "sha256": "58aa805b3d54867a617b8cb0f47ae7314a032afde83713102051b5fd90d4c196"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/01_Modal/Dust_Chamber.ptfx",
+      "kind": "studio_fx",
+      "name": "Dust Chamber",
+      "category": "Modal",
+      "sha256": "5e989afbb0eff816dd7cdd23e22221348c100c7373f937d67a9978f656b20f7e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/02_Sympathetic/Sympathetic_Felt.ptfx",
+      "kind": "studio_fx",
+      "name": "Sympathetic Felt",
+      "category": "Sympathetic",
+      "sha256": "a3e1e01bab08aba202ad3e8181f2afd925a14dec10b9af0c461587eed97ee0c5"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/02_Sympathetic/Harmonic_Timber.ptfx",
+      "kind": "studio_fx",
+      "name": "Harmonic Timber",
+      "category": "Sympathetic",
+      "sha256": "b3bd778895277067a463db92f6a1acae24f5a2b7b45b5140bc05cc8a55fabedd"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/02_Sympathetic/Bright_String_Air.ptfx",
+      "kind": "studio_fx",
+      "name": "Bright String Air",
+      "category": "Sympathetic",
+      "sha256": "f5c66b686c9bc14ac7980759e5a7d7ad6bcdd248d9a5de4fa3c9f3a8bb64fb35"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/02_Sympathetic/Sympathetic_Bloom.ptfx",
+      "kind": "studio_fx",
+      "name": "Sympathetic Bloom",
+      "category": "Sympathetic",
+      "sha256": "f0fc4dbdef5533e31a1f45b6b1510d64d7e4746933f0cb642f36a00dcd7615c2"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/02_Sympathetic/Muted_Choir.ptfx",
+      "kind": "studio_fx",
+      "name": "Muted Choir",
+      "category": "Sympathetic",
+      "sha256": "dd76c4f61a88c1fb4910a83da5ccc2fbec16c3273c01824c0702722024010ae0"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/02_Sympathetic/Shadow_Strings.ptfx",
+      "kind": "studio_fx",
+      "name": "Shadow Strings",
+      "category": "Sympathetic",
+      "sha256": "1aa7ba018090031ec01a54388e1eddf1d22eb302bdb3192a3f6eb6b3e47cf35b"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/03_Strings/Nylon_Halo.ptfx",
+      "kind": "studio_fx",
+      "name": "Nylon Halo",
+      "category": "Strings",
+      "sha256": "74a1b9a2230847d64a834c0b26a6ffbd32169a352b62788d3adf07d052161fba"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/03_Strings/Plucked_Cedar.ptfx",
+      "kind": "studio_fx",
+      "name": "Plucked Cedar",
+      "category": "Strings",
+      "sha256": "310533959f46ab76ad5e7ced7d0fa945a3f20916a098fa4e765354943d861e41"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/03_Strings/Steel_Shimmer.ptfx",
+      "kind": "studio_fx",
+      "name": "Steel Shimmer",
+      "category": "Strings",
+      "sha256": "627e13359405af058e33334ca16113b611b911d869248a622e5561d4f636c752"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/03_Strings/String_Canopy.ptfx",
+      "kind": "studio_fx",
+      "name": "String Canopy",
+      "category": "Strings",
+      "sha256": "72e6d59f99e0138e1229049a24caab544e82f492fc8aca243d69786345ba4442"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/03_Strings/Rusty_Zither.ptfx",
+      "kind": "studio_fx",
+      "name": "Rusty Zither",
+      "category": "Strings",
+      "sha256": "39a26d5ca90cd286608c6169d141f3a25482099683f772083447d40706ac5a33"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/03_Strings/Quiet_Damping.ptfx",
+      "kind": "studio_fx",
+      "name": "Quiet Damping",
+      "category": "Strings",
+      "sha256": "d4b6f94b89d294d5e918c603407c53c296a37687023a24bc4deedcd03bc1a557"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/04_FM_Resonators/FM_Felt.ptfx",
+      "kind": "studio_fx",
+      "name": "FM Felt",
+      "category": "FM Resonators",
+      "sha256": "2518c91ee09c9e6b1ad60841155a5c35f1f0e967f76bef9f2d920a4d18093068"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/04_FM_Resonators/Copper_Partial.ptfx",
+      "kind": "studio_fx",
+      "name": "Copper Partial",
+      "category": "FM Resonators",
+      "sha256": "425c710bd5e1d1442dcf27f951d3914d978a8f96a0d7aa2a136575490c74db86"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/04_FM_Resonators/FM_Crystal.ptfx",
+      "kind": "studio_fx",
+      "name": "FM Crystal",
+      "category": "FM Resonators",
+      "sha256": "6f85d3f12fd33890dc027f772ec8897a35b47b26323a8e3097ed87945b8f176c"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/04_FM_Resonators/FM_Vapor.ptfx",
+      "kind": "studio_fx",
+      "name": "FM Vapor",
+      "category": "FM Resonators",
+      "sha256": "d6d0b40047191215009ec17f6f3fa0ae7ac578718c827e1341e58c59211e2935"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/04_FM_Resonators/Metallic_Key.ptfx",
+      "kind": "studio_fx",
+      "name": "Metallic Key",
+      "category": "FM Resonators",
+      "sha256": "04b22f39a28cde6c6e0396d40486893393664444f91e7d042cb4bc2d704f3448"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/04_FM_Resonators/Dark_FM_Body.ptfx",
+      "kind": "studio_fx",
+      "name": "Dark FM Body",
+      "category": "FM Resonators",
+      "sha256": "779682c30b4c720d1f939026b782506d55cfb72653f0c80a2dc3289c286a7657"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/05_Tuned_Resonators/Tuned_Reed.ptfx",
+      "kind": "studio_fx",
+      "name": "Tuned Reed",
+      "category": "Tuned Resonators",
+      "sha256": "95b1107844570c0ce7bc11da44d17142a09f2578148de816eb6ef05aa8dc9d7e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/05_Tuned_Resonators/Tempered_Wood.ptfx",
+      "kind": "studio_fx",
+      "name": "Tempered Wood",
+      "category": "Tuned Resonators",
+      "sha256": "6d18f99300524fc2640348c6a4f701109e487b5504ae09b22aa0a959a8a6b698"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/05_Tuned_Resonators/Tuned_Glass.ptfx",
+      "kind": "studio_fx",
+      "name": "Tuned Glass",
+      "category": "Tuned Resonators",
+      "sha256": "09a4f9fa8c1e830d8fb93734efcf5751dd5ea61808e09a3749e01563ff65047a"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/05_Tuned_Resonators/Harmonic_Steps.ptfx",
+      "kind": "studio_fx",
+      "name": "Harmonic Steps",
+      "category": "Tuned Resonators",
+      "sha256": "0f46b319f81e434eff245f5982bd62e668a14bac422ec6efad231d0060248499"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/05_Tuned_Resonators/Tuned_Bell.ptfx",
+      "kind": "studio_fx",
+      "name": "Tuned Bell",
+      "category": "Tuned Resonators",
+      "sha256": "84f539372d274ee234511f44cc45388e02b9ce241bb04015ab23f99c1f9b9a34"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/05_Tuned_Resonators/Damped_Steps.ptfx",
+      "kind": "studio_fx",
+      "name": "Damped Steps",
+      "category": "Tuned Resonators",
+      "sha256": "0673adcfe1f980b17474df431f61caffbfd5994c0ef4c207f43caaf760105ecc"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/06_String_Spaces/Wooden_Chamber.ptfx",
+      "kind": "studio_fx",
+      "name": "Wooden Chamber",
+      "category": "String Spaces",
+      "sha256": "f958de3c39d342b7d1899c4096fc1cfd8945bd053da71d585a2a3f682e102190"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/06_String_Spaces/Fretboard_Air.ptfx",
+      "kind": "studio_fx",
+      "name": "Fretboard Air",
+      "category": "String Spaces",
+      "sha256": "ef4089fe7da9c87618e03faf0827c90ce973f05be3cb953b2ffe7ed50b0f374b"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/06_String_Spaces/Silver_Spring.ptfx",
+      "kind": "studio_fx",
+      "name": "Silver Spring",
+      "category": "String Spaces",
+      "sha256": "ef1d12c58a2432ad6c94987281c03c76e4f88930131b9c5c1b239143b5dea645"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/06_String_Spaces/Deep_String_Room.ptfx",
+      "kind": "studio_fx",
+      "name": "Deep String Room",
+      "category": "String Spaces",
+      "sha256": "0e720f88246d16510faa6ba040b5e82e73df68d5885026778e48181f93f04646"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/06_String_Spaces/String_Plate.ptfx",
+      "kind": "studio_fx",
+      "name": "String Plate",
+      "category": "String Spaces",
+      "sha256": "ca7b2af71692b2c73127797cb9c7cc32bbb07f4c610841c6f6e237671cadbc2c"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/06_String_Spaces/Dusted_Resonance.ptfx",
+      "kind": "studio_fx",
+      "name": "Dusted Resonance",
+      "category": "String Spaces",
+      "sha256": "4219e05ad59a43b34acf7184fc160d5ed0c639606a6ab6fc2d6d7aaca179109f"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/07_Crossfade/Soft_Crossfade.ptfx",
+      "kind": "studio_fx",
+      "name": "Soft Crossfade",
+      "category": "Crossfade",
+      "sha256": "b151189738cb7d0a839bf3851c87ef220bbfe859c863e6fda6a9e54cf7ac20d2"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/07_Crossfade/Stereo_Mesh.ptfx",
+      "kind": "studio_fx",
+      "name": "Stereo Mesh",
+      "category": "Crossfade",
+      "sha256": "cbe26c43caeb95e5ab45b5ed685fb3a2836858ad647a7fa092cfe28eb7b44c37"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/07_Crossfade/Crossfade_Contour.ptfx",
+      "kind": "studio_fx",
+      "name": "Crossfade Contour",
+      "category": "Crossfade",
+      "sha256": "7d34bf23e89c081f9587342dfe74d4b21ef39121a3fae8215d9c7c56130ba10f"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/07_Crossfade/Air_Crossfade.ptfx",
+      "kind": "studio_fx",
+      "name": "Air Crossfade",
+      "category": "Crossfade",
+      "sha256": "1f5705398bd00de413c1244550666e74a477badc23f44c5b8cc4941798911d8e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/08_Wavefold/Velvet_Fold.ptfx",
+      "kind": "studio_fx",
+      "name": "Velvet Fold",
+      "category": "Wavefold",
+      "sha256": "636352c692bfec96c44efe7e24a8afb0fc68e1c56143af7a085750818f179322"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/08_Wavefold/Hollow_Fold.ptfx",
+      "kind": "studio_fx",
+      "name": "Hollow Fold",
+      "category": "Wavefold",
+      "sha256": "3c37047d249c2a71d65f15d27764e0f0856c05653bd952cfb3f9617f66f9b121"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/08_Wavefold/Copper_Edges.ptfx",
+      "kind": "studio_fx",
+      "name": "Copper Edges",
+      "category": "Wavefold",
+      "sha256": "e9c2cdc1056ccb0ecf3965632d6b0128a01e54049a51f8888596642b93562481"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/08_Wavefold/Folded_Air.ptfx",
+      "kind": "studio_fx",
+      "name": "Folded Air",
+      "category": "Wavefold",
+      "sha256": "7fef6bc5be1321a6317098ee7cbe9ba882ec2df03b4da0636266c2d07214edd2"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/09_Analog_Ring/Warm_Ring.ptfx",
+      "kind": "studio_fx",
+      "name": "Warm Ring",
+      "category": "Analog Ring",
+      "sha256": "c5aa1e695311966fb9f6cf099ef9f6a81c460f90796122b902d0f0f036366ab5"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/09_Analog_Ring/Wooden_Sidebands.ptfx",
+      "kind": "studio_fx",
+      "name": "Wooden Sidebands",
+      "category": "Analog Ring",
+      "sha256": "c9fce2fb9dabc64af37032096da32be4db8f12f6f99507a5822816ae9de040b8"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/09_Analog_Ring/Analog_Bells.ptfx",
+      "kind": "studio_fx",
+      "name": "Analog Bells",
+      "category": "Analog Ring",
+      "sha256": "8a038346a3e555b186d564fc0678a16bb6bc0927c5b0318a43d43f5482da8f00"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/09_Analog_Ring/High_Ring_Air.ptfx",
+      "kind": "studio_fx",
+      "name": "High Ring Air",
+      "category": "Analog Ring",
+      "sha256": "231d8fa9863b3937f52408f041292bdf18eb40b9651b75a6fd0af24b0cf23d7e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/10_Digital_Ring/Soft_Digital_Ring.ptfx",
+      "kind": "studio_fx",
+      "name": "Soft Digital Ring",
+      "category": "Digital Ring",
+      "sha256": "948cdc70134a0fe0ee93bdd5d1773d85741350d9db3f087512107c6aa7249734"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/10_Digital_Ring/Hollow_Chime.ptfx",
+      "kind": "studio_fx",
+      "name": "Hollow Chime",
+      "category": "Digital Ring",
+      "sha256": "2097398d538b28b06869ab1afefbcf5ac2861b2ade216d0e9403c698937161bf"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/10_Digital_Ring/Chrome_Sidebands.ptfx",
+      "kind": "studio_fx",
+      "name": "Chrome Sidebands",
+      "category": "Digital Ring",
+      "sha256": "d0b3339c4ba7ac5e2efcf3d336a809fad752d9493b262f8cd5a30a341fdf99b9"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/10_Digital_Ring/Digital_Halo.ptfx",
+      "kind": "studio_fx",
+      "name": "Digital Halo",
+      "category": "Digital Ring",
+      "sha256": "168c3f533844922604fc41d9ffe1b9dad79b2fa59c80404b91cb6193164aa1aa"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Subtle_XOR.ptfx",
+      "kind": "studio_fx",
+      "name": "Subtle XOR",
+      "category": "Logic Color",
+      "sha256": "07d852479634591db4bfe5e487c250640d9cc4c86ad3073ff396ef466d83fcd4"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Hollow_Logic.ptfx",
+      "kind": "studio_fx",
+      "name": "Hollow Logic",
+      "category": "Logic Color",
+      "sha256": "32d60576fa6358136c44aa94ad1d42524edaef612c5a63647bf9a355fb252de3"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Pixel_Edges.ptfx",
+      "kind": "studio_fx",
+      "name": "Pixel Edges",
+      "category": "Logic Color",
+      "sha256": "995257104b0b4839d6ea825bffbc011ac7e5c0a872088924c08c9ec038c0beb1"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Air_Logic.ptfx",
+      "kind": "studio_fx",
+      "name": "Air Logic",
+      "category": "Logic Color",
+      "sha256": "fee80c4a328ecc1ec15cd06f7a35584eb4aff0cbaa9d3a3b222832e5f852387a"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Soft_Comparator.ptfx",
+      "kind": "studio_fx",
+      "name": "Soft Comparator",
+      "category": "Logic Color",
+      "sha256": "cf6e2445b55e3ba78db9dda56432c689e2437fee648e9a7547341f27a3d36a1d"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Comparator_Body.ptfx",
+      "kind": "studio_fx",
+      "name": "Comparator Body",
+      "category": "Logic Color",
+      "sha256": "567b15a5b63e39c7ebd46a4b8f9ce6a5ebe043413a3d4410f34795f5a8ea4ad0"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Hard_Contour.ptfx",
+      "kind": "studio_fx",
+      "name": "Hard Contour",
+      "category": "Logic Color",
+      "sha256": "1ca124c428d47ed745c4afe7f5e1eff6fa5a81f732af7ae7e41e6913677b2465"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/11_Logic_Color/Open_Comparator.ptfx",
+      "kind": "studio_fx",
+      "name": "Open Comparator",
+      "category": "Logic Color",
+      "sha256": "5c579645a7fbd3451422c7c3f5b79f7bda215e730f95df299bd2bba3b1f52537"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Warm_Carrier_A.ptfx",
+      "kind": "studio_fx",
+      "name": "Warm Carrier A",
+      "category": "Vocoder",
+      "sha256": "452e7e7615b3a6e1e33f39e0aabfd0c9dd3ba05718f48199a68693f204bf2a4c"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Vowel_Carrier_A.ptfx",
+      "kind": "studio_fx",
+      "name": "Vowel Carrier A",
+      "category": "Vocoder",
+      "sha256": "7f773457b8da3ad9830b4fcc34cee31adcb989bdac8a6108b28f89d27ced4bac"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Metal_Voice_A.ptfx",
+      "kind": "studio_fx",
+      "name": "Metal Voice A",
+      "category": "Vocoder",
+      "sha256": "0413b08b2338700dd5103b16ad07f1a3dafae4936ccbc6faef4cd0452c28837e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Air_Choir_A.ptfx",
+      "kind": "studio_fx",
+      "name": "Air Choir A",
+      "category": "Vocoder",
+      "sha256": "2a15ecf2feba686f7d0bb731a10dd499ec7ba18848821a14e36fc5ce6e76a35d"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Warm_Carrier_B.ptfx",
+      "kind": "studio_fx",
+      "name": "Warm Carrier B",
+      "category": "Vocoder",
+      "sha256": "efc92588ea35b1746ba4b6bf2a6fcbd19ad6fcbbaea542c88a055921c51d28fb"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Vowel_Carrier_B.ptfx",
+      "kind": "studio_fx",
+      "name": "Vowel Carrier B",
+      "category": "Vocoder",
+      "sha256": "0d28ba479b0e0b03e3407003f76b18a8d4370137aaf7973e13baa0006950d662"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Metal_Voice_B.ptfx",
+      "kind": "studio_fx",
+      "name": "Metal Voice B",
+      "category": "Vocoder",
+      "sha256": "7f10c61c181ba79f8dc832ee19ddd90d92c46f4242d40be6301d41fc786f650e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Air_Choir_B.ptfx",
+      "kind": "studio_fx",
+      "name": "Air Choir B",
+      "category": "Vocoder",
+      "sha256": "207183447070604a3c5ca7c096fc1569d9ee96d35c13cd4dcb0e15f8ae1119e7"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Warm_Carrier_C.ptfx",
+      "kind": "studio_fx",
+      "name": "Warm Carrier C",
+      "category": "Vocoder",
+      "sha256": "e79007febe95f9eed7c71b98f6f826eb40969bec8e6e4931c0b764afb2eec42e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Vowel_Carrier_C.ptfx",
+      "kind": "studio_fx",
+      "name": "Vowel Carrier C",
+      "category": "Vocoder",
+      "sha256": "7016298c9f2601e54d9590f1b1a9256bc254abfe32cb2827060f7a182d5a2db6"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Metal_Voice_C.ptfx",
+      "kind": "studio_fx",
+      "name": "Metal Voice C",
+      "category": "Vocoder",
+      "sha256": "d57d277afb7deb88a0140adc63f0c283110d3eaef9003f1a19def71bcf5fa47b"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/12_Vocoder/Air_Choir_C.ptfx",
+      "kind": "studio_fx",
+      "name": "Air Choir C",
+      "category": "Vocoder",
+      "sha256": "8dd5b9e1f6b44a32922e852f2b1328586f4c7dd2cb874e96cf75990dcb37fa21"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/13_Granular/Grain_Dust.ptfx",
+      "kind": "studio_fx",
+      "name": "Grain Dust",
+      "category": "Granular",
+      "sha256": "4f5e3ea304d92e46cb2eb6ffdb1f3e8fb7b2417e120f0e70e9d00aab29d66089"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/13_Granular/Small_Grain_Veil.ptfx",
+      "kind": "studio_fx",
+      "name": "Small Grain Veil",
+      "category": "Granular",
+      "sha256": "2e4f8a2a4ed823764a4ecb35614e5b63fbd89a6cff0fa641657149e7bf99215a"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/13_Granular/Wide_Grain_Bloom.ptfx",
+      "kind": "studio_fx",
+      "name": "Wide Grain Bloom",
+      "category": "Granular",
+      "sha256": "c4f7f6d99772dee7c321a1e6f68cddfa171ce76887be35eb6cb2c4113f1c4f9e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/13_Granular/Cloud_Canopy.ptfx",
+      "kind": "studio_fx",
+      "name": "Cloud Canopy",
+      "category": "Granular",
+      "sha256": "1484f7b0a659fa7f2eb7b01332883e276b725fa28dc550328c1b50ee8a252bb5"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/13_Granular/Soft_Spray.ptfx",
+      "kind": "studio_fx",
+      "name": "Soft Spray",
+      "category": "Granular",
+      "sha256": "f4777e7f71f9e1f87c4d0da04b2bc27b1f191d20ac00b6c0bd1038cb888443ab"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/13_Granular/Grain_Rhythm.ptfx",
+      "kind": "studio_fx",
+      "name": "Grain Rhythm",
+      "category": "Granular",
+      "sha256": "1cf5f065168070a9e1fdcd68523da115aa289837c1df15e1cef08b3d101d7432"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/14_Stretch/Soft_Stretch.ptfx",
+      "kind": "studio_fx",
+      "name": "Soft Stretch",
+      "category": "Stretch",
+      "sha256": "aabea210d7b53b335ce8643c9c51ead68e0d5c051009f2e80f5764f42675a8d9"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/14_Stretch/Stretch_Tapestry.ptfx",
+      "kind": "studio_fx",
+      "name": "Stretch Tapestry",
+      "category": "Stretch",
+      "sha256": "fe56d7a3cc1a4856b7c316f551cccced5e726b98090fec057e7e6aa8bfcae290"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/14_Stretch/Long_Stretch_Air.ptfx",
+      "kind": "studio_fx",
+      "name": "Long Stretch Air",
+      "category": "Stretch",
+      "sha256": "c6c05ccf37070d9febe9c786454089cacfc00b3fa6b0fc916cc858ace97d897e"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/14_Stretch/Time_Canopy.ptfx",
+      "kind": "studio_fx",
+      "name": "Time Canopy",
+      "category": "Stretch",
+      "sha256": "e423fc91be03eee2d11410696320b3c581170259b0f4255c3b058a340a79783f"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/14_Stretch/Stretch_Mist.ptfx",
+      "kind": "studio_fx",
+      "name": "Stretch Mist",
+      "category": "Stretch",
+      "sha256": "3c9d76aace1c0f63dee106d44b799ae097faad6be79276eaf63b852b88f73cfa"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/14_Stretch/Stretched_Flecks.ptfx",
+      "kind": "studio_fx",
+      "name": "Stretched Flecks",
+      "category": "Stretch",
+      "sha256": "087c5b067d11e5a006ddeee3932bd4cf764176eb9039d4779ab8242c76d2c529"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/15_Loop_Delay/Short_Loop_Lace.ptfx",
+      "kind": "studio_fx",
+      "name": "Short Loop Lace",
+      "category": "Loop Delay",
+      "sha256": "9ae4bd51c37a3559294f1f67ff744a588fdbb4c4082d4f6b0a38ba1f659dd9c5"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/15_Loop_Delay/Loop_Timber.ptfx",
+      "kind": "studio_fx",
+      "name": "Loop Timber",
+      "category": "Loop Delay",
+      "sha256": "6b12ab11b7f9d5df162861a8b05192fe530ae647d51a25f979f7c93407f2e683"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/15_Loop_Delay/Loop_Panorama.ptfx",
+      "kind": "studio_fx",
+      "name": "Loop Panorama",
+      "category": "Loop Delay",
+      "sha256": "136ff3d989008d150b61539ebc470d7f117347acf0f03e1e3452a622bafd216b"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/15_Loop_Delay/Deep_Loop_Bed.ptfx",
+      "kind": "studio_fx",
+      "name": "Deep Loop Bed",
+      "category": "Loop Delay",
+      "sha256": "2cd5e6bd7f0be274bc07be6e1d78ae2c25b90e2bee95d06381089ee9057752c5"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/15_Loop_Delay/Loop_Vapor.ptfx",
+      "kind": "studio_fx",
+      "name": "Loop Vapor",
+      "category": "Loop Delay",
+      "sha256": "ed5303677a2f3162b6c732c29aee5bc6d3a02b292c11fbb7e134ebe40146603a"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/15_Loop_Delay/Loop_Fragments.ptfx",
+      "kind": "studio_fx",
+      "name": "Loop Fragments",
+      "category": "Loop Delay",
+      "sha256": "ffe1731a903d451cd49e673503adb96a345243dc0c2403947754029dffdf8c41"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/16_Spectral/Spectral_Dust.ptfx",
+      "kind": "studio_fx",
+      "name": "Spectral Dust",
+      "category": "Spectral",
+      "sha256": "ceafd48e53fb66967c747fc5013c8914c654086aa2caff1b92bf2b4a718e836b"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/16_Spectral/Spectral_Felt.ptfx",
+      "kind": "studio_fx",
+      "name": "Spectral Felt",
+      "category": "Spectral",
+      "sha256": "3dfd79fd2fae868905507c4e145f49534b537ab576686383d8a5067dfe22a2b8"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/16_Spectral/Harmonic_Glass.ptfx",
+      "kind": "studio_fx",
+      "name": "Harmonic Glass",
+      "category": "Spectral",
+      "sha256": "0f492786bbdcef5b270731a15f0f3342398b96e1076d611fc784b378f517f94d"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/16_Spectral/Spectral_Canopy.ptfx",
+      "kind": "studio_fx",
+      "name": "Spectral Canopy",
+      "category": "Spectral",
+      "sha256": "74763319c9a473bdd424e3d5d8d4acdb0ab1ca459277bc5b53d4f8d0bf92d813"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/16_Spectral/Soft_Frequency_Veil.ptfx",
+      "kind": "studio_fx",
+      "name": "Soft Frequency Veil",
+      "category": "Spectral",
+      "sha256": "cee47b8ca112f02c5d853692d3cc96f65f4d118eb8c76d442409d79e86fbb83c"
+    },
+    {
+      "path": "Presets/StudioFX/Extreme_Collection/16_Spectral/Spectral_Flecks.ptfx",
+      "kind": "studio_fx",
+      "name": "Spectral Flecks",
+      "category": "Spectral",
+      "sha256": "a3ac949302eeb108020febeb5a2f1b24f455cfdff126a5981921c9c6b7005c49"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Open_Mix.ptmaster",
+      "kind": "masters",
+      "name": "Open Mix",
+      "category": "Transparent",
+      "sha256": "ac295716a80473f9f42fae92db5c521034056b704c728f2e18d7af3ae5f7b738"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Gentle_Stitch.ptmaster",
+      "kind": "masters",
+      "name": "Gentle Stitch",
+      "category": "Transparent",
+      "sha256": "57463e1800717bfd58acfdbc15e814f38b8ced40a4adaf4fa52649a9c005caf0"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Warm_Center.ptmaster",
+      "kind": "masters",
+      "name": "Warm Center",
+      "category": "Transparent",
+      "sha256": "e91675c99e7205f50e4645e38928ca1c2b3c78daff13fbbdd5d40b2df3841e81"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Transient_Room.ptmaster",
+      "kind": "masters",
+      "name": "Transient Room",
+      "category": "Transparent",
+      "sha256": "48a5c60047375dbfa54abf3a5eea0a968964ba4294b6c0d7aa0c10363758e900"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Clear_Mid_Side.ptmaster",
+      "kind": "masters",
+      "name": "Clear Mid Side",
+      "category": "Transparent",
+      "sha256": "6acd607e8a0a48e088a8fa2fbd1fa0f19c70e56d0244e32a62532f988f6b6144"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Low_End_Tidy.ptmaster",
+      "kind": "masters",
+      "name": "Low End Tidy",
+      "category": "Transparent",
+      "sha256": "627fdc2dc0fdf1b9bfd0ea813ebe0b35694e5084af4a266403d49f232dc629f9"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Soft_Mix_Anchor.ptmaster",
+      "kind": "masters",
+      "name": "Soft Mix Anchor",
+      "category": "Transparent",
+      "sha256": "2f848450584681e831bbdcfe852a632ccada785736678890846704c3f40190ca"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/01_Transparent/Headroom_First.ptmaster",
+      "kind": "masters",
+      "name": "Headroom First",
+      "category": "Transparent",
+      "sha256": "8a0ad2b2e77560979b1b3204ea9bd500026c216951eddc17de01fd7c373d8192"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/Organic_Drum_Glue.ptmaster",
+      "kind": "masters",
+      "name": "Organic Drum Glue",
+      "category": "Drum Buses",
+      "sha256": "51c4cac99631cfa74f192d5d846175aab936c8d78302e2f89db7730553fa1c72"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/Brush_Detail.ptmaster",
+      "kind": "masters",
+      "name": "Brush Detail",
+      "category": "Drum Buses",
+      "sha256": "1c0939b6f582b41533e677d4138b56a3b6dd95af426fc249be9a825c702852ba"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/Broken_Beat_Snap.ptmaster",
+      "kind": "masters",
+      "name": "Broken Beat Snap",
+      "category": "Drum Buses",
+      "sha256": "d4b625c532754ba1002f5037f03342c5d20f2d90ff4a9cdf6927cd9771adcee3"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/House_Drum_Focus.ptmaster",
+      "kind": "masters",
+      "name": "House Drum Focus",
+      "category": "Drum Buses",
+      "sha256": "439fe11ae4bb45f976f4f2f4a4bfb243e24329fc2906d8812ba9df68e2700edb"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/Kick_And_Wood.ptmaster",
+      "kind": "masters",
+      "name": "Kick And Wood",
+      "category": "Drum Buses",
+      "sha256": "19099bf002fca4df991b6ebe9814722d852b30c41dd7b3d0716905638da55567"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/Percussion_Silk.ptmaster",
+      "kind": "masters",
+      "name": "Percussion Silk",
+      "category": "Drum Buses",
+      "sha256": "afaa1704feb6f441f87e5b80a035e5e1684c40c0a077df95740717fc44312d63"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/Breaks_Control.ptmaster",
+      "kind": "masters",
+      "name": "Breaks Control",
+      "category": "Drum Buses",
+      "sha256": "eb811f78791d315c96e26a4bc7b919a956a1f345c02e1782e21e4dec2620e18c"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/02_Drum_Buses/Roomy_Drum_Bus.ptmaster",
+      "kind": "masters",
+      "name": "Roomy Drum Bus",
+      "category": "Drum Buses",
+      "sha256": "776786cb6a3fb44379dccd230e6910effc0b2e79ac82674056bee73479aeb639"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Cassette_Frame.ptmaster",
+      "kind": "masters",
+      "name": "Cassette Frame",
+      "category": "Character",
+      "sha256": "017ddc5dd6630eec1fb75275d2bf1b3e498ed9cae4fff3ba14481b23896ffc64"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Amber_Console.ptmaster",
+      "kind": "masters",
+      "name": "Amber Console",
+      "category": "Character",
+      "sha256": "cf07b123206a6ac07d978e0be297116ab0ab45895791493590e0e3020a7eb1be"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Dusty_Soul_Bus.ptmaster",
+      "kind": "masters",
+      "name": "Dusty Soul Bus",
+      "category": "Character",
+      "sha256": "91e39b4c3c9e224bd660e32675e887c399050c308bec56115d0765f552ac2fc8"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Copper_Glue.ptmaster",
+      "kind": "masters",
+      "name": "Copper Glue",
+      "category": "Character",
+      "sha256": "8ea9243877c32dc605c2f8f28ab54924238bfe37ec97edbf489252efd4f3bd4d"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Warm_Mono_Color.ptmaster",
+      "kind": "masters",
+      "name": "Warm Mono Color",
+      "category": "Character",
+      "sha256": "d04fe0d533717e9a37b2c53b8e79a421dc8736182e704da1f5e9e669f45bd76d"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Soft_Fold_Mix.ptmaster",
+      "kind": "masters",
+      "name": "Soft Fold Mix",
+      "category": "Character",
+      "sha256": "b629f49ec4d58eae4d74f8e1751f581f15e9c2d71741519ea9c2cb443281f090"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Velvet_Parallel.ptmaster",
+      "kind": "masters",
+      "name": "Velvet Parallel",
+      "category": "Character",
+      "sha256": "07949fa03e7debc1fd7da48cf4702492cdfa0d5320f520ea1f841ce5bac1aa07"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/03_Character/Night_Saturation.ptmaster",
+      "kind": "masters",
+      "name": "Night Saturation",
+      "category": "Character",
+      "sha256": "56092828f8bb776cb989ca370daa0c9395c3902a89b10df134b490c238d37c5b"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Wide_Quiet_Mix.ptmaster",
+      "kind": "masters",
+      "name": "Wide Quiet Mix",
+      "category": "Space Control",
+      "sha256": "1b203cf9a52c56029fdce7a0dcf0d087d39a07c3127fe269e072b69df5ecbd29"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Ambient_Anchor.ptmaster",
+      "kind": "masters",
+      "name": "Ambient Anchor",
+      "category": "Space Control",
+      "sha256": "78ac6beda086fad98d6529f6d632512db935fd1329f6ae6e49d6a41ddc587b71"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Deep_House_Polish.ptmaster",
+      "kind": "masters",
+      "name": "Deep House Polish",
+      "category": "Space Control",
+      "sha256": "492d14a906cd041d3d17f560bce154a8fe534c8597d1045484ca1950e52ceba4"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Dub_Center.ptmaster",
+      "kind": "masters",
+      "name": "Dub Center",
+      "category": "Space Control",
+      "sha256": "c6fadd3d9c8e3b1fbae93009a9a06f1a840b4614a298332aa39ccce5bcbf4f36"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Granular_Frame.ptmaster",
+      "kind": "masters",
+      "name": "Granular Frame",
+      "category": "Space Control",
+      "sha256": "ca2132b75ddea0dc41e713fad23d0d62caa70a8912b795c1ec898d7aa1ffa255"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Jazzy_Keys_Bus.ptmaster",
+      "kind": "masters",
+      "name": "Jazzy Keys Bus",
+      "category": "Space Control",
+      "sha256": "b4f59a1c17f3642beb634eda2b39eecfded47d1912a0645998b6dfad61781bca"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Stereo_Restraint.ptmaster",
+      "kind": "masters",
+      "name": "Stereo Restraint",
+      "category": "Space Control",
+      "sha256": "14ec67045b46dac82cf30fbdad052fa249df81c9fc628d058d17cc2c501ba9e1"
+    },
+    {
+      "path": "Presets/Mastering/Extreme_Collection/04_Space_Control/Air_With_Body.ptmaster",
+      "kind": "masters",
+      "name": "Air With Body",
+      "category": "Space Control",
+      "sha256": "2c88bdf98c83521bbab7527eee227cbb14e2973a07191dbd0b839756df8f3e20"
+    }
+  ]
+}

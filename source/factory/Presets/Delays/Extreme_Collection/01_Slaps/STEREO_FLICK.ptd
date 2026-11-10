@@ -1,0 +1,12 @@
+{
+  "name": "STEREO_FLICK",
+  "pong": true,
+  "sync": false,
+  "time": 14,
+  "feedback": 49,
+  "tone": 196,
+  "wobble": 4,
+  "reverbSend": 12,
+  "category": "Slaps",
+  "description": "Short mono or stereo doubling. Modest feedback preserves rhythmic definition."
+}

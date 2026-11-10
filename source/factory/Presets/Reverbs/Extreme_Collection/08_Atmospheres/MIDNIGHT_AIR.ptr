@@ -1,0 +1,12 @@
+{
+  "name": "MIDNIGHT_AIR",
+  "algo": 1,
+  "size": 196,
+  "decay": 197,
+  "damp": 91,
+  "pre": 88,
+  "width": 202,
+  "mod": 31,
+  "category": "Atmospheres",
+  "description": "Long but decaying atmosphere. Leave room between phrases; no infinite feedback setting."
+}
