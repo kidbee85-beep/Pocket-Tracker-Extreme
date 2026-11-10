@@ -64,6 +64,13 @@ jobs:
         working-directory: ${{ steps.app_source.outputs.directory }}
         run: |
           set -eu
-          for name in ptstudio-check ptsample-editor-check ptsample-tools-check ptcapture-check ptdrumlab-check ptsource-sampler-check ptsource-integration-check ptsource-query-check ptstudio-access-check ptlive-dsp-check ptstudio-live-check ptinstrument-load-check ptm8-import-check; do
+          for name in ptstudio-check ptsample-editor-check ptsample-tools-check ptcapture-check ptdrumlab-check ptsource-sampler-check ptsource-integration-check ptsource-query-check ptstudio-access-check ptlive-dsp-check ptstudio-live-check ptinstrument-load-check ptm8-import-check ptpunch-theme-check ptrecorder-workflow-check; do
             "build/host/native/$name" "$RUNNER_TEMP/$name"
           done
+          "build/host/native/ptbraids-pcm-check"
+      - name: Verify data-preserving updater and portable preparation
+        working-directory: ${{ steps.app_source.outputs.directory }}
+        run: |
+          python3 tests/brick-launcher/check_program_updater.py
+          python3 tests/brick-launcher/check_preset_preparer.py
+          python3 tests/r36s-launcher/check_launcher.py

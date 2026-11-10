@@ -1,0 +1,121 @@
+name: Publish verified TrackWerk website
+
+on:
+  workflow_dispatch:
+    inputs:
+      youtube_main:
+        description: Public YouTube main-film URL (leave empty until public)
+        required: false
+        type: string
+      youtube_short:
+        description: Public YouTube Short URL (leave empty until public)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: trackwerk-website
+  cancel-in-progress: false
+
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Download the verified public website source
+        run: curl --fail --location --output "$RUNNER_TEMP/trackwerk-site.zip" 'https://github.com/kidbee85-beep/Pocket-Tracker-Extreme/releases/download/v0.9.0-beta/TrackWerk-0.9-Website-Source.zip?revision=b48ef10f4882'
+      - name: Verify and prepare only the website
+        env:
+          SITE_ARCHIVE: ${{ runner.temp }}/trackwerk-site.zip
+          YOUTUBE_MAIN: ${{ inputs.youtube_main }}
+          YOUTUBE_SHORT: ${{ inputs.youtube_short }}
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import hashlib,html,json,os,re,shutil,tempfile,urllib.request,zipfile
+          archive=Path(os.environ['SITE_ARCHIVE'])
+          digest='b48ef10f4882a05c386835fbb08476c335bcea0d6e1d39ba51299ec843eb767d'
+          assert archive.stat().st_size==11261709
+          assert hashlib.sha256(archive.read_bytes()).hexdigest()==digest
+          request=urllib.request.Request('https://api.github.com/repos/kidbee85-beep/Pocket-Tracker-Extreme/releases/tags/v0.9.0-beta',headers={'User-Agent':'TrackWerk-website-verifier'})
+          with urllib.request.urlopen(request,timeout=60) as response: released=json.load(response)
+          assert released['draft'] is False and released['prerelease'] is True
+          actual={a['name']:a for a in released['assets']}
+          assert actual['TrackWerk-0.9-Website-Source.zip']['size']==11261709
+          if actual['TrackWerk-0.9-Website-Source.zip'].get('digest'):
+              assert actual['TrackWerk-0.9-Website-Source.zip']['digest']=='sha256:'+digest
+          with tempfile.TemporaryDirectory() as temp:
+              temp=Path(temp)
+              with zipfile.ZipFile(archive) as z:
+                  assert z.testzip() is None
+                  for name in z.namelist():
+                      assert (temp/name).resolve().is_relative_to(temp.resolve())
+                  z.extractall(temp)
+              source=temp/'TrackWerk-0.9-Website'
+              for path in source.rglob('*'):
+                  if path.is_file() and path.suffix in ['.html','.json','.css','.js']:
+                      text=path.read_text()
+                      assert '1569493424162213951' not in text
+                      assert 'upstream-exchange' not in text
+              target=Path('docs/site')
+              if target.exists(): shutil.rmtree(target)
+              target.mkdir(parents=True)
+              for path in source.iterdir():
+                  if path.name in ['assets','data','licenses','community'] or path.suffix=='.html' or path.name in ['.nojekyll','robots.txt','sitemap.xml']:
+                      if path.is_dir(): shutil.copytree(path,target/path.name)
+                      else: shutil.copy2(path,target/path.name)
+          manifest_path=target/'data/releases.json'
+          manifest=json.loads(manifest_path.read_text())
+          assert 'android-private' not in manifest['assets']
+          for asset in manifest['assets'].values():
+              remote=actual[asset['file']]
+              assert asset['ready'] and asset['bytes']==remote['size']
+              if remote.get('digest'): assert remote['digest']=='sha256:'+asset['sha256']
+          manifest['releaseReady']=True
+          manifest['plannedDate']='2026-11-10'
+          text=(target/'index.html').read_text().replace('<strong>Release candidate / 11 November 2026.</strong> Packages are verified and prepared. Download buttons activate when the release is published; this staging site does not silently send you to an older build.','<strong>TrackWerk 0.9 beta is available.</strong> Choose the package for your platform and follow the field guide. Matching source and checksums accompany the release.')
+          links=[]
+          for key,label in [('YOUTUBE_MAIN','Watch the full session on YouTube'),('YOUTUBE_SHORT','Watch the YouTube Short')]:
+              url=os.environ.get(key,'').strip()
+              if not url: continue
+              assert re.fullmatch(r'https://(?:youtu\.be/[A-Za-z0-9_-]{11}|(?:www\.)?youtube\.com/(?:watch\?v=|shorts/)[A-Za-z0-9_-]{11})',url)
+              links.append('<a href="'+html.escape(url,quote=True)+'">'+label+' ↗</a>')
+              manifest['film'][key.lower()]=url
+          if links:
+              marker='<p class="capture-caption">A complete jazz phrase'
+              text=text.replace(marker,'<p class="film-credit">'+' · '.join(links)+'</p>'+marker,1)
+          (target/'index.html').write_text(text)
+          manifest_path.write_text(json.dumps(manifest,indent=2)+'\n')
+          publication=Path('PUBLICATION-MANIFEST.json')
+          if publication.exists():
+              p=json.loads(publication.read_text())
+              for item in p['assets']:
+                  if item.get('role')=='website': item.update(bytes=11261709,sha256=digest)
+              publication.write_text(json.dumps(p,indent=2)+'\n')
+          shutil.copy2('source/LICENSE','LICENSE')
+          print('Clean website verified; eight software assets unchanged; no application tag touched')
+          PYTHON
+      - name: Commit the website update
+        run: |
+          git config user.name "Kid Bunka"
+          git config user.email "338288444+kidbee85-beep@users.noreply.github.com"
+          git add docs/site PUBLICATION-MANIFEST.json LICENSE
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish clean TrackWerk provenance and verified website"
+            git push origin HEAD:main
+          fi
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6.0.0
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: docs/site
+      - name: Deploy the verified website
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1
