@@ -110,8 +110,9 @@ jobs:
               publication.write_text(json.dumps(p,indent=2)+'\n')
           shutil.copy2('source/LICENSE','LICENSE')
           for path in [Path('README.md'),*Path('.github').rglob('*')]:
+              if '.github/workflows/' in path.as_posix(): continue
               if path.is_file() and path.suffix in ['.md','.yml','.yaml','.json','.py']:
-                  text=path.read_text(); updated=canonical(text)
+                  text=path.read_text(); updated=canonical(text).replace('The repository and legacy data namespace retain their earlier names to preserve existing links and user files.','The repository is now TrackWerk. Legacy on-device data paths remain unchanged to preserve projects, samples and settings.')
                   if text!=updated: path.write_text(updated)
           funding=Path('.github/FUNDING.yml')
           if funding.exists(): funding.write_text(funding.read_text().replace('Pocket%20Tracker%20Extreme','TrackWerk').replace('Pocket+Tracker+Extreme','TrackWerk'))
@@ -121,8 +122,9 @@ jobs:
               request=urllib.request.Request(api+'/releases/tags/'+tag,headers=headers)
               with urllib.request.urlopen(request,timeout=60) as response: release=json.load(response)
               old=release.get('body') or ''; updated=canonical(old)
-              if updated!=old:
-                  request=urllib.request.Request(api+'/releases/'+str(release['id']),data=json.dumps({'body':updated}).encode(),headers={**headers,'Content-Type':'application/json'},method='PATCH')
+              desired_name=release['name'] if tag=='v0.9.0-beta' else 'TrackWerk — historical '+tag.split('v0.2.0-')[1]+' (superseded)'
+              if updated!=old or release['name']!=desired_name:
+                  request=urllib.request.Request(api+'/releases/'+str(release['id']),data=json.dumps({'body':updated,'name':desired_name}).encode(),headers={**headers,'Content-Type':'application/json'},method='PATCH')
                   with urllib.request.urlopen(request,timeout=60) as response: assert canonical(json.load(response)['body'])==updated
           print('Clean website verified; eight software assets unchanged; no application tag touched')
           PYTHON
