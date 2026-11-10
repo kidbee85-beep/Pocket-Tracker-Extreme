@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/sitemap.xml
+Sitemap: https://kidbee85-beep.github.io/TrackWerk/sitemap.xml
