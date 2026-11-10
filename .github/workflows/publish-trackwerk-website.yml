@@ -91,6 +91,9 @@ jobs:
           if links:
               marker='<p class="capture-caption">A complete jazz phrase'
               text=text.replace(marker,'<p class="film-credit">'+' · '.join(links)+'</p>'+marker,1)
+              credits=target/'credits.html'
+              credit_text=credits.read_text().replace('<h2 id="music">','<p class="film-credit">Session videos: '+' · '.join(links)+'</p><h2 id="music">',1)
+              credits.write_text(credit_text)
           (target/'index.html').write_text(text)
           manifest_path.write_text(json.dumps(manifest,indent=2)+'\n')
           publication=Path('PUBLICATION-MANIFEST.json')
