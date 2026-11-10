@@ -1,0 +1,365 @@
+name: Publish approved TrackWerk 0.9
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: trackwerk-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Prepare the reviewed publication helper
+        run: |
+          mkdir -p "$RUNNER_TEMP/trackwerk-publisher"
+          cat > "$RUNNER_TEMP/trackwerk-publisher/expected.json" <<'EXPECTED'
+          {
+            "product": "TrackWerk",
+            "tag": "v0.9.0-beta",
+            "approved_for_publication": true,
+            "actual_release_date": "2026-11-10",
+            "public_software_assets": 8,
+            "android_application_id": "com.kidbunka.trackwerk",
+            "source_freeze": "27597fb255f6c500d66628992f4a1cce02fb5a2b83dd45ffab88672394c3c230",
+            "film_sha256": "b4adb1d614f1a391853a5c05e8cf564ddd3bcdf68e2f46405329b1b20fda881a",
+            "assets": [
+              {
+                "file": "TrackWerk-0.9-Android.apk",
+                "bytes": 33293682,
+                "sha256": "25a836c310c3143406f5c2643814eb62584b3a30674a6c1c21b45709337005ef",
+                "role": "android"
+              },
+              {
+                "file": "SDL2-mmiyoo-f6319cf9-source.tar.gz",
+                "bytes": 17285143,
+                "sha256": "b4c2416b244ad5d9c208fa5939e865331880df9fb8f9e8fca3a5d2d5017af549",
+                "role": "software"
+              },
+              {
+                "file": "TrackWerk-0.9-Miyoo-Mini-Onion.zip",
+                "bytes": 5224967,
+                "sha256": "e90ee4a24842be642a7a6526f12d29b9aa5d4ce5cb35a25db3fb8c37a78a86e5",
+                "role": "software"
+              },
+              {
+                "file": "TrackWerk-0.9-Miyoo-Plus-Onion.zip",
+                "bytes": 5462576,
+                "sha256": "5e868d794ee3d7d570a6bb643e2a988ac7dc4239c59119c56e5e252403923e38",
+                "role": "software"
+              },
+              {
+                "file": "TrackWerk-0.9-Brick-KNULLI.zip",
+                "bytes": 50942030,
+                "sha256": "20b7d5af274be8a6bfdecb3b0fc470844e85d72d266ecd716b07f0a2ec83a1c2",
+                "role": "software"
+              },
+              {
+                "file": "TrackWerk-0.9-Brick-Program-Factory-Update.zip",
+                "bytes": 5193645,
+                "sha256": "b23aa771d77c052db91ba296cae8a5318ae433e3d99cde4f9a190a2c3eb8dfd9",
+                "role": "software"
+              },
+              {
+                "file": "TrackWerk-0.9-Factory-Presets.zip",
+                "bytes": 1975012,
+                "sha256": "36ec474f3210454038270011a0a4bf23c351b16066c339b1946cae7c8c226e19",
+                "role": "software"
+              },
+              {
+                "file": "TrackWerk-0.9-Source.zip",
+                "bytes": 169336250,
+                "sha256": "0c7ec1615de39ef5d33540502c8233b4f320e753274fbf2347ec55f57aa52249",
+                "role": "source"
+              },
+              {
+                "file": "SHA256SUMS.txt",
+                "bytes": 796,
+                "sha256": "5c5462a1f7f49861e11b63a62132c74ab9cc9666fb483768c7f3a28f601677b1",
+                "role": "checksums"
+              },
+              {
+                "file": "INSTALL-AND-UPDATE.md",
+                "bytes": 5847,
+                "sha256": "0a7dc011a34bddc86c9497a0f69c26c3869e675075ec8bdba86e2400917b5b32",
+                "role": "guide"
+              },
+              {
+                "file": "COMPATIBILITY.md",
+                "bytes": 3100,
+                "sha256": "4b7f499c25371638a81f5f6ac3b11f859a6db725402d80b50b3445f718c36f06",
+                "role": "guide"
+              },
+              {
+                "file": "RELEASE-NOTES.md",
+                "bytes": 5539,
+                "sha256": "2bdc6c79068e4508223a5ae705bc437292e254af9788f81dd44eb726b08c5a56",
+                "role": "guide"
+              },
+              {
+                "file": "TrackWerk-0.9-Website-Source.zip",
+                "bytes": 11262513,
+                "sha256": "953b3869f9399bab5189c085b6869d2e5c1ace7a68b4bc3c52d48c381c57332e",
+                "role": "website"
+              }
+            ]
+          }
+          EXPECTED
+          cat > "$RUNNER_TEMP/trackwerk-publisher/approved_release.py" <<'PUBLISHER'
+          """Verify reviewed release artifacts, mirror corresponding source, activate Pages.
+          
+          This runs only through the manually dispatched publication workflow. No build or
+          signing secrets are requested, generated or included in the resulting source.
+          """
+          import argparse
+          import datetime
+          import hashlib
+          import json
+          import shutil
+          import subprocess
+          import tempfile
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+          
+          REPO = 'kidbee85-beep/Pocket-Tracker-Extreme'
+          TAG = 'v0.9.0-beta'
+          
+          
+          def sha(path):
+              h = hashlib.sha256()
+              with Path(path).open('rb') as f:
+                  for block in iter(lambda: f.read(1024*1024), b''):
+                      h.update(block)
+              return h.hexdigest()
+          
+          
+          def extract(zippath, destination):
+              destination = destination.resolve()
+              with zipfile.ZipFile(zippath) as archive:
+                  for item in archive.infolist():
+                      target = (destination / item.filename).resolve()
+                      if not target.is_relative_to(destination):
+                          raise RuntimeError('Archive member escapes its reviewed root')
+                      if (item.external_attr >> 16) & 0o170000 == 0o120000:
+                          raise RuntimeError('Unexpected symbolic link in reviewed archive')
+                  if archive.testzip() is not None:
+                      raise RuntimeError('Archive CRC mismatch')
+                  archive.extractall(destination)
+                  for item in archive.infolist():
+                      mode = (item.external_attr >> 16) & 0o777
+                      if mode:
+                          (destination/item.filename).chmod(mode)
+          
+          
+          def prepare(args, expected):
+              downloads = args.downloads.resolve()
+              for record in expected['assets']:
+                  path = downloads / record['file']
+                  assert path.is_file(), record['file']
+                  assert path.stat().st_size == record['bytes'], record['file']
+                  assert sha(path) == record['sha256'], record['file']
+              source = next(x for x in expected['assets'] if x['role'] == 'source')
+              website = next(x for x in expected['assets'] if x['role'] == 'website')
+              root = args.repository.resolve()
+              assert (root / '.git').exists(), 'Use a checked-out repository'
+              with tempfile.TemporaryDirectory() as temp:
+                  temp = Path(temp)
+                  extract(downloads/source['file'], temp/'source')
+                  extract(downloads/website['file'], temp/'site')
+                  bundle = temp/'source'/'TrackWerk-0.9'
+                  manifest = json.loads((bundle/'SOURCE-FILES.json').read_text())
+                  assert manifest['freeze'] == expected['source_freeze']
+                  assert len(manifest['files']) >= 6013
+                  assert 'com.kidbunka.trackwerk' in (bundle/'source/app/build.gradle.kts').read_text()
+                  for record in manifest['files']:
+                      path = bundle/record['path']
+                      assert path.stat().st_size == record['bytes'], record['path']
+                      assert sha(path) == record['sha256'], record['path']
+                  # Preserve the repository's .git and active, reviewed workflows. All new
+                  # application sources remain in the exact corresponding-source layout.
+                  for path in root.iterdir():
+                      if path.name in ('.git', '.github'):
+                          continue
+                      if path.is_dir():
+                          shutil.rmtree(path)
+                      else:
+                          path.unlink()
+                  for path in bundle.iterdir():
+                      target = root/path.name
+                      if path.is_dir():
+                          shutil.copytree(path,target)
+                      else:
+                          shutil.copy2(path,target)
+                  shutil.copy2(args.readme or root/'.github/scripts/README-TRACKWERK.md',root/'README.md')
+                  site = temp/'site'/'TrackWerk-0.9-Website'
+                  # Copy only the static website, not authoring/QA files into Pages.
+                  out = root/'docs/site'
+                  out.mkdir(parents=True,exist_ok=True)
+                  for path in site.iterdir():
+                      if path.name in ('assets','data','licenses','community') or path.suffix=='.html' or path.name in ('.nojekyll','robots.txt','sitemap.xml'):
+                          if path.is_dir():
+                              shutil.copytree(path,out/path.name)
+                          else:
+                              shutil.copy2(path,out/path.name)
+                  release = json.loads((out/'data/releases.json').read_text())
+                  assert not release['releaseReady'], 'The public gate opens after publication'
+                  assert 'android-private' not in release['assets']
+                  assert release['film']['sha256'] == expected['film_sha256']
+                  assert sha(out/release['film']['file']) == expected['film_sha256']
+                  (root/'PUBLICATION-MANIFEST.json').write_text(json.dumps(expected,indent=2)+'\n')
+                  print('Verified and mirrored',len(manifest['files']),'corresponding-source files')
+          
+          
+          def activate(args, expected):
+              req = urllib.request.Request('https://api.github.com/repos/'+REPO+'/releases/tags/'+TAG,
+                                           headers={'Accept':'application/vnd.github+json','User-Agent':'TrackWerk-publication-verifier'})
+              with urllib.request.urlopen(req,timeout=60) as response:
+                  release = json.load(response)
+              assert release['draft'] is False and release['prerelease'] is True
+              actual = {a['name']:a for a in release['assets']}
+              for record in expected['assets']:
+                  remote = actual[record['file']]
+                  assert remote['size']==record['bytes']
+                  if remote.get('digest'):
+                      assert remote['digest']=='sha256:'+record['sha256']
+              root = args.repository.resolve()
+              path = root/'docs/site/data/releases.json'
+              data = json.loads(path.read_text())
+              data['releaseReady']=True
+              data['plannedDate']=datetime.date.today().isoformat()
+              for asset in data['assets'].values():
+                  assert asset['file'] in actual
+                  assert asset['ready']
+              path.write_text(json.dumps(data,indent=2)+'\n')
+              path = root/'docs/site/index.html'
+              text = path.read_text().replace(
+                  '<strong>Release candidate / 11 November 2026.</strong> Packages are verified and prepared. Download buttons activate when the release is published; this staging site does not silently send you to an older build.',
+                  '<strong>TrackWerk 0.9 beta is available.</strong> Choose the package for your platform and follow the field guide. Matching source and checksums accompany the release.')
+              path.write_text(text)
+              print('Published prerelease assets verified; website downloads activated')
+          
+          
+          def main():
+              p=argparse.ArgumentParser()
+              p.add_argument('mode',choices=['prepare','activate'])
+              p.add_argument('--expected',type=Path,required=True)
+              p.add_argument('--downloads',type=Path)
+              p.add_argument('--readme',type=Path)
+              p.add_argument('--repository',type=Path,default=Path('.'))
+              a=p.parse_args()
+              expected=json.loads(a.expected.read_text())
+              assert expected['approved_for_publication'] is True
+              assert expected['tag']==TAG
+              assert expected['android_application_id']=='com.kidbunka.trackwerk'
+              assert not any('Private-Test' in item['file'] for item in expected['assets'])
+              if a.mode=='prepare':
+                  assert a.downloads
+                  prepare(a,expected)
+              else:
+                  activate(a,expected)
+          
+          
+          if __name__=='__main__':
+              main()
+          PUBLISHER
+          cat > "$RUNNER_TEMP/trackwerk-publisher/README-TRACKWERK.md" <<'README'
+          # TrackWerk
+          
+          **A free, open-source music studio for Android and Linux handhelds.**
+          
+          TrackWerk **0.9 beta**, by **Kid Bunka** and contributors, brings tracker sequencing, sample editing, synthesis, performance effects and online digging into one button-driven studio.
+          
+          TrackWerk is an independent fork of **[PocketTracker by conanizer and contributors](https://github.com/conanizer/pockettracker)**. The upstream tracker, sampler, editor, mixer/export tools and established button workflow are its foundation. Kid Bunka’s TrackWerk work develops the expanded Studio, performance and archive workflows, visual identity and handheld fixes. Original authorship and component credits stay visible.
+          
+          [Website](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/) · [Illustrated field guide](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html) · [Downloads](https://github.com/kidbee85-beep/Pocket-Tracker-Extreme/releases/tag/v0.9.0-beta) · [Watch the session](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/#film) · [Optional support](https://www.paypal.com/donate/?business=kidbee85%40gmail.com&currency_code=CHF)
+          
+          ![TrackWerk Studio — actual native interface](docs/site/assets/images/synth.png)
+          
+          ## Make a track your way
+          
+          - Eight tracker tracks, project swing, pattern/song arrangement and mix/stem export.
+          - Distinct synthesis engines with relevant controls, live editing and audition; 2,048 categorized instrument presets, including drums.
+          - Detailed sample editing, slicing, fades and declicking; long-WAV storage preview and range cropping into the editor.
+          - Internet Archive search, preview, IN/OUT selection, WAV rendering and import on supported connected profiles.
+          - Drumlab generation from your own selected sounds, followed by normal tracker editing.
+          - 64 momentary Punch choices in eight banks, internal post-FX resampling and import of the saved take.
+          - Categorized reverb, delay, Studio FX and mastering presets.
+          - 17 typefaces, 50 palettes, 18 materials and an independent TrackWerk visual identity.
+          - A supported M8 sampler/arrangement subset; unsupported engines/effects are reported and omitted.
+          
+          ## Platforms and updates
+          
+          Android 8+ (ARM64, ARMv7, x86_64); Trimui Brick with KNULLI; Miyoo Mini and Mini Plus with Onion. The original Mini is offline; Mini Plus uses its separate online profile. R36S and Polyend Tracker Mini are outside this 0.9 release.
+          
+          Linux program updates keep samples, projects, presets, themes, settings and controller mappings. Public TrackWerk Android has its own application identity and installs alongside earlier Pocket Tracker Extreme apps: export app-private work into a shared folder and leave the earlier app installed. The new app needs its own settings and folder grant. Future TrackWerk updates retain its identity and signature. **Do not uninstall, reflash or replace your whole data folder as an app-update step.** [Read the installation/update guide](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/guide.html#updates).
+          
+          This is a beta. Final device acceptance is ongoing. Physical microphone and class-compliant audio-interface recording depend on device tests. Miyoo physical input is disabled. Direct iPhone-to-Brick USB capture failed in the tested setup and is not a supported claim. Online providers and rights vary; use material you are permitted to sample.
+          
+          ## Source and build
+          
+          The complete application lives in [source/](source/). [BUILD-TRACKWERK-0.9.txt](BUILD-TRACKWERK-0.9.txt) explains Android, native Linux, preferred font/art sources and the Miyoo builders. Keep `source/`, `font-authoring/` and `brand-authoring/` together. The matching source ZIP and exact Miyoo SDL source accompany the release.
+          
+          The repository and legacy data namespace retain their earlier names to preserve existing links and user files. The public product name is **TrackWerk**. Old release history remains available for reference.
+          
+          ## Credits and license
+          
+          TrackWerk is an independent fork of [PocketTracker by conanizer and contributors](https://github.com/conanizer/pockettracker), under [GPL-3.0-or-later](source/LICENSE). Original authors and third-party notices retain their credits. Selected Mutable Instruments DSP by Emilie Gillet and dependencies keep their original licenses. These adaptations are not full hardware-module emulations. [Credits](source/CREDITS.md) · [Website credits](https://kidbee85-beep.github.io/Pocket-Tracker-Extreme/credits.html).
+          
+          Public downloads exclude private sample libraries, private demo projects, signing keys and device identifiers. The new session film’s music/sample attribution is on the website and in its video description.
+          README
+      - name: Download the reviewed draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v0.9.0-beta --repo "$GITHUB_REPOSITORY" --dir "$RUNNER_TEMP/trackwerk-09"
+      - name: Verify and mirror corresponding source and website
+        run: python3 "$RUNNER_TEMP/trackwerk-publisher/approved_release.py" prepare --expected "$RUNNER_TEMP/trackwerk-publisher/expected.json" --readme "$RUNNER_TEMP/trackwerk-publisher/README-TRACKWERK.md" --downloads "$RUNNER_TEMP/trackwerk-09"
+      - name: Commit the approved source and tag
+        run: |
+          git config user.name "Kid Bunka"
+          git config user.email "338288444+kidbee85-beep@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish TrackWerk 0.9 corresponding source and independent identity"
+          fi
+          if ! git rev-parse refs/tags/v0.9.0-beta >/dev/null 2>&1; then
+            git tag -a v0.9.0-beta -m "TrackWerk 0.9 beta — approved source"
+            git push --atomic origin HEAD:main refs/tags/v0.9.0-beta
+          else
+            git push origin HEAD:main
+          fi
+      - name: Publish the reviewed prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit v0.9.0-beta --repo "$GITHUB_REPOSITORY" --target "$(git rev-parse HEAD)" --draft=false --prerelease
+      - name: Activate downloads only after public asset verification
+        run: |
+          python3 "$RUNNER_TEMP/trackwerk-publisher/approved_release.py" activate --expected "$RUNNER_TEMP/trackwerk-publisher/expected.json"
+          git add docs/site
+          if ! git diff --cached --quiet; then
+            git commit -m "Activate verified TrackWerk 0.9 public downloads"
+          fi
+          git push origin HEAD:main
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6.0.0
+        with:
+          enablement: true
+      - name: Upload the approved website
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: docs/site
+      - name: Publish GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1
