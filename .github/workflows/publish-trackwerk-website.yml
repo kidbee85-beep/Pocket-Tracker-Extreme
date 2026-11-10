@@ -30,10 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Download the verified public website source
-        run: curl --fail --location --output "$RUNNER_TEMP/trackwerk-site.zip" 'https://github.com/kidbee85-beep/Pocket-Tracker-Extreme/releases/download/v0.9.0-beta/TrackWerk-0.9-Website-Source.zip?revision=b48ef10f4882'
+        run: curl --fail --location --output "$RUNNER_TEMP/trackwerk-site.zip" 'https://github.com/kidbee85-beep/TrackWerk/releases/download/v0.9.0-beta/TrackWerk-0.9-Website-Source.zip?revision=b48ef10f4882'
       - name: Verify and prepare only the website
         env:
           SITE_ARCHIVE: ${{ runner.temp }}/trackwerk-site.zip
+          GH_TOKEN: ${{ github.token }}
           YOUTUBE_MAIN: ${{ inputs.youtube_main }}
           YOUTUBE_SHORT: ${{ inputs.youtube_short }}
         run: |
@@ -44,7 +45,7 @@ jobs:
           digest='b48ef10f4882a05c386835fbb08476c335bcea0d6e1d39ba51299ec843eb767d'
           assert archive.stat().st_size==11261709
           assert hashlib.sha256(archive.read_bytes()).hexdigest()==digest
-          request=urllib.request.Request('https://api.github.com/repos/kidbee85-beep/Pocket-Tracker-Extreme/releases/tags/v0.9.0-beta',headers={'User-Agent':'TrackWerk-website-verifier'})
+          request=urllib.request.Request('https://api.github.com/repos/kidbee85-beep/TrackWerk/releases/tags/v0.9.0-beta',headers={'User-Agent':'TrackWerk-website-verifier'})
           with urllib.request.urlopen(request,timeout=60) as response: released=json.load(response)
           assert released['draft'] is False and released['prerelease'] is True
           actual={a['name']:a for a in released['assets']}
@@ -71,6 +72,11 @@ jobs:
                   if path.name in ['assets','data','licenses','community'] or path.suffix=='.html' or path.name in ['.nojekyll','robots.txt','sitemap.xml']:
                       if path.is_dir(): shutil.copytree(path,target/path.name)
                       else: shutil.copy2(path,target/path.name)
+          def canonical(text):
+              return text.replace('kidbee85-beep.github.io/'+'Pocket-Tracker-Extreme','kidbee85-beep.github.io/TrackWerk').replace('kidbee85-beep/'+'Pocket-Tracker-Extreme','kidbee85-beep/TrackWerk')
+          for path in target.rglob('*'):
+              if path.is_file() and path.suffix in ['.html','.json','.css','.js','.txt','.xml','.md']:
+                  path.write_text(canonical(path.read_text()))
           manifest_path=target/'data/releases.json'
           manifest=json.loads(manifest_path.read_text())
           assert 'android-private' not in manifest['assets']
@@ -103,13 +109,28 @@ jobs:
                   if item.get('role')=='website': item.update(bytes=11261709,sha256=digest)
               publication.write_text(json.dumps(p,indent=2)+'\n')
           shutil.copy2('source/LICENSE','LICENSE')
+          for path in [Path('README.md'),*Path('.github').rglob('*')]:
+              if path.is_file() and path.suffix in ['.md','.yml','.yaml','.json','.py']:
+                  text=path.read_text(); updated=canonical(text)
+                  if text!=updated: path.write_text(updated)
+          funding=Path('.github/FUNDING.yml')
+          if funding.exists(): funding.write_text(funding.read_text().replace('Pocket%20Tracker%20Extreme','TrackWerk').replace('Pocket+Tracker+Extreme','TrackWerk'))
+          api='https://api.github.com/repos/kidbee85-beep/TrackWerk'
+          headers={'User-Agent':'TrackWerk-canonical-link-migration','Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}
+          for tag in ['v0.9.0-beta','v0.2.0-beta.1','v0.2.0-beta.2']:
+              request=urllib.request.Request(api+'/releases/tags/'+tag,headers=headers)
+              with urllib.request.urlopen(request,timeout=60) as response: release=json.load(response)
+              old=release.get('body') or ''; updated=canonical(old)
+              if updated!=old:
+                  request=urllib.request.Request(api+'/releases/'+str(release['id']),data=json.dumps({'body':updated}).encode(),headers={**headers,'Content-Type':'application/json'},method='PATCH')
+                  with urllib.request.urlopen(request,timeout=60) as response: assert canonical(json.load(response)['body'])==updated
           print('Clean website verified; eight software assets unchanged; no application tag touched')
           PYTHON
       - name: Commit the website update
         run: |
           git config user.name "Kid Bunka"
           git config user.email "338288444+kidbee85-beep@users.noreply.github.com"
-          git add docs/site PUBLICATION-MANIFEST.json LICENSE
+          git add docs/site PUBLICATION-MANIFEST.json LICENSE README.md .github
           if ! git diff --cached --quiet; then
             git commit -m "Publish clean TrackWerk provenance and verified website"
             git push origin HEAD:main
