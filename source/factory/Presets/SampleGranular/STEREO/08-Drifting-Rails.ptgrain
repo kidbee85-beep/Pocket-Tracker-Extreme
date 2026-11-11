@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Drifting Rails",
+  "parameters": {
+    "attackMs": 80.0,
+    "densityHz": 14.0,
+    "freeze": false,
+    "level": 0.36000001430511475,
+    "panSpread": 0.8399999737739563,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.47999998927116394,
+    "position": 0.4350000023841858,
+    "releaseMs": 700.0,
+    "reverseProbability": 0.20000000298023224,
+    "scanSpeed": -0.029999997466802597,
+    "sizeMs": 308.0,
+    "sprayMs": 64.0,
+    "windowShape": 0.15000000596046448
+  },
+  "version": 1
+}

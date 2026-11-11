@@ -79,6 +79,7 @@ struct ButtonEvent {
     Button       button;
     ButtonAction action;
     ButtonMods   mods;
+    bool         cancelled = false;  // Device or window reset, rather than a user's key-up.
 };
 
 }  // namespace pt::ui

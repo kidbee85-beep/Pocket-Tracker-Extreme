@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Loose Bolts",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 47.0,
+    "freeze": false,
+    "level": 0.47999998927116394,
+    "panSpread": 0.8399999737739563,
+    "pitchSemitones": 6.0,
+    "pitchSpraySemitones": 1.1200000047683716,
+    "position": 0.75,
+    "releaseMs": 245.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 31.0,
+    "sprayMs": 4.0,
+    "windowShape": 0.8999999761581421
+  },
+  "version": 1
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Staccato Glass",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 75.0,
+    "freeze": true,
+    "level": 0.3799999952316284,
+    "panSpread": 0.45000001788139343,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 1.0,
+    "position": 0.3449999988079071,
+    "releaseMs": 120.0,
+    "reverseProbability": 0.45000001788139343,
+    "scanSpeed": 1.0,
+    "sizeMs": 43.0,
+    "sprayMs": 255.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

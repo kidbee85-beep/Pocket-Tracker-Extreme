@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Mirror Fragments",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 91.0,
+    "freeze": true,
+    "level": 0.3799999952316284,
+    "panSpread": 0.949999988079071,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 3.0,
+    "position": 0.7950000166893005,
+    "releaseMs": 200.0,
+    "reverseProbability": 0.949999988079071,
+    "scanSpeed": 4.0,
+    "sizeMs": 113.0,
+    "sprayMs": 605.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

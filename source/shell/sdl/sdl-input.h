@@ -70,7 +70,7 @@ public:
 
     // A touch button uses the same press/release, repeat and held-button de-dup as a key or a pad.
     void touch_press(Button b, uint64_t now_ms) { press(b, now_ms); }
-    void touch_release(Button b)                { release(b); }
+    void touch_release(Button b, bool cancelled = false) { release(b, cancelled); }
 
     // The shell's FULL-vs-touch-layout question.
     size_t controller_count() const { return controllers_.size(); }
@@ -85,7 +85,7 @@ public:
 
 private:
     void press(Button b, uint64_t now_ms);
-    void release(Button b);
+    void release(Button b, bool cancelled = false);
 
     // Against the live map (defaults, as edited by config.json).
     bool key_to_button(SDL_Keycode k, Button& out) const;

@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Linen Signal",
+  "parameters": {
+    "attackMs": 670.0,
+    "densityHz": 14.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.7900000214576721,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.25,
+    "position": 0.7050000429153442,
+    "releaseMs": 1640.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.29999998211860657,
+    "sizeMs": 531.0,
+    "sprayMs": 142.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

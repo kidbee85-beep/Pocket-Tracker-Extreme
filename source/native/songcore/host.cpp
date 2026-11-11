@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <new>
 #include <stdexcept>
 
 namespace songcore {
@@ -62,6 +63,7 @@ bool SongcoreHost::push_project(const std::string& blob) {
     normalize_and_migrate(parsed);   // pool repair + v0→1 table-volume migration
     if (engine_) engine_->local_wav_source().close();
     project_ = std::move(parsed);
+    clear_master_maximum();
     projectSha_ = sha1_hex(blob);
     // Table data may have changed, so the consumer's "already sent" cache must go.
     consumer_.invalidate_tables();
@@ -399,6 +401,7 @@ void SongcoreHost::new_project() {
 
     invalidate_tables();
     push_params();
+    clear_master_maximum();
 }
 
 void SongcoreHost::clean_inst(const std::string& baseDir) {
@@ -411,6 +414,7 @@ void SongcoreHost::clean_inst(const std::string& baseDir) {
 bool SongcoreHost::load_sample(int id, const std::string& path) {
     if (engine_) engine_->local_wav_source().close();
     if (!load_instrument_sample(engine_, project_, id, path, routing_)) return false;
+    if(path.rfind("/@mutable/",0)==0)project_.instruments[id].granularEnabled=false;
     push_instrument(id);   // the fresh source needs its slot's filter/window/loop
     return true;
 }
@@ -429,6 +433,8 @@ bool SongcoreHost::update_studio_synth(int id,const std::string& uri,const studi
     engine_->setStudioSynthParams(ins.sampleId,params);
     *ins.sampleFilePath=std::move(stored);
     ins.studioSynthParams=params;
+    ins.granularEnabled=false;
+    push_sample_granular(*engine_,ins,routing_,0);
     return true;
 }
 
@@ -517,7 +523,16 @@ bool SongcoreHost::load_instrument_preset(int id, const std::string& path) {
         const auto& params=values.at("studioSynthParams");if(!params.is_array())return false;
         for(const auto& value:params)if(!value.is_number_integer()||value.get<int64_t>()< -1||value.get<int64_t>()>255)return false;
     }
-    const InstrumentPreset ip = parse_instrument_preset(j);
+    if(values.contains("granular")&&!detail::valid_granular_object(values["granular"]))return false;
+    InstrumentPreset ip = parse_instrument_preset(j);
+    if(ip.instrument.granularEnabled){
+        if(!ip.instrument.sampleFilePath)return false;
+        const auto slash=path.find_last_of("/\\");
+        const auto directory=slash==std::string::npos?std::string{}:path.substr(0,slash);
+        MediaRoots presetRoots=mediaRoots_;presetRoots.baseDir=directory;presetRoots.projectDir=directory;
+        ip.instrument.sampleFilePath=resolve_media_path(*ip.instrument.sampleFilePath,presetRoots);
+        if(ip.instrument.sampleFilePath->rfind("/@mutable/",0)==0)return false;
+    }
     const Instrument previous=project_.instruments[id];
     const std::optional<Table> previousTable=id<static_cast<int>(project_.tables.size())?std::optional<Table>(project_.tables[id]):std::nullopt;
     const bool sourceOk = apply_instrument_preset(engine_, project_, id, ip, routing_, mediaRoots_);
@@ -559,10 +574,11 @@ std::vector<float> SongcoreHost::sample_waveform(int id, int bins, int startFram
     return out;
 }
 
-std::vector<int> SongcoreHost::detect_transients(int id, int sensitivity) const {
-    if (!engine_) return {};
+std::vector<int> SongcoreHost::detect_transients(int id, int sensitivity,
+                                                 const AudioEngine::TransientScan& scan) const {
+    if (!engine_ || id < 0 || id >= static_cast<int>(project_.instruments.size())) return {};
     int       markers[128];
-    const int n = engine_->detectTransients(id, sensitivity, markers, 128);
+    const int n = engine_->detectTransients(id, sensitivity, sample_rate_of(id), scan, markers, 128);
     return std::vector<int>(markers, markers + std::max(n, 0));
 }
 
@@ -652,11 +668,54 @@ void SongcoreHost::finish_sample_preview(int id) {
     push_instrument_mod_eq_sends(*engine_, ins, tempo_in_force(project_), engine_->getSampleRate());
 }
 
+bool SongcoreHost::preview_sample_chop(int id, int sourceMode, int first, int end, float gain) {
+    if (!engine_ || id < 0 || id >= POOL_INSTRUMENTS) return false;
+    engine_->local_wav_source().close();
+    stop_preview(true);
+    // Play the exact PCM in the audition lane. The song's original sampler
+    // settings, sample slot and sounding voices stay untouched.
+    const int slot = SOURCE_PREVIEW_SLOT;
+    if (!engine_->prepareSourcePreviewRange(slot, id, sourceMode, first, end)) return false;
+    if (gain != 1.f) engine_->applySampleGain(slot, 0, end - first, gain);
+    Instrument draft;
+    draft.sampleId = slot;
+    push_instrument_playback_params(*engine_, draft);
+    preview_instrument_dry(*engine_, draft, slot, routing_.sampleRateRatio[id]);
+    return true;
+}
+
 bool SongcoreHost::save_sample_wav(int id, const std::string& path, const std::vector<int>& cuePoints,
                                    int sourceMode, bool hasStereo, int bits) {
     if (!engine_) return false;
     return songcore::save_sample_wav(*engine_, routing_, id, path, cuePoints, sourceMode, hasStereo,
                                      bits);
+}
+
+bool SongcoreHost::save_sample_selection_wav(int id, const std::string& path, int first, int end,
+                                             const std::vector<int>& cuePoints, int sourceMode, int bits) {
+    if (!engine_ || id < 0 || id >= static_cast<int>(project_.instruments.size()) ||
+        first < 0 || end <= first || end > engine_->getSampleLength(id)) return false;
+    const bool hasRight = has_stereo_data(id);
+    const bool stereo = hasRight && sourceMode == 2;
+    const bool downmix = hasRight && sourceMode == 3;
+    const bool rightOnly = hasRight && sourceMode == 1;
+    const auto length = static_cast<size_t>(end - first);
+    const int depth = songcore::resolve_save_bits(*engine_, id, bits);
+    try {
+        std::vector<float> left(length);
+        std::vector<float> right(stereo || downmix ? length : 0);
+        float* leftOut = rightOnly ? nullptr : left.data();
+        float* rightOut = rightOnly ? left.data() : (right.empty() ? nullptr : right.data());
+        if (!engine_->copySampleRegion(id, first, end, leftOut, rightOut))
+            return false;
+        if (downmix) {
+            for (size_t i = 0; i < length; ++i) left[i] = (left[i] + right[i]) * 0.5f;
+        }
+        return write_wav(path, left, right, sample_rate_of(id), cuePoints, stereo ? 2 : 1,
+                         depth, depth == 32 && engine_->isSampleFloat(id));
+    } catch (const std::bad_alloc&) {
+        return false;
+    }
 }
 
 void SongcoreHost::adopt_saved_sample(int id, int bits) {
@@ -1103,3 +1162,55 @@ void SongcoreHost::flush_trace() {
 }
 
 }  // namespace songcore
+
+
+namespace songcore {
+bool SongcoreHost::update_sample_granular(int id,bool enabled,const studio::granular::Parameters& params){
+    granularError_.clear();
+    if(!engine_||id<0||id>=int(project_.instruments.size())){granularError_="Choose a valid instrument";return false;}
+    if(!studio::granular::validParameters(params)){granularError_="Invalid granular parameter value";return false;}
+    auto& ins=project_.instruments[id];
+    if(ins.instrumentType!=InstrumentType::SAMPLER){granularError_="Granular needs a sampler instrument";return false;}
+    if(enabled&&(!ins.sampleFilePath||ins.sampleFilePath->rfind("/@mutable/",0)==0||
+        ins.sampleId<0||ins.sampleId>=256||engine_->getSampleLength(ins.sampleId)<1||
+        engine_->studioCodes[ins.sampleId].load()>=0)){
+        granularError_="Load an actual audio sample first";return false;
+    }
+    ins.granularEnabled=enabled;ins.granularParams=params;
+    push_sample_granular(*engine_,ins,routing_,0);
+    return true;
+}
+bool SongcoreHost::apply_sample_granular_settings(int id,const studio::granular::Parameters& params){
+    return update_sample_granular(id,true,params);
+}
+bool SongcoreHost::load_sample_granular_patch(int id,const std::string& path,
+        const studio::granular::Parameters& params,uint32_t seed){
+    granularError_.clear();
+    if(!engine_||id<0||id>=int(project_.instruments.size())||path.empty()||path.rfind("/@mutable/",0)==0){
+        granularError_="Choose an actual audio sample";return false;
+    }
+    if(!studio::granular::validParameters(params)){granularError_="Invalid granular parameter value";return false;}
+    // Validate settings before the loader's transactional PCM replacement. A failed decode keeps
+    // the original instrument/PCM. All following settings are POD, so no second fallible load exists.
+    if(!load_sample(id,path)){granularError_="Sample load failed; previous instrument retained";return false;}
+    auto& ins=project_.instruments[id];
+    ins.instrumentType=InstrumentType::SAMPLER;ins.soundfontPath.reset();
+    ins.granularEnabled=true;ins.granularParams=params;ins.granularSeed=seed;
+    push_instrument(id);
+    return true;
+}
+studio::granular::Snapshot SongcoreHost::sample_granular_snapshot(int id,int preferredTrack){
+    if(!engine_)return {};
+    if(id<0){engine_->clearGranularMonitor();return {};}
+    if(id>=int(project_.instruments.size()))return {};
+    const auto& ins=project_.instruments[id];
+    if(ins.instrumentType!=InstrumentType::SAMPLER||!ins.sampleFilePath||
+       ins.sampleFilePath->rfind("/@mutable/",0)==0){
+        engine_->clearGranularMonitor();
+        studio::granular::Snapshot empty;empty.instrumentId=id;return empty;
+    }
+    auto out=engine_->sampleGranularSnapshot(ins.sampleId,preferredTrack);
+    out.instrumentId=id;
+    return out;
+}
+} // namespace songcore

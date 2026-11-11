@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Pixel Clap",
+  "parameters": {
+    "attackMs": 2.0,
+    "densityHz": 40.0,
+    "freeze": false,
+    "level": 0.47999998927116394,
+    "panSpread": 0.7799999713897705,
+    "pitchSemitones": 3.0,
+    "pitchSpraySemitones": 1.0399999618530273,
+    "position": 0.7050000429153442,
+    "releaseMs": 230.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.5,
+    "sizeMs": 29.0,
+    "sprayMs": 2.0,
+    "windowShape": 0.8999999761581421
+  },
+  "version": 1
+}

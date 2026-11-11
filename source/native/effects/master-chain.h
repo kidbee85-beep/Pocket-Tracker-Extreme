@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include "modules/limiter-module.h"
 #include "modules/ott-module.h"
 #include "modules/dust-chain.h"
@@ -47,7 +48,7 @@ struct MasterChain {
     void setLimiterPreGain(float g) { limiter.setPreGain(g); }
 
     // Interleaved stereo, in place.
-    void process(float* buf, int numFrames, int channelCount) {
+    void process(float* buf, int numFrames, int channelCount, float* limiterInputPeak = nullptr) {
         if (masterEq.active) {
             for (int i = 0; i < numFrames; i++) {
                 float L = buf[i * channelCount];
@@ -61,6 +62,12 @@ struct MasterChain {
             if (ott.enabled) ott.process(buf, numFrames, channelCount);
         } else {
             if (dustDepth > 0.f) dust.process(buf, numFrames, channelCount);
+        }
+        if (limiterInputPeak) {
+            float peak = 0.0f;
+            for (int i = 0; i < numFrames * channelCount; ++i)
+                peak = std::fmax(peak, std::fabs(buf[i]));
+            *limiterInputPeak = std::fmax(*limiterInputPeak, peak * limiter.preGain);
         }
         limiter.process(buf, numFrames, channelCount);
     }

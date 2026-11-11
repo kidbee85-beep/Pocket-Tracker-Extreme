@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Soft Rim Grain",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 47.0,
+    "freeze": false,
+    "level": 0.47999998927116394,
+    "panSpread": 0.35999998450279236,
+    "pitchSemitones": -3.0,
+    "pitchSpraySemitones": 0.47999998927116394,
+    "position": 0.39000001549720764,
+    "releaseMs": 125.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 15.0,
+    "sprayMs": 0.0,
+    "windowShape": 0.8999999761581421
+  },
+  "version": 1
+}

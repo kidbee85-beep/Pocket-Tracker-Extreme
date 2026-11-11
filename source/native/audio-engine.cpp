@@ -75,6 +75,7 @@ AudioEngine::~AudioEngine() {
 
 
 void AudioEngine::stopAll() {
+    granularResetRequest.fetch_add(1, std::memory_order_release);
     studioRack.punch.store(0);
     stopRampRequested.store(false, std::memory_order_relaxed);   // superseded: nothing is left to ramp
     for (int i = 0; i < MAX_VOICES; i++) {
@@ -88,12 +89,14 @@ void AudioEngine::stopAll() {
 }
 
 void AudioEngine::stopAllRamped() {
+    granularResetRequest.fetch_add(1, std::memory_order_release);
     studioRack.punch.store(0);
     stopRampRequested.store(true, std::memory_order_release);
     stoppedSinceTake.store(true, std::memory_order_relaxed);
 }
 
 void AudioEngine::startTake() {
+    granularResetRequest.fetch_add(1, std::memory_order_release);
     if (stoppedSinceTake.exchange(false, std::memory_order_relaxed))
         ottRestartRequested.store(true, std::memory_order_release);
 }
@@ -288,6 +291,7 @@ songcore::Program AudioEngine::programView(int id) const {
 // Audio thread, once per block.
 void AudioEngine::syncInstrumentData() {
     studioSynthParams.sync();
+    // Granular rows use independent atomic32 mailboxes, pulled only by sounding/triggered slots.
     instrumentParams.sync();
     instrumentModSlots.sync();
     programs.sync();
@@ -347,12 +351,18 @@ void AudioEngine::clearScheduledNotes() {
     noteQueue.clear();
     killQueue.clear();
     paramUpdateQueue.clear();
+    granularResetRequest.fetch_add(1, std::memory_order_release);
 }
 
 void AudioEngine::clearScheduledNotesFrom(int64_t fromFrame, int trackId) {
     noteQueue.clearFrom(fromFrame, trackId);
     killQueue.clearFrom(fromFrame, trackId);
     paramUpdateQueue.clearFrom(fromFrame, trackId);
+    if (trackId < 0) {
+        for (int t = 0; t < SONG_SAMPLE_VOICES; ++t) scheduleGranularTrackReset(fromFrame, t);
+    } else {
+        scheduleGranularTrackReset(fromFrame, trackId);
+    }
 }
 
 void AudioEngine::scheduleVoiceTableRow(int64_t targetFrame, int trackId, int row) {
@@ -367,6 +377,21 @@ void AudioEngine::scheduleTrackPhraseVol(int64_t targetFrame, int trackId, float
 
 void AudioEngine::scheduleVoiceCc(int64_t targetFrame, int trackId, int cc, float value) {
     paramUpdateQueue.schedule({ targetFrame, trackId, cc, value, PARAM_UPDATE_VOICE_CC, 0.0f });
+}
+
+void AudioEngine::scheduleGranularStep(int64_t frame, int track, const studio::granular::step::Delta& delta) {
+    if (track < 0 || track >= SONG_SAMPLE_VOICES || delta.count == 0) return;
+    ScheduledParamUpdate update{};
+    update.targetFrame = frame;
+    update.trackId = track;
+    update.action = PARAM_UPDATE_GRANULAR_STEP;
+    update.granular = delta;
+    paramUpdateQueue.schedule(update);
+}
+
+void AudioEngine::scheduleGranularTrackReset(int64_t frame, int track) {
+    if (track < 0 || track >= SONG_SAMPLE_VOICES) return;
+    paramUpdateQueue.schedule({frame, track, 0, 0.f, PARAM_UPDATE_GRANULAR_RESET});
 }
 
 void AudioEngine::scheduleVoiceReverse(int64_t targetFrame, int trackId, bool reverse, bool restart) {  // BCK
@@ -540,10 +565,22 @@ void AudioEngine::getTrackPeaks(float* outBuffer) {
     }
 }
 
-void AudioEngine::getMasterPeaks(float* outBuffer) {
+void AudioEngine::getMasterPeaks(float* outBuffer, float* maximum, float* limiterMaximum) {
     std::lock_guard<std::mutex> lock(peakMutex);
     outBuffer[0] = masterPeakL;
     outBuffer[1] = masterPeakR;
+    if (maximum) {
+        maximum[0] = masterMaximum[0];
+        maximum[1] = masterMaximum[1];
+    }
+    if (limiterMaximum) *limiterMaximum = limiterInputMaximum;
+}
+
+void AudioEngine::clearMasterMaximum() {
+    std::lock_guard<std::mutex> lock(peakMutex);
+    masterMaximum[0] = masterMaximum[1] = 0.0f;
+    limiterInputMaximum = 0.0f;
+    masterMeterEpoch.fetch_add(1, std::memory_order_relaxed);
 }
 
 void AudioEngine::getSendPeaks(float* outBuffer) {
@@ -1002,4 +1039,153 @@ void AudioEngine::renderMetronome(float* output, int numFrames, int channelCount
             out = fmaxf(-1.0f, fminf(1.0f, out + s));
         }
     }
+}
+
+
+void AudioEngine::setSampleGranular(int id,bool enabled,const studio::granular::Parameters& params,
+                                   double sourceRate,uint32_t seed) {
+    if(id<0||id>=256)return;
+    GranularControl next;
+    next.enabled=enabled;next.params=studio::granular::Voice::sanitize(params);
+    next.sourceRate=sourceRate;next.seed=seed;
+    next.modeEpoch=granularStaged[id].modeEpoch + uint32_t(granularStaged[id].enabled != enabled);
+    granularStaged[id]=next;
+    granularControls[id].publish(next);
+}
+void AudioEngine::syncGranular(int id) {
+    if(id>=0&&id<256)granularControls[id].read(granularLive[id],granularSeen[id]);
+}
+
+void AudioEngine::beginGranularStepBlock() {
+    const auto epoch = granularResetRequest.load(std::memory_order_acquire);
+    if (epoch != granularResetSeen) {
+        granularResetSeen = epoch;
+        for (auto& track : granularTracks) track.reset();
+        for (auto& voice : granularVoiceSteps) voice.reset();
+    } else {
+        for (auto& voice : granularVoiceSteps) voice.beginBlock();
+    }
+}
+
+bool AudioEngine::granularStepSourceCurrent(const studio::granular::step::SourceKey& key) {
+    if (!key.valid() || key.instrument >= songcore::PROGRAM_SLOTS || key.sample >= 256) return false;
+    if (sampleGen[key.sample].load(std::memory_order_relaxed) != key.generation || !samples[key.sample]) return false;
+    syncGranular(key.sample);
+    const auto& ctl = granularLive[key.sample];
+    if (!ctl.enabled || ctl.modeEpoch != key.modeEpoch || studioCodes[key.sample].load(std::memory_order_acquire) >= 0)
+        return false;
+    const auto program = programView(key.instrument);
+    return program.type == songcore::PROGRAM_SAMPLER && program.hasSample && program.sampleId == key.sample;
+}
+
+void AudioEngine::bindGranularNote(const ScheduledNote& note, int slot, uint32_t generation) {
+    auto& state = granularVoiceSteps[slot];
+    state.reset(); // Also discards pending updates belonging to a stolen slot.
+    const int track = note.trackId, sample = note.sampleId;
+    if (track < 0 || track >= SONG_SAMPLE_VOICES || sample < 0 || sample >= 256) return;
+    auto& latch = granularTracks[track];
+    syncGranular(sample);
+    const studio::granular::step::SourceKey key{note.instrumentId, sample, generation, granularLive[sample].modeEpoch};
+    if (!granularStepSourceCurrent(key)) { latch.reset(); return; }
+    latch.bind(key);
+    latch.overlay.apply(note.noteOn.granular);
+    state.bind(latch);
+}
+
+void AudioEngine::resetGranularTrack(int track, int frame) {
+    if (track < 0 || track >= SONG_SAMPLE_VOICES) return;
+    granularTracks[track].reset();
+    for (int v = 0; v < SONG_SAMPLE_VOICES; ++v) {
+        if (!voices[v].isActive || voices[v].trackId != track || !granularVoiceSteps[v].source.valid()) continue;
+        if (!granularVoiceSteps[v].schedule(frame, {})) granularStepDropped.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+void AudioEngine::applyGranularStep(const ScheduledParamUpdate& update, const BlockMix& b) {
+    const int track = update.trackId;
+    if (track < 0 || track >= SONG_SAMPLE_VOICES) return;
+    const int frame = static_cast<int>(std::clamp<int64_t>(update.targetFrame - b.startFrame, 0, b.numFrames - 1));
+    if (update.action == PARAM_UPDATE_GRANULAR_RESET) { resetGranularTrack(track, frame); return; }
+    auto& latch = granularTracks[track];
+    if (!granularStepSourceCurrent(latch.source)) { latch.reset(); return; }
+    latch.overlay.apply(update.granular);
+    for (int v = 0; v < SONG_SAMPLE_VOICES; ++v) {
+        const auto& voice = voices[v];
+        auto& state = granularVoiceSteps[v];
+        if (!voice.isActive || voice.isFadingOut || voice.trackId != track || !(state.source == latch.source)) continue;
+        if (!state.schedule(frame, latch.overlay)) granularStepDropped.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+bool AudioEngine::configureGranularVoice(int index,float outputRate) {
+    auto& voice=voices[index];const int id=voice.instrId;
+    if(id<0||id>=256)return false;
+    syncGranular(id);const auto& control=granularLive[id];
+    const bool enabled=control.enabled&&studioCodes[id].load(std::memory_order_acquire)<0;
+    auto& grain=granularVoices[index];
+    auto& automation=granularVoiceSteps[index];
+    if (automation.source.valid() && (!enabled || automation.source.modeEpoch != control.modeEpoch)) automation.reset();
+    if(!enabled){
+        if(voice.granularMode){
+            voice.position=grain.snapshot().scanSourceFrame;
+            grain.stop();voice.granularMode=false;voice.granularReleaseAt=-1;
+            voice.fadeIn.start(0.f,1.f,DECLICK_SAMPLES);
+        }
+        return false;
+    }
+    const auto parameters = automation.overlay.mask ? studio::granular::step::effective(control.params, automation.overlay) : control.params;
+    if(!voice.granularMode){
+        studio::granular::SampleView source{voice.sampleData,voice.sampleDataRight,voice.sampleLength,
+            control.sourceRate,voice.sampleGen,voice.actualStart,
+            std::min<int64_t>(voice.sampleLength,int64_t(voice.actualEnd)+1)};
+        const double musicalRate=voice.playbackRate*double(outputRate)/control.sourceRate;
+        if(!grain.start(source,parameters,musicalRate,outputRate,control.seed))return false;
+        voice.granularMode=true;voice.granularReleaseAt=-1;voice.chordExtra=0;
+        voice.fadeIn.start(0.f,1.f,DECLICK_SAMPLES);
+    }
+    grain.update(parameters);
+    return true;
+}
+void AudioEngine::publishGranularView(){
+    const int id=granularMonitorId.load(std::memory_order_relaxed);
+    if(id<0||id>=256)return;
+    const int64_t now=globalFrameCounter.load(std::memory_order_relaxed);
+    if(id==granularLastMonitor&&now>=granularPublishedFrame&&now-granularPublishedFrame<std::max(1,getSampleRate()/30))return;
+    granularPublishedFrame=now;granularLastMonitor=id;
+    const int preferred=granularMonitorTrack.load(std::memory_order_relaxed);
+    studio::granular::Snapshot out;out.instrumentId=id;
+    int picked=-1,bestScore=-1;
+    for(int i=0;i<MAX_VOICES;++i){
+        const auto& voice=voices[i];
+        if(!voice.isActive||!voice.granularMode||voice.instrId!=id||
+           voice.sampleGen!=sampleGen[id].load(std::memory_order_relaxed))continue;
+        const int score=(voice.trackId==preferred?100:0)+(voice.trackId==PREVIEW_LANE?50:0)+(!voice.isFadingOut?10:0);
+        if(score>bestScore){picked=i;bestScore=score;}
+    }
+    if(picked>=0){
+        out=granularVoices[picked].snapshot();out.instrumentId=id;
+        out.trackId=voices[picked].trackId;out.voiceSlot=picked;
+    }
+    granularSnapshotPublisher.publish(out);
+}
+studio::granular::Snapshot AudioEngine::sampleGranularSnapshot(int id,int preferredTrack){
+    if(id<0||id>=256)return {};
+    granularMonitorTrack.store(preferredTrack,std::memory_order_relaxed);
+    granularMonitorId.store(id,std::memory_order_relaxed);
+    granularSnapshotPublisher.read(granularSnapshotCache,granularSnapshotSeen);
+    auto out=granularSnapshotCache;
+    std::lock_guard<std::mutex> lock(sampleEditMutex);
+    const uint32_t generation=sampleGen[id].load();
+    if(out.instrumentId!=id||out.sourceGeneration!=generation)out={};
+    out.instrumentId=id;out.sourceGeneration=generation;
+    out.sourceValid=samples[id].load()!=nullptr&&sampleLengths[id]>0&&studioCodes[id].load()<0;
+    out.sourceFrames=out.sourceValid?sampleLengths[id].load():0;
+    out.sourceRate=granularStaged[id].sourceRate;
+    if(!out.active){
+        int first=0,end=0;
+        if(out.sourceValid)derive_sample_window(float(instrumentParams.staged(id).startPoint),
+            float(instrumentParams.staged(id).endPoint),sampleLengths[id],first,end);
+        out.firstFrame=first;out.endFrame=out.sourceValid?int64_t(end)+1:0;
+    }
+    return out;
 }

@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Fifth Mist",
+  "parameters": {
+    "attackMs": 60.0,
+    "densityHz": 23.0,
+    "freeze": false,
+    "level": 0.3700000047683716,
+    "panSpread": 0.8600000143051147,
+    "pitchSemitones": 7.0,
+    "pitchSpraySemitones": 0.45000001788139343,
+    "position": 0.2549999952316284,
+    "releaseMs": 800.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.10000000149011612,
+    "sizeMs": 132.0,
+    "sprayMs": 0.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

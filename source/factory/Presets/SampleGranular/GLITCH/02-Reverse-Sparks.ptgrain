@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Reverse Sparks",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 43.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.25,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.20000000298023224,
+    "position": 0.16499999165534973,
+    "releaseMs": 88.0,
+    "reverseProbability": 0.25,
+    "scanSpeed": -1.0,
+    "sizeMs": 15.0,
+    "sprayMs": 115.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

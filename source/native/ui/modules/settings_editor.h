@@ -80,6 +80,9 @@ struct SettingsValues {
     int         lastSampleScroll = 0;
     int         lastSampleSort = 2;  // FileSortMode::NAME_ASC
 
+    // Ordered factory preset IDs for the Granular Favorites bank, independent of the current song.
+    std::vector<int> sampleGranularFavorites;
+
     // NAV = POOL / SONG. POOL: B+LEFT/RIGHT scroll the chain and phrase pools; SONG: B+D-pad walks
     // the arrangement. ⚠️ This default reaches existing installs.
     bool navSongRelative = true;

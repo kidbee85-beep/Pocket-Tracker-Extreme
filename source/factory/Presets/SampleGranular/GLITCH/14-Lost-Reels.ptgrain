@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Lost Reels",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 75.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.8500000238418579,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 2.6000001430511475,
+    "position": 0.7050000429153442,
+    "releaseMs": 184.0,
+    "reverseProbability": 0.8500000238418579,
+    "scanSpeed": 1.0,
+    "sizeMs": 99.0,
+    "sprayMs": 535.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

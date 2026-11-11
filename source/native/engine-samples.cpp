@@ -345,6 +345,9 @@ int64_t AudioEngine::audio_memory_bytes() const {
     for (int id = 0; id < 256; ++id) {
         total += pcm(samples[id],         samplesRight[id],         sampleLengths[id],         4);
         total += pcm(sampleBackups[id],   sampleBackupsRight[id],   sampleBackupLengths[id],   4);
+        const auto& level = sampleLevel[id].undo;
+        total += pcm(level.sourceLeft.get(), level.sourceRight.get(), level.sourceCount, 4);
+        total += pcm(level.activeLeft.get(), level.activeRight.get(), level.activeCount, 4);
         total += pcm(originalSamples[id], originalSamplesRight[id], originalSampleLengths[id], 2);
         total += pcm(originalSamplesF[id], originalSamplesRightF[id], originalSampleLengths[id], 4);
     }

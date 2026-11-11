@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Distant Edges",
+  "parameters": {
+    "attackMs": 80.0,
+    "densityHz": 12.0,
+    "freeze": false,
+    "level": 0.36000001430511475,
+    "panSpread": 0.9199999570846558,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.6399999856948853,
+    "position": 0.6150000095367432,
+    "releaseMs": 700.0,
+    "reverseProbability": 0.10000000149011612,
+    "scanSpeed": 0.20999999344348907,
+    "sizeMs": 404.0,
+    "sprayMs": 92.0,
+    "windowShape": 0.75
+  },
+  "version": 1
+}

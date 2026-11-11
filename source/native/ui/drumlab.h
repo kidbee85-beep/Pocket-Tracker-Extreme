@@ -16,6 +16,8 @@ struct Theme;
 inline constexpr int DRUMLAB_LANES = 8;
 inline constexpr int DRUMLAB_MAX_STEPS = 64;
 inline constexpr int DRUMLAB_ROWS = 20;
+inline constexpr int DRUMLAB_EUCLIDEAN = 8;
+inline constexpr int DRUMLAB_STEP_HISTORY = 32;
 
 struct DrumLabStep {
     uint8_t velocity = 0;       // 0 = rest; otherwise the tracker's 1..127 V column.
@@ -28,6 +30,14 @@ struct DrumLabStep {
 struct DrumLabLane {
     int instrument = 0;
     bool locked = false;
+    int period = 16;
+    int hits = 4;
+    int rotation = 0;
+};
+
+struct DrumLabStepEdit {
+    int lane = 0, step = 0;
+    DrumLabStep before, after;
 };
 
 struct DrumLabState {
@@ -35,11 +45,19 @@ struct DrumLabState {
     int genre = 0, activeLanes = 8, steps = 32;
     int density = 65, variation = 35, swing = 18, humanize = 12, fill = 35;
     uint32_t seed = 1;
-    std::array<DrumLabLane, DRUMLAB_LANES> lanes = {{{0,false},{1,false},{2,false},{3,false},
-                                                    {4,false},{5,false},{6,false},{7,false}}};
+    std::array<DrumLabLane, DRUMLAB_LANES> lanes = {{{0,false,16,4,0}, {1,false,8,2,4},
+                                                    {2,false,8,5,0}, {3,false,12,3,1},
+                                                    {4,false,7,2,2}, {5,false,11,3,1},
+                                                    {6,false,16,1,14}, {7,false,16,1,0}}};
     std::array<std::array<DrumLabStep, DRUMLAB_MAX_STEPS>, DRUMLAB_LANES> grid{};
     bool generated = false, dirty = true, confirmApply = false, showHelp = false, aUsed = false;
     int generatedSteps = 0, gridPage = 0;
+    bool gridFocused = false, gridAHeld = false, gridPreviewHeld = false, gridAudition = false;
+    bool gridBUsed = false;
+    uint8_t gridHistoryDirections = 0;
+    int gridStep = 0;
+    std::array<DrumLabStepEdit, DRUMLAB_STEP_HISTORY> stepHistory{};
+    int stepHistoryCursor = 0, stepHistorySize = 0;
     std::string status = "Assign 5-8 loaded sample / synth slots, then Generate.";
     uint32_t applySerial = 0;
     int appliedSongRow = -1;
@@ -67,6 +85,9 @@ bool drumlab_generate(DrumLabState&);
 bool drumlab_apply(DrumLabState&, songcore::SongcoreHost&);
 bool drumlab_preview(DrumLabState&, songcore::SongcoreHost&, AudioEngine&);
 void drumlab_tick(DrumLabState&, songcore::SongcoreHost&, AudioEngine&);
+// Dismiss pending grid chords when another overlay takes input.
+void drumlab_clear_grid_input(DrumLabState&);
+void drumlab_release_grid_audition(DrumLabState&, songcore::SongcoreHost&);
 // Call before transport start, changing tabs, closing Studio or replacing a project.
 void drumlab_stop(DrumLabState&, songcore::SongcoreHost&, AudioEngine&);
 // Host before-play hook: cancel owned lookahead without clearing MIDI start/follow state.

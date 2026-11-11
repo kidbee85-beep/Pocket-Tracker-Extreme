@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Loose Capstan",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 45.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.25,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.3199999928474426,
+    "position": 0.30000001192092896,
+    "releaseMs": 160.0,
+    "reverseProbability": 0.11999999731779099,
+    "scanSpeed": 0.5600000023841858,
+    "sizeMs": 44.0,
+    "sprayMs": 78.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

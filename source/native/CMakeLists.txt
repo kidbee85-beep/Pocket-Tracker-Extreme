@@ -206,6 +206,8 @@ set(ENGINE_CORE_SOURCES
         common/load_progress.cpp
         # Bounded local-WAV audition/region export: file I/O stays on its worker.
         common/local_wav_source.cpp
+        # Disk-backed Granular performance takes; the audio callback only feeds its bounded ring.
+        studio/granular_disk_take.cpp
         soundfont-voice.cpp
         # Reading a SoundFont's preset index without its samples, and writing a one-preset copy of
         # it. Pure file-format handling over a FILE* — no tsf, no engine. See the header.
@@ -473,6 +475,10 @@ add_library(pt-ui STATIC
         ui/live_resample.cpp
         ui/studio_help.cpp
         ui/studio_synth.cpp
+        ui/sample_granular_ui.cpp
+        ui/sample_granular_view.cpp
+        ui/sample_granular_presets.cpp
+        ui/sample_granular_recording.cpp
         ui/studio_view.cpp
         ui/drumlab.cpp
         ui/source_sampler.cpp
@@ -614,6 +620,7 @@ if(ANDROID)
     add_library(pockettracker-sdl SHARED
             "${PT_SHELL_DIR}/app.cpp"
             "${PT_SHELL_DIR}/android/android-main.cpp"
+            "${PT_SHELL_DIR}/android/live-radio-jni.cpp"
             "${PT_SHELL_DIR}/android/saf-filesystem.cpp"   # the SAF ui::FileSystem, and byte_source.h's
                                                            # three hooks for pt:// paths
             "${PT_SHELL_DIR}/android/midi-out-android.cpp" # MIDI out over five JNI up-calls
@@ -701,6 +708,9 @@ if(PT_STUDIO_CHECK)
  add_executable(ptstudio-check ../tests/studio/integration.cpp)
  target_link_libraries(ptstudio-check PRIVATE pt-ui)
  target_compile_options(ptstudio-check PRIVATE -UNDEBUG)
+ add_executable(ptstudio-orbit-gravity-check ../tests/studio/test.cpp)
+ target_link_libraries(ptstudio-orbit-gravity-check PRIVATE pt-mutable)
+ target_compile_options(ptstudio-orbit-gravity-check PRIVATE -UNDEBUG)
  add_executable(ptsample-editor-check ../tests/studio/sample_editor.cpp)
  target_link_libraries(ptsample-editor-check PRIVATE pt-ui)
  target_compile_options(ptsample-editor-check PRIVATE -UNDEBUG)
@@ -724,6 +734,12 @@ if(PT_STUDIO_CHECK)
  target_link_libraries(ptrecorder-workflow-check PRIVATE pt-ui)
  target_compile_options(ptrecorder-workflow-check PRIVATE -UNDEBUG)
  endif()
+ if(UNIX AND NOT ANDROID)
+ add_executable(ptcapture-input-policy-check ../tests/studio/sdl_capture_policy.cpp ../shell/linux/sample-recorder.cpp)
+ target_include_directories(ptcapture-input-policy-check PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../shell" "${CMAKE_CURRENT_SOURCE_DIR}/vendor/SDL2/include")
+ target_link_libraries(ptcapture-input-policy-check PRIVATE Threads::Threads)
+ target_compile_options(ptcapture-input-policy-check PRIVATE -UNDEBUG)
+ endif()
  add_executable(ptdrumlab-check ../tests/studio/drumlab.cpp)
  target_link_libraries(ptdrumlab-check PRIVATE pt-ui)
  target_compile_options(ptdrumlab-check PRIVATE -UNDEBUG)
@@ -739,6 +755,9 @@ if(PT_STUDIO_CHECK)
  add_executable(ptstudio-access-check ../tests/studio/studio_access.cpp)
  target_link_libraries(ptstudio-access-check PRIVATE pt-ui)
  target_compile_options(ptstudio-access-check PRIVATE -UNDEBUG)
+ add_executable(ptstudio-navigation-check ../tests/studio/navigation.cpp)
+ target_link_libraries(ptstudio-navigation-check PRIVATE pt-ui)
+ target_compile_options(ptstudio-navigation-check PRIVATE -UNDEBUG)
  add_executable(ptlive-dsp-check ../tests/studio/live_dsp.cpp)
  target_link_libraries(ptlive-dsp-check PRIVATE pt-ui)
  target_compile_options(ptlive-dsp-check PRIVATE -UNDEBUG)
@@ -755,6 +774,9 @@ if(PT_STUDIO_CHECK)
  add_executable(ptpunch-theme-check ../tests/studio/punch_theme.cpp)
  target_link_libraries(ptpunch-theme-check PRIVATE pt-ui)
  target_compile_options(ptpunch-theme-check PRIVATE -UNDEBUG)
+ add_executable(pttheme-grid-check ../tests/studio/theme_grid.cpp)
+ target_link_libraries(pttheme-grid-check PRIVATE pt-ui)
+ target_compile_options(pttheme-grid-check PRIVATE -UNDEBUG)
  add_executable(ptinstrument-load-check ../tests/studio/instrument_load.cpp)
  target_link_libraries(ptinstrument-load-check PRIVATE pt-ui)
  target_compile_options(ptinstrument-load-check PRIVATE -UNDEBUG)
@@ -796,3 +818,16 @@ endif()
 # Reproducible public metadata; test fixture paths remain test-local.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/pt_reproducible.cmake")
 pt_public_library_prefixes("${CMAKE_CURRENT_SOURCE_DIR}")
+
+# Independent sample-granular vertical path; no UI required by this check.
+if(PT_STUDIO_CHECK)
+ add_executable(ptsample-granular-check ../tests/studio/sample_granular_engine.cpp)
+ target_link_libraries(ptsample-granular-check PRIVATE songcore)
+ target_compile_options(ptsample-granular-check PRIVATE -UNDEBUG)
+ add_executable(ptgranular-step-scheduler-check ../tests/studio/granular_step_scheduler.cpp)
+ target_link_libraries(ptgranular-step-scheduler-check PRIVATE songcore)
+ target_compile_options(ptgranular-step-scheduler-check PRIVATE -UNDEBUG)
+ add_executable(ptgranular-step-engine-check ../tests/studio/granular_step_engine.cpp)
+ target_link_libraries(ptgranular-step-engine-check PRIVATE songcore)
+ target_compile_options(ptgranular-step-engine-check PRIVATE -UNDEBUG)
+endif()

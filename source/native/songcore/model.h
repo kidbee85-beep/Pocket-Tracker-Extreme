@@ -4,7 +4,8 @@
 // The song data model behind the .ptp / .pti JSON (project_io.h).
 // ⚠️ Field defaults, order and pool sizes are part of the file format: a key equal to its member
 // initializer is omitted on save and a missing one loads as it. A FACTORY value differs only for
-// Instrument.sampleId (the slot index). No floating point, so a .ptp round-trips exactly.
+// Instrument.sampleId (the slot index). Legacy fields are integers; optional granular settings
+// use round-trip-safe JSON float numbers, while absent settings preserve the old document.
 
 #include <cstddef>
 #include <array>
@@ -17,6 +18,7 @@
 // For the CC-slot ids `resolve_cc_param` translates; event.h is a leaf, so no cycle.
 #include "event.h"
 #include "program.h"   // PROGRAM_SLOTS — the engine's program table is one row per instrument
+#include "../studio/sample_granular.h"
 
 namespace songcore {
 
@@ -374,6 +376,10 @@ struct Instrument {
     std::optional<std::string> sampleFilePath;   // null
     // -1 keeps the engine's authored factory value; absent in older projects/presets.
     std::array<int,16> studioSynthParams = []{std::array<int,16> p{};p.fill(-1);return p;}();
+    // Optional sample-based mode. The real sampleFilePath remains the source; legacy defaults omit it.
+    bool granularEnabled = false;
+    studio::granular::Parameters granularParams{};
+    uint32_t granularSeed = 1;
     int tableId = -1, tableTicRate = 0x06;
     std::vector<ModSlot> modSlots = std::vector<ModSlot>(4);
     InstrumentType instrumentType = InstrumentType::SAMPLER;

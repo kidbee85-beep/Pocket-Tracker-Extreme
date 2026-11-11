@@ -1,90 +1,69 @@
 {
-  "product": "TrackWerk",
-  "tag": "v0.9.0-beta",
-  "approved_for_publication": true,
-  "actual_release_date": "2026-11-10",
-  "public_software_assets": 8,
-  "android_application_id": "com.kidbunka.trackwerk",
-  "source_freeze": "8e96634f5861295e4de9a823007b521b1ece502ac3b5eb213c89d18a9035a508",
-  "film_sha256": "b4adb1d614f1a391853a5c05e8cf564ddd3bcdf68e2f46405329b1b20fda881a",
-  "assets": [
-    {
-      "file": "TrackWerk-0.9-Android.apk",
-      "bytes": 33293682,
-      "sha256": "25a836c310c3143406f5c2643814eb62584b3a30674a6c1c21b45709337005ef",
-      "role": "android"
-    },
-    {
-      "file": "SDL2-mmiyoo-f6319cf9-source.tar.gz",
+  "assets": {
+    "SDL2-mmiyoo-f6319cf9-source.tar.gz": {
       "bytes": 17285143,
-      "sha256": "b4c2416b244ad5d9c208fa5939e865331880df9fb8f9e8fca3a5d2d5017af549",
-      "role": "software"
+      "sha256": "b4c2416b244ad5d9c208fa5939e865331880df9fb8f9e8fca3a5d2d5017af549"
     },
-    {
-      "file": "TrackWerk-0.9-Miyoo-Mini-Onion.zip",
-      "bytes": 5236121,
-      "sha256": "015c457361e8f989029b4b4400902c267d3c529777c80360f6dd756c79c3d63f",
-      "role": "software"
+    "SHA256SUMS.txt": {
+      "bytes": 1160,
+      "sha256": "430740e5d5e332de8579496ae36440ddd861fa5e235c585be85ae473b07b811e"
     },
-    {
-      "file": "TrackWerk-0.9-Miyoo-Plus-Onion.zip",
-      "bytes": 5475021,
-      "sha256": "8a49e62addd6cff2960ec59ae6af7bc3e71670a18cc67f1ee2d843deb8ffe3b9",
-      "role": "software"
+    "TrackWerk-1.0-Android.apk": {
+      "bytes": 34586354,
+      "sha256": "9fd6c746e4e694665c58110017aefb02b924ae709f05ae93b7496b3baa912ee4"
     },
-    {
-      "file": "TrackWerk-0.9-Brick-KNULLI.zip",
-      "bytes": 51012306,
-      "sha256": "3c5ad45c25cc3f8be690d781f4e07c268109d8e89153494cd69aa203b5616ab6",
-      "role": "software"
+    "TrackWerk-1.0-Brick-KNULLI-First-Install.zip": {
+      "bytes": 51300921,
+      "sha256": "eeeec9dd64834389f2e9e3f51bd5ab14143ccf12044689fc338472dbf2de9aab"
     },
-    {
-      "file": "TrackWerk-0.9-Brick-Program-Factory-Update.zip",
-      "bytes": 5266209,
-      "sha256": "0da18608248de9d7c1fa10ecacfaabbeccfc10ce056c3048bb469d5c9b5c9a31",
-      "role": "software"
+    "TrackWerk-1.0-Brick-Program-Factory-Update.zip": {
+      "bytes": 5161133,
+      "sha256": "bd2e64891e61ebdc471151b81cbff5ee692f917fff27c97d37b3b05dc3e349e2"
     },
-    {
-      "file": "TrackWerk-0.9-Factory-Presets.zip",
-      "bytes": 1978974,
-      "sha256": "3d39c9ad4a84c93ae5b46b570199e9454525766428f51dbf18b89d6ad0a984f2",
-      "role": "software"
+    "TrackWerk-1.0-Factory-Presets.zip": {
+      "bytes": 2035034,
+      "sha256": "e66e2084da36b89730f9f76b5af2bee55968ee620f392bfcb8ca50553cd1d4b2"
     },
-    {
-      "file": "TrackWerk-0.9-Source.zip",
-      "bytes": 171867187,
-      "sha256": "fb01cdaf7d93e79ce22360c1c9e31130d1664045bd009abef958699c67e63523",
-      "role": "source"
+    "TrackWerk-1.0-Miyoo-Mini-Onion-First-Install.zip": {
+      "bytes": 5502170,
+      "sha256": "d0620ed22e9849da88c87d52d3aff76dd34c0e551e7c16c2035812e0f6434544"
     },
-    {
-      "file": "SHA256SUMS.txt",
-      "bytes": 796,
-      "sha256": "2e5fc58a45afb9c43665db1d5875c4dac12a14a02025328e67672bca5e0c149f",
-      "role": "checksums"
+    "TrackWerk-1.0-Miyoo-Plus-Onion-First-Install.zip": {
+      "bytes": 5789778,
+      "sha256": "38b7c6309c0f0b3c47c903b1b363968218c5681c3472a230db11f191047b9017"
     },
-    {
-      "file": "INSTALL-AND-UPDATE.md",
-      "bytes": 5829,
-      "sha256": "c2de0e00f4362ef5a6045257d9d87c48592a802dac7149efc53720039db32430",
-      "role": "guide"
+    "TrackWerk-1.0-Miyoo-Program-Update.zip": {
+      "bytes": 5496943,
+      "sha256": "d05af9c0ed81fcf513dffd10209f8aa9de191548e806fe621286eab674c06cef"
     },
-    {
-      "file": "COMPATIBILITY.md",
-      "bytes": 3100,
-      "sha256": "4b7f499c25371638a81f5f6ac3b11f859a6db725402d80b50b3445f718c36f06",
-      "role": "guide"
+    "TrackWerk-1.0-RGB20S-AmberELEC-Program-Update.zip": {
+      "bytes": 3119443,
+      "sha256": "062bdc4b661af0963ca71b777376994e59a7d8e4ead21bb4990e8a0bd0ea2473"
     },
-    {
-      "file": "RELEASE-NOTES.md",
-      "bytes": 5539,
-      "sha256": "2bdc6c79068e4508223a5ae705bc437292e254af9788f81dd44eb726b08c5a56",
-      "role": "guide"
+    "TrackWerk-1.0-RGB20S-AmberELEC.zip": {
+      "bytes": 51290704,
+      "sha256": "06fbba0068acf6bee88f99da757ddeeb44f0a0ff875808d69d7390250337f45d"
     },
-    {
-      "file": "TrackWerk-0.9-Website-Source.zip",
-      "bytes": 11324994,
-      "sha256": "b110d54d1eaf097b97dab9024a92db334c93370129112e115e62ffd92ec9c082",
-      "role": "website"
+    "TrackWerk-1.0-Source.zip": {
+      "bytes": 170216958,
+      "sha256": "1d10cd32882bef531d8b1f559536c09cac6f1c9207a6bafae4745a4339ad001f"
+    },
+    "TrackWerk-1.0-Website.zip": {
+      "bytes": 1006623,
+      "sha256": "5ac582ff409d2acd68448a5ef0fbd182ff6a896becff3244a62272815b952ee3"
     }
-  ]
+  },
+  "readme_sha256": "49b007aca615263057dec84f1a03370e078f7a84e961cedbb37660b5a1b8434a",
+  "repository": "kidbee85-beep/TrackWerk",
+  "source": {
+    "file": "TrackWerk-1.0-Source.zip",
+    "manifest_sha256": "b90a06e73106cc3f6a23ad7103e9571a3d9afae44a786f15b6271bc01edff8f6",
+    "root": "TrackWerk-1.0"
+  },
+  "tag": "v1.0.0",
+  "version": 1,
+  "website": {
+    "file": "TrackWerk-1.0-Website.zip",
+    "root": "TrackWerk-1.0-Website"
+  }
 }

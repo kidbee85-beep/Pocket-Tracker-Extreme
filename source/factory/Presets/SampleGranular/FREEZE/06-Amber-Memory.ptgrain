@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Amber Memory",
+  "parameters": {
+    "attackMs": 120.0,
+    "densityHz": 16.0,
+    "freeze": true,
+    "level": 0.4399999976158142,
+    "panSpread": 0.6500000357627869,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.19999998807907104,
+    "position": 0.33000001311302185,
+    "releaseMs": 1900.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 385.0,
+    "sprayMs": 13.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

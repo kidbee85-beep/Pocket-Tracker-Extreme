@@ -54,7 +54,7 @@ void HelpOverlayModule::draw(Canvas& c, HelpTopic topic, const Theme& t) const {
                     CHAR_SPACING, FONT_SCALE);
     });
 
-    constexpr const char* HINT = "ANY BUTTON CLOSES";
+    constexpr const char* HINT = "A QUICK   B / SELECT BACK";
     const int hintW = static_cast<int>(std::char_traits<char>::length(HINT)) * CHAR_W - CHAR_SPACING;
     c.draw_text(HINT, BOX_X + (BOX_W - hintW) / 2, boxY + hint_dy(boxH) + TEXT_PADDING, t.textEmpty,
                 CHAR_SPACING, FONT_SCALE);

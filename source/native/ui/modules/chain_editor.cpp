@@ -1,6 +1,7 @@
 #include "ui/modules/chain_editor.h"
 
 #include "ui/helpers.h"
+#include "ui/step_grid.h"
 
 namespace pt::ui {
 
@@ -41,6 +42,7 @@ void ChainEditorModule::draw_row(Canvas& c, int x, int y, int index, const Chain
     const bool isEmpty   = (phraseRef == -1);
 
     c.fill_rect(x, dataRowY, WIDTH, ROW_HEIGHT, row_bg_color(index, t));
+    draw_step_grid(c, t, t.chainGrid, index, x, dataRowY, WIDTH, ROW_HEIGHT, {phX - 6, tspX - 8});
 
     const int textY = dataRowY + TEXT_PADDING;
 

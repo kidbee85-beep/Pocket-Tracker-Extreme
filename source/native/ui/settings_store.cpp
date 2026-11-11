@@ -1,7 +1,9 @@
 #include "ui/settings_store.h"
 
+#include <algorithm>
 #include <string>
 
+#include "ui/sample_granular_presets.h"
 #include "ui/theme_io.h"
 #include "ui/demo_font_style.h"
 #include "vendor/nlohmann/json.hpp"
@@ -68,6 +70,19 @@ bool load_settings(FileSystem& fs, SettingsValues& values, Theme& theme) {
     values.lastSampleCursor   = clamp(get_int(j, "lastSampleCursor", 0), 0, 1000000);
     values.lastSampleScroll   = clamp(get_int(j, "lastSampleScroll", 0), 0, 1000000);
     values.lastSampleSort     = clamp(get_int(j, "lastSampleSort", 2), 0, FILE_SORT_MODE_COUNT - 1);
+    auto& favorites = values.sampleGranularFavorites;
+    favorites.clear();
+    if (const auto saved = j.find("sampleGranularFavorites"); saved != j.end() && saved->is_array()) {
+        for (const auto& id : *saved) {
+            if (favorites.size() == kSampleGranularPerCategory) break;
+            if (!id.is_number_integer()) continue;
+            const auto index64 = id.get<uint64_t>();
+            if (index64 >= kSampleGranularFactoryCount) continue;
+            const int index = static_cast<int>(index64);
+            if (std::find(favorites.begin(), favorites.end(), index) == favorites.end())
+                favorites.push_back(index);
+        }
+    }
     values.navSongRelative    = get_bool(j, "navSongRelative", values.navSongRelative);
     values.traceEnabled       = get_bool(j, "trace",              values.traceEnabled);
 
@@ -142,6 +157,7 @@ std::string serialize_settings(const SettingsValues& values, const Theme& theme)
     j["lastSampleCursor"]   = values.lastSampleCursor;
     j["lastSampleScroll"]   = values.lastSampleScroll;
     j["lastSampleSort"]     = values.lastSampleSort;
+    if (!values.sampleGranularFavorites.empty()) j["sampleGranularFavorites"] = values.sampleGranularFavorites;
     j["navSongRelative"]    = values.navSongRelative;
     j["abxy"]               = values.abxyIndex;            // 0 AUTO, 1 XBOX, 2 NINTENDO
     j["touchButtonsWithPad"] = values.touchButtonsWithPad;

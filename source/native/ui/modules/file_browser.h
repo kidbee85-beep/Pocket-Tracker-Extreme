@@ -88,6 +88,13 @@ struct BrowserItem {
 // NORMAL browses; the others are arm-then-confirm (A = YES, B = NO). ⚠️ Append, never insert.
 enum class BrowserMode { NORMAL, DELETE, SET_HOME, FORGET_ROOT };
 
+struct BrowserDeleteRequest {
+    std::vector<std::string> paths;
+    std::string directory;
+    std::string name;
+    bool includesFolder = false;
+};
+
 struct FileBrowserState {
     std::string              currentDirectory;
     std::vector<BrowserItem> items;
@@ -95,6 +102,7 @@ struct FileBrowserState {
     int                      scroll = 0;
     BrowserMode              mode     = BrowserMode::NORMAL;
     FileSortMode             sortMode = FileSortMode::NAME_ASC;
+    BrowserDeleteRequest     pendingDelete;
 
     std::string statusMessage;
     bool        statusSuccess = true;

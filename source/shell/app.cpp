@@ -19,6 +19,7 @@
 #include "ui/layout.h"
 #include "ui/studio.h"
 #include "ui/live_resample.h"
+#include "ui/sample_granular_recording.h"
 #include "ui/modules/oscilloscope.h"   // WAVEFORM_SIZE
 #include "ui/scale_io.h"              // seed_scale_bank
 #include "ui/groove_io.h"             // seed_groove_bank
@@ -960,8 +961,14 @@ void FrameLoop::handle_input(Uint64 now) {
             if(be.action==ui::ButtonAction::RELEASED)state.splashSkipButton=-1;
             continue;
         }
-        if(!ui::studio_button(be,state,host,engineRef,*cfg.filesystem))
+        const auto oldProjectVersion=state.projectVersion;
+        if (ui::is_live_resample_chord(be) && be.action == ui::ButtonAction::PRESSED)
+            mapper.shoulderClearPending = false;
+        if(dispatch.help_full_open() || mapper.owns_help_key(be.button) ||
+           !ui::studio_button(be,state,host,engineRef,*cfg.filesystem))
             ui::handle_button(be, dispatch, mapper, now);
+        else if(state.projectVersion!=oldProjectVersion)
+            dispatch.arm_studio_autosave();
         if(state.pendingSampleEditor){
             state.pendingSampleEditor=false;
             dispatch.open_imported_sample_editor();
@@ -973,21 +980,23 @@ void FrameLoop::handle_input(Uint64 now) {
 }
 
 void FrameLoop::handle_sdl_event(const SDL_Event& e, Uint64 now) {
-    if(e.type==SDL_APP_WILLENTERBACKGROUND || e.type==SDL_APP_DIDENTERBACKGROUND ||
-       e.type==SDL_CONTROLLERDEVICEREMOVED || (e.type==SDL_WINDOWEVENT&&e.window.event==SDL_WINDOWEVENT_FOCUS_LOST))
-        ui::studio_synth_stop_audition(state,host);
-    if(e.type==SDL_APP_WILLENTERBACKGROUND || e.type==SDL_APP_DIDENTERBACKGROUND) {
+    const bool enteringBackground = e.type == SDL_APP_WILLENTERBACKGROUND || e.type == SDL_APP_DIDENTERBACKGROUND;
+    const bool inputInterrupted = enteringBackground || e.type == SDL_CONTROLLERDEVICEREMOVED ||
+        (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_FOCUS_LOST);
+    if (enteringBackground) {
         ui::source_sampler_stop(state.sourceSampler);
         if(state.captureBackend) state.captureBackend->stop();
+        if (e.type == SDL_APP_WILLENTERBACKGROUND) input.reset();
     }
-    if(e.type==SDL_APP_WILLENTERBACKGROUND || e.type==SDL_APP_DIDENTERBACKGROUND ||
-       (e.type==SDL_WINDOWEVENT&&e.window.event==SDL_WINDOWEVENT_FOCUS_LOST))
+    if (inputInterrupted) {
+        ui::studio_synth_stop_audition(state,host);
+        state.studioSynthPicker.chooseArmed=false;
+        mapper.shoulderClearPending = false;
         ui::drumlab_stop(state.drumLab,host,engineRef);
-    if(e.type==SDL_APP_WILLENTERBACKGROUND || e.type==SDL_APP_DIDENTERBACKGROUND ||
-       e.type==SDL_CONTROLLERDEVICEREMOVED || (e.type==SDL_WINDOWEVENT && e.window.event==SDL_WINDOWEVENT_FOCUS_LOST)) {
         engineRef.studioRack.punch.store(0);
         if(state.studioTab==3)state.studioAUsed=false;
         ui::live_resample_stop(state,engineRef,*cfg.filesystem);
+        ui::sample_granular_recording_interrupt(state,host,engineRef);
     }
     // Any event may change the screen; over-drawing costs one frame, and present() compares pixels.
     sawInput = true;
@@ -1188,7 +1197,10 @@ void FrameLoop::draw_frame(Uint64 now) {
     state.trackMask = host.track_mask();
 
     // Everything the UI reads back from the engine; after isPlaying, which the waveform's decay uses.
+    const float oldMasterMaxL = state.masterMaximum[0], oldMasterMaxR = state.masterMaximum[1];
     feed.poll(engineRef, host, state, static_cast<long long>(now));
+    const bool masterMaxChanged = oldMasterMaxL != state.masterMaximum[0] ||
+                                  oldMasterMaxR != state.masterMaximum[1];
 
     // Read every frame so no edit site has to push it. 0x80 lands at -12 dBFS, below the limiter.
     engineRef.setMetronome(state.settings.metronomeEnabled,
@@ -1212,12 +1224,16 @@ void FrameLoop::draw_frame(Uint64 now) {
         --resizeSettle;
     }
     const bool captureChanged=ui::studio_poll_capture(state,now);
-    const bool resampleChanged=ui::live_resample_poll(state,engineRef,*cfg.filesystem);
+    const bool granularChanged=ui::sample_granular_poll(state,host,now);
+    const bool granularRecordingChanged=ui::sample_granular_recording_poll(state,host,engineRef,now);
+    const bool resampleChanged=ui::live_resample_poll(state,engineRef,*cfg.filesystem,&host);
     const bool sourceChanged=state.studioOpen&&state.studioTab==7&&ui::source_sampler_poll(state.sourceSampler,now);
+    const bool sourceImported=state.studioOpen&&state.studioTab==7&&!state.studioHelp&&!state.qwerty.isOpen&&ui::source_sampler_apply_import(state,host,engineRef,*cfg.filesystem);
+    if(sourceImported&&state.pendingSampleEditor){state.pendingSampleEditor=false;dispatch.open_imported_sample_editor();}
     const bool sourceQueryRequested=state.studioOpen&&state.studioTab==7&&!state.qwerty.isOpen&&cfg.sources&&cfg.sources->take_query_request();
     if(sourceQueryRequested)dispatch.open_source_search();
-    if (audible || audibleEdge || sawInput || !drewOnce || settling || metersFalling || captureChanged || resampleChanged || sourceChanged || sourceQueryRequested || splashChanged || state.drumLab.previewRunning ||
-        timedWork || timedWorkEdge) {
+    if (audible || audibleEdge || sawInput || !drewOnce || settling || metersFalling || captureChanged || granularChanged || granularRecordingChanged || resampleChanged || sourceChanged || sourceImported || sourceQueryRequested || splashChanged || state.drumLab.previewRunning ||
+        timedWork || timedWorkEdge || masterMaxChanged) {
         layout.draw(screen.canvas, state);
         ++drawn;
 
@@ -1504,6 +1520,7 @@ int run(const AppConfig& cfg) {
 
     log_startup_phase("entering frame loop");
     loop.run();
+    ui::sample_granular_recording_interrupt(state,host,engineRef);
     ui::live_resample_stop(state,engineRef,filesystem);
     log_startup_phase("frame loop returned");
 

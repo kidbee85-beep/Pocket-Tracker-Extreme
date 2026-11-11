@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Dusty Fifth",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 35.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.4000000059604645,
+    "pitchSemitones": 7.0,
+    "pitchSpraySemitones": 0.7999999523162842,
+    "position": 0.5699999928474426,
+    "releaseMs": 220.0,
+    "reverseProbability": 0.11999999731779099,
+    "scanSpeed": 0.800000011920929,
+    "sizeMs": 74.0,
+    "sprayMs": 150.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

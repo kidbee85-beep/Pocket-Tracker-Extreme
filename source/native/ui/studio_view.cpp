@@ -5,6 +5,10 @@
 #include "ui/live_resample.h"
 #include "ui/premium.h"
 #include "ui/brand_graphics.h"
+#include "ui/punch_graphics.h"
+#include "ui/studio_navigation.h"
+#include "ui/studio_synth_picker.h"
+#include "ui/studio_workspace.h"
 #include "studio/synth.h"
 #include "studio/rack.h"
 #include "studio/punch.h"
@@ -48,10 +52,10 @@ void studio_card(Canvas& c,int x,int y,int w,int h,const Theme& t,bool focus=fal
  c.fill_rect(x+8,y+h-2,w-16,1,0x34000000u);
  if(focus)c.fill_rect(x+10,y+3,w-20,1,with_alpha(t.rowCursor,.19f));
 }
-int synth_family(int model){return model>=102?5:model>=94?4:model>=78?3:model>=72?2:model>=24?1:0;}
+int synth_family(int model){return std::max(0,studio_synth_model_group(model)-1);}
 Theme synth_theme(const AppState& s){
  Theme t=s.theme;
- static constexpr Argb colors[]={0xFF5CD8D0,0xFFB699F3,0xFF78B7EE,0xFFE4BD7A,0xFF8FDEA6,0xFFE89BBE};
+ static constexpr Argb colors[]={0xFF5CD8D0,0xFFB699F3,0xFF78B7EE,0xFFE4BD7A,0xFF8FDEA6,0xFFE89BBE,0xFFE8A37A};
  if(t.name!="MONO"&&t.name.find("OLED")==std::string::npos)
   t.rowCursor=mix(t.rowCursor,colors[synth_family(s.studioModel)],t.name=="STUDIO"||t.name=="GRAPHITE"||t.name=="CARBON"?.52f:.20f);
  return t;
@@ -73,29 +77,66 @@ void engine_diagram(Canvas& c,int family,int x,int y,Argb color){
  }else if(family==3){
   c.line(x+5,y+10,x+38,y+1,color);c.line(x+38,y+1,x+74,y+10,color);c.line(x+74,y+10,x+38,y+19,faint);c.line(x+38,y+19,x+5,y+10,faint);
   c.line(x+22,y+6,x+55,y+14,faint);c.line(x+22,y+14,x+55,y+6,faint);c.fill_rect(x+36,y+8,4,4,color);
+ }else if(family==6){
+  c.line(x,y+18,x+76,y+18,faint);
+  for(int bounce=0;bounce<3;++bounce){
+   const int left=x+25*bounce, height=14-4*bounce;
+   int previous=y+17;
+   for(int step=1;step<=24;++step){
+    const int py=y+17-height*step*(24-step)/144;
+    c.line(left+step-1,previous,left+step,py,color);
+    previous=py;
+   }
+  }
  }else{
   for(int i=0;i<18;++i){const int px=x+(i*37)%76,py=y+2+(i*11)%16;c.fill_rect(px,py,i%3+2,2,i%2?color:faint);}
  }
 }
+const char* gravity_description(int model){
+ switch(model-studio::kGravityFirstModel){
+ case 0:return "Each rebound strikes a tuned resonator";
+ case 1:return "Crossing orbit sectors strikes bells";
+ default:return "Independent drops trigger tuned impacts";
+ }
+}
+void synth_diagram(Canvas& c,int model,int x,int y,Argb color){
+ const int kind=model-studio::kGravityFirstModel;
+ if(kind==1){
+  const auto dim=with_alpha(color,.36f);
+  static constexpr int dx[]={0,9,21,29,32,29,21,9,0,-9,-21,-29,-32,-29,-21,-9};
+  static constexpr int dy[]={-8,-8,-6,-3,0,3,6,8,8,8,6,3,0,-3,-6,-8};
+  for(int i=0;i<16;++i){const int j=(i+1)%16;c.line(x+38+dx[i],y+10+dy[i],x+38+dx[j],y+10+dy[j],i<8?color:dim);}
+  c.fill_rect(x+36,y+8,4,4,color);
+  c.fill_rect(x+65,y+5,4,4,color);
+ }else if(kind==2){
+  const auto dim=with_alpha(color,.38f);
+  for(int i=0;i<7;++i){const int xx=x+4+i*11,yy=y+2+(i*7)%10;c.line(xx,yy,xx-3,yy+6,dim);c.fill_rect(xx-4,yy+7,3,2,color);}
+  c.line(x,y+18,x+76,y+18,dim);
+ }else engine_diagram(c,synth_family(model),x,y,color);
+}
 void heading(Canvas& c,const AppState& s){
  const auto& t=s.theme;
  c.surface_rect(0,0,640,480,t.background);
- c.draw_label(kProductName,18,14,t.textValue,18);
- c.draw_label("MUSIC / CODE",145,19,t.rowCursor,12);
- brand::mark(c,278,13,27,t.rowCursor,with_alpha(t.textTitle,.42f));
- c.draw_label("KID BUNKA",316,14,t.textValue,12);
- c.draw_label("DEMOSCENE AUDIO LAB",316,30,t.textParam,12);
- if(brand::expressive_material(t))brand::registration(c,452,33,60,t,s.blinkPhaseMs,s.isPlaying||s.studioAuditionHeld||s.studioAUsed);
- const bool audition=s.studioTab==0&&s.studioAuditionHeld;
- chip(c,s.studioTab==3?(s.studioAUsed?"FX HELD":"DRY MIX"):audition?"AUDITION":s.isPlaying?"PLAYING":"STUDIO",530,14,94,t,s.isPlaying||audition||s.studioAUsed);
+ brand::mark(c,18,12,27,t.rowCursor,with_alpha(t.textTitle,.42f));
+ c.draw_label(kProductName,57,13,t.textTitle,18);
+ c.draw_label("KID BUNKA",194,18,t.textParam,12);
+ label(c,"SELECT  HELP",272,18,t.rowCursor,90,12);
+ if(!s.studioAppearanceSettings) {
+  c.draw_label("B + Select   Sections",365,18,t.textParam,12);
+  if(brand::expressive_material(t))brand::registration(c,365,35,123,t,s.blinkPhaseMs,s.isPlaying||s.studioAuditionHeld||s.studioAUsed);
+ }
+ const bool audition=s.studioTab==0&&(s.studioAuditionHeld||s.studioSynthPicker.previewSounding);
+ const bool recording=s.resampleView.active||granular_recording_busy(s.sampleGranular.recording);
+ const char* transport=recording?"RECORDING":s.studioAppearanceSettings?"SETTINGS":s.studioTab==3&&s.studioAUsed?"FX HELD":audition?"AUDITION":s.isPlaying?"PLAYING":"STOPPED";
+ chip(c,transport,530,14,94,t,recording||(!s.studioAppearanceSettings&&(s.isPlaying||audition||s.studioAUsed)));
  c.fill_rect(18,47,606,1,with_alpha(t.textParam,.2f));
- if(s.studioTab==3){
-  const char* banks[]={"RHYTHM","TAPE","FILTER","DUB","GLITCH","GRAIN","MOD","DAMAGE"};
-  for(int i=0;i<studio::kPunchBanks;++i)chip(c,banks[i],16+i*77,60,72,t,i==studio::punch_bank(s.studioPunch));
+ if(s.studioAppearanceSettings){
+  c.draw_label("SETTINGS / APPEARANCE",18,62,t.textValue,18);
+  label(c,"B: Back to Settings",466,67,t.rowCursor,158);
   return;
  }
- const char* tabs[]={"Synth","FX Rack","Master","Punch","Input","Drumlab","Style","Digging"};
- for(int i=0;i<8;++i)chip(c,tabs[i],16+i*77,60,72,t,i==s.studioTab);
+ for(size_t i=0;i<kStudioMusicTabs.size();++i)
+  chip(c,kStudioMusicTabs[i].label,16+static_cast<int>(i)*88,60,80,t,kStudioMusicTabs[i].id==s.studioTab);
 }
 void preset(Canvas& c,const AppState& s,const std::string& title){
  const auto& t=s.theme;studio_card(c,16,102,608,66,t,s.studioRow==0);
@@ -140,74 +181,194 @@ void list_page(Canvas& c,const AppState& s){
  label(c,studio::effect_name(p[studio::FX]),430,384,t.textValue,180);
 }
 void synth_page(Canvas& c,const AppState& s){
- const auto t=synth_theme(s);studio_card(c,16,102,100,68,t,s.studioRow==0);
- c.draw_label("Instrument",29,113,t.textParam);
- c.draw_text(songcore::hex2(s.currentInstrument),29,137,t.textValue,2,3);
+ const auto t=synth_theme(s);
  const bool live=studio_synth_live(s);
- chip(c,live?"LIVE":"Draft",74,134,36,t,live);
- studio_card(c,126,102,498,68,t,s.studioRow==1);
- c.draw_label("Sound engine",140,113,t.textParam);
- const char* family=s.studioModel>=102?"Studio DSP":s.studioModel>=94?"Granular":s.studioModel>=78?"Elements":s.studioModel>=72?"Rings":s.studioModel>=24?"Braids":"Plaits";
- chip(c,family,508,110,100,t);
- label(c,studio::model_name(s.studioModel),140,137,t.textValue,356,18);
- engine_diagram(c,synth_family(s.studioModel),522,141,t.rowCursor);
- studio_card(c,16,180,608,40,t,s.studioRow==2);
- c.draw_label("Preset",30,195,t.textParam);
- label(c,studio_value(s,2),101,192,t.textValue,501,18);
- const std::string page=std::string(studio_synth_page_name(s))+"   "+std::to_string(s.studioSynthPage+1)+" / "+std::to_string(studio_synth_page_count(s));
- label(c,page,20,222,t.rowCursor,445);
- label(c,"R + Left / Right",493,222,t.textParam,131);
- const int controls=std::clamp(studio_synth_control_count(s),0,4);
- const int cells=std::max(3,controls),width=cells==4?146:196,step=cells==4?154:206;
- for(int i=0;i<cells;++i){const int x=16+i*step;const bool selected=s.studioRow==i+3&&i<controls;
-  studio_card(c,x,237,width,130,t,selected);
-  if(i>=controls){
-   c.draw_label("Output scope",x+14,248,t.textParam);
-   scope(c,x+14,278,width-28,66,s.waveform,WAVEFORM_SIZE,t);continue;
+ const auto target=songcore::hex2(s.currentInstrument);
+ const auto& group=studio_synth_model_groups()[studio_synth_model_group(s.studioModel)];
+ const bool hasTarget=s.project&&s.currentInstrument>=0&&s.currentInstrument<int(s.project->instruments.size());
+ studio_card(c,16,100,154,70,t,s.studioRow==0);
+ label(c,"TARGET SLOT",28,108,t.textParam,130);
+ c.draw_label(target,28,128,t.textValue,20);
+ chip(c,live?"LIVE":"DRAFT",77,126,79,t,live);
+ if(hasTarget)label(c,s.project->instruments[s.currentInstrument].name,28,153,t.textParam,130);
+
+ studio_card(c,180,100,444,70,t,s.studioRow==1);
+ label(c,"SYNTH MODEL",194,108,t.textParam,132);
+ label(c,"A: Choose",527,108,s.studioRow==1?t.rowCursor:t.textParam,86);
+ label(c,studio::model_name(s.studioModel),194,128,t.textValue,322,20);
+ label(c,studio::is_gravity_model(s.studioModel)?gravity_description(s.studioModel):group.name,194,153,t.textParam,316);
+ synth_diagram(c,s.studioModel,526,134,t.rowCursor);
+
+ studio_card(c,16,178,608,42,t,s.studioRow==2);
+ label(c,"PRESET",28,191,t.textParam,75);
+ const auto variation=s.studioSynthCustom?"Custom macros":studio_synth_preset_label(s.studioModel,s.studioVariation);
+ label(c,variation,111,188,t.textValue,399,18);
+ label(c,"A: Choose",527,191,s.studioRow==2?t.rowCursor:t.textParam,86);
+
+ const std::string page=studio_synth_page_name(s)+"   "+std::to_string(s.studioSynthPage+1)+" / "+std::to_string(studio_synth_page_count(s));
+ label(c,page,22,229,t.rowCursor,370);
+ label(c,"R + Left / Right: Pages",455,229,t.textParam,168);
+ const int controls=std::clamp(studio_synth_control_count(s),1,4);
+ const int cellWidth=608/controls;
+ studio_card(c,16,248,608,105,t);
+ for(int i=0;i<controls;++i){
+  const int x=16+i*cellWidth;
+  const bool selected=s.studioRow==i+3;
+  const Argb ink=selected?t.rowCursor:t.textValue;
+  if(i)c.fill_rect(x,258,1,84,with_alpha(t.textParam,.23f));
+  if(selected){
+   c.panel_rect(x+5,254,cellWidth-10,92,mix(t.rowEvery4th,t.rowCursor,.12f),t.rowCursor,5);
+   c.fill_rect(x+6,265,2,70,t.rowCursor);
   }
-  label(c,studio_synth_control_label(s,i),x+12,248,selected?t.rowCursor:t.textParam,width-24);
-  knob(c,x+width/2,297,studio_synth_control_level(s,i),t,selected,cells==4?23:25);
-  const auto value=studio_synth_control_value(s,i);
-  const auto fitted=Canvas::clip_label(value,width-20,18);
-  c.draw_label(fitted,x+(width-Canvas::label_width(fitted,18))/2,338,selected?t.rowCursor:t.textValue,18);
+  label(c,studio_synth_control_label(s,i),x+16,265,selected?ink:t.textParam,cellWidth-32,14);
+  label(c,studio_synth_control_value(s,i),x+16,290,ink,cellWidth-32,20);
+  const int level=std::clamp(studio_synth_control_level(s,i),0,255);
+  const int blocks=16,step=(cellWidth-32)/blocks;
+  for(int j=0;j<blocks;++j){
+   const bool lit=j*255/blocks<level;
+   c.fill_rect(x+16+j*step,326,step-2,7,with_alpha(t.rowCursor,lit?(selected?.92f:.57f):.15f));
+  }
  }
- const bool applyFocus=s.studioRow==studio_synth_apply_row(s);
- studio_card(c,16,379,390,30,t,applyFocus);
- const std::string action=s.studioConfirm?"Press A again to replace this instrument":live?"Live editing - changes are heard immediately":"Load once to link this instrument";
- label(c,action,30,386,applyFocus?t.rowCursor:t.textValue,362);
- studio_card(c,416,379,208,30,t,s.studioAuditionHeld);
- label(c,std::string(s.studioAuditionHeld?"Release L: stop ":"Hold L: ")+studio_synth_note_name(s),430,386,s.studioAuditionHeld?t.rowCursor:t.textParam,180);
+
+ const bool focus=s.studioRow==studio_synth_apply_row(s);
+ const auto& compare=s.studioSynthCompare;
+ const bool applyFocused=focus&&!compare.focused;
+ studio_card(c,16,361,192,53,t,applyFocused);
+ const std::string action=s.studioConfirm?"A AGAIN: REPLACE":live?"LIVE EDIT":"A: APPLY TO "+target;
+ label(c,action,30,371,applyFocused?t.rowCursor:t.textValue,163,16);
+ label(c,live?"Linked instrument":s.studioConfirm?"Replace slot "+target:"Hold L: Audition",30,394,t.textParam,163);
+ const bool compareFocused=focus&&compare.focused;
+ studio_card(c,216,361,132,53,t,compareFocused);
+ label(c,"A / B",228,371,compareFocused?t.rowCursor:t.textValue,105,16);
+ label(c,!compare.alternate?"A: Store A":compare.listeningToA?"A active   > B":"B active   > A",228,394,t.textParam,105);
+ studio_card(c,358,361,266,53,t);
+ const auto& take=s.resampleView;
+ std::string status;
+ if(take.active){
+  char text[32];std::snprintf(text,sizeof(text),"REC %.1fs",take.rate>0?double(take.frames)/take.rate:0.0);
+  status=text;
+ }else if(take.saving)status="SAVING";
+ else if(s.studioAuditionHeld)status="AUDITION  "+studio_synth_note_name(s);
+ else if(take.frames>0&&!take.failed&&!take.path.empty())status="B + Up: Use take";
+ else status=s.isPlaying?"PLAYBACK":"L: "+studio_synth_note_name(s);
+ c.draw_label("OUT",371,370,t.textParam,12);
+ label(c,status,403,369,take.active?0xffffaaaa:(take.saving||s.studioAuditionHeld)?t.rowCursor:t.textValue,200,13);
+ scope(c,371,386,240,20,s.waveform,WAVEFORM_SIZE,t);
 }
+
+void synth_picker_page(Canvas& c,const AppState& s){
+ const auto t=synth_theme(s);
+ const auto& picker=s.studioSynthPicker;
+ const bool model=picker.mode==StudioSynthPickerMode::Model;
+ const bool live=studio_synth_live(s);
+ studio_card(c,16,100,608,44,t);
+ label(c,model?"SYNTH MODEL":"PRESET",29,112,t.textValue,180,18);
+ if(!model)label(c,studio::model_name(s.studioModel),165,115,t.textParam,285,14);
+ const std::string target="Slot "+songcore::hex2(s.currentInstrument)+(live?" / LIVE":" / DRAFT");
+ label(c,target,481,116,t.rowCursor,128,12);
+ if(model){
+  const auto& groups=studio_synth_model_groups();
+  studio_card(c,16,153,178,259,t);
+  for(int i=0;i<studio_synth_model_group_count();++i){
+   const bool focus=i==picker.group;
+   const int y=161+i*31;
+   if(focus)c.panel_rect(22,y,166,29,mix(t.rowEvery4th,t.rowCursor,.16f),t.rowCursor,4);
+   label(c,groups[i].name,30,y+7,focus?t.rowCursor:t.textValue,150,14);
+  }
+  studio_card(c,202,153,422,259,t);
+  const auto& group=groups[picker.group];
+  const int highlighted=group.firstModel+picker.item;
+  constexpr int visible=8;
+  const int first=std::clamp(picker.item-visible/2,0,std::max(0,group.count-visible));
+  const int active=sample_granular_studio(s)?kSampleGranularModel:s.studioModel;
+  for(int i=first;i<std::min(group.count,first+visible);++i){
+   const int y=161+(i-first)*27;
+   const int id=group.firstModel+i;
+   const bool focus=i==picker.item;
+   if(focus)c.panel_rect(208,y,410,25,mix(t.rowEvery4th,t.rowCursor,.15f),t.rowCursor,4);
+   label(c,id==kSampleGranularModel?"Sample Granular":studio::model_name(id),222,y+5,focus?t.rowCursor:t.textValue,307,14);
+   if(id==active)label(c,"CURRENT",540,y+6,t.textParam,65,12);
+  }
+  if(group.firstModel==kSampleGranularModel){
+   label(c,"Granulate a loaded sample.",222,199,t.textParam,383,14);
+   label(c,"Load or crop the source in the Sample Granular editor.",222,225,t.textParam,383,12);
+  }else{
+   const std::string position=std::to_string(picker.item+1)+" / "+std::to_string(group.count);
+   if(studio::is_gravity_model(highlighted))label(c,gravity_description(highlighted),222,364,t.textParam,375,14);
+   label(c,position,222,390,t.textParam,111);
+   synth_diagram(c,highlighted,526,384,t.rowCursor);
+  }
+  label(c,"Left / Right: Family    Up / Down: Model    R: Sample Granular",22,435,t.textParam,596);
+ }else{
+  const int count=studio::variation_count();
+  const int columnSize=(count+1)/2;
+  for(int i=0;i<count;++i){
+   const int x=16+(i/columnSize)*309,y=153+(i%columnSize)*43;
+   const bool focus=i==picker.item;
+   studio_card(c,x,y,299,37,t,focus);
+   label(c,studio_synth_preset_label(s.studioModel,i),x+15,y+9,focus?t.rowCursor:t.textValue,206,16);
+   if(!s.studioSynthCustom&&i==s.studioVariation)label(c,"CURRENT",x+225,y+12,t.textParam,64,12);
+  }
+  label(c,"D-pad: Preset",22,435,t.textParam,596);
+ }
+ c.fill_rect(18,424,606,1,with_alpha(t.textParam,.2f));
+ const bool granularChoice=model&&picker.group==0;
+ label(c,granularChoice?"A: Open editor    B: Back    Select: Help":"Hold L: Audition    A: Choose    B: Back    Select: Help",
+       22,458,t.textValue,438);
+ if(picker.previewSounding){
+  c.draw_label("OUT",465,456,t.textParam,12);
+  scope(c,499,451,117,20,s.waveform,WAVEFORM_SIZE,t);
+ }
+}
+
 void input_page(Canvas& c,const AppState& s){
- const auto& t=s.theme;const auto& v=s.capture;
+ const auto& t=s.theme;const auto& v=s.capture;const auto& rv=s.resampleView;
+ const bool internal=v.internal_source();
  const CaptureInput* selected=v.inputs.empty()?nullptr:&v.inputs[std::clamp(v.selected,0,int(v.inputs.size())-1)];
  const bool phone=selected&&selected->kind.rfind("iphone",0)==0;
+ const bool disconnected=selected&&!selected->connected&&selected->kind!="iphone-action";
+ const bool receiving=internal?rv.active&&rv.frames>0:v.receiving();
+ const int64_t frames=internal?rv.frames:v.frames;const int rate=internal?rv.rate:v.actualRate;
  studio_card(c,16,102,608,70,t);
- c.draw_label("RECORD / Sample recorder",30,113,t.textValue,18);
- label(c,s.captureBackend?"Microphone / USB interface / experimental iPhone":"Recording unavailable on this platform",30,145,t.textParam,477);
- char time[32];std::snprintf(time,sizeof(time),"%02lld:%02lld",static_cast<long long>(v.frames/std::max(v.actualRate,1)/60),static_cast<long long>(v.frames/std::max(v.actualRate,1)%60));
- c.draw_text(time,531,119,v.receiving()?t.meterHigh:t.textValue,1,3);
- const auto input=selected?selected->name:"No input - Refresh";
+ c.draw_label("RECORD / Internal + input",30,113,t.textValue,18);
+ label(c,internal?"Internal mix includes Punch + Master. Start: play song.":s.captureBackend?"Microphone / USB interface / experimental iPhone":"External input unavailable; internal resampling works",30,145,t.textParam,477);
+ char time[32];std::snprintf(time,sizeof(time),"%02lld:%02lld",static_cast<long long>(frames/std::max(rate,1)/60),static_cast<long long>(frames/std::max(rate,1)%60));
+ c.draw_text(time,531,119,receiving?t.meterHigh:t.textValue,1,3);
+ const std::string input=selected?selected->name+(disconnected?" / disconnected":""):"Internal master / resample";
  const bool empty=v.targetInstrument>=0&&s.project&&songcore::instrument_is_free(s.project->instruments[std::clamp(v.targetInstrument,0,127)]);
- const std::string names[]={"Source  < / >","Channels  < / >","Sample rate  < / >","New take slot  < / >"};
- const std::string values[]={input,v.channels==1?"Mono":"Stereo",std::to_string(v.rate)+" Hz / 16 bit",v.targetInstrument<0?"Auto: first empty slot":songcore::hex2(v.targetInstrument)+(empty?" / empty":" / occupied - protected")};
+ const char* lengths[]={"FREE / 60 sec","1 BAR","2 BARS","4 BARS","8 BARS"};
+ const std::string names[]={!internal&&v.active()?"Source < internal":"Source  < / >",internal?"Length  < / >":"Channels  < / >",internal?"Format / master":"Sample rate  < / >","New take slot  < / >"};
+ const std::string values[]={input,internal?lengths[std::clamp(rv.lengthIndex,0,4)]:v.channels==1?"Mono":"Stereo",internal?"Stereo / live engine rate":std::to_string(v.rate)+" Hz / 16 bit",v.targetInstrument<0?"Auto: first empty slot":songcore::hex2(v.targetInstrument)+(empty?" / empty":" / occupied - protected")};
  for(int i=0;i<4;++i)row(c,16,184+i*31,390,names[i],values[i],t,s.studioRow==i);
  studio_card(c,16,312,390,40,t,s.studioRow==4);
- label(c,v.active()?"A  STOP & KEEP TAKE":"A  START RECORDING",31,323,s.studioRow==4?t.rowCursor:t.textValue,359,18);
+ const std::string record=internal?(rv.saving?"SAVING TAKE...":rv.active?"A  STOP & SAVE RESAMPLE":rv.failed?"A  RETRY SAVING TAKE":"A  START RESAMPLE"):v.active()?"A  STOP & KEEP TAKE":"A  START RECORDING";
+ label(c,record,31,323,s.studioRow==4?t.rowCursor:t.textValue,359,18);
  studio_card(c,16,358,390,35,t,s.studioRow==5);
- label(c,v.path.empty()?"USE TAKE  / record first":"A  USE TAKE > EDIT & SLICE",31,368,s.studioRow==5?t.rowCursor:t.textValue,359,16);
+ const bool hasTake=internal?rv.frames>0&&!rv.active&&!rv.saving&&!rv.failed&&!rv.path.empty():!v.path.empty();
+ label(c,hasTake?"A  USE TAKE > EDIT & SLICE":"USE TAKE  / record first",31,368,s.studioRow==5?t.rowCursor:t.textValue,359,16);
  studio_card(c,16,399,390,20,t,s.studioRow==6);
- label(c,"A  REFRESH INPUTS / reconnect devices",31,402,s.studioRow==6?t.rowCursor:t.textParam,359,12);
- studio_card(c,416,184,208,235,t);c.draw_label("Actual input level",430,196,t.textParam);
- meter(c,430,221,180,12,v.receiving()?v.peakL:0.f,t);meter(c,430,242,180,12,v.receiving()?v.peakR:0.f,t);
- label(c,studio_capture_status(v),430,266,v.receiving()?t.meterHigh:t.rowCursor,180,14);
- std::string detail=v.inputError;
- if(detail.empty()&&phone){
-  const bool current=v.requestedId==selected->id&&v.state!="idle";
-  detail=(v.receiving()?"Receiving audio. ":v.phoneTrusted&&current?"Trust verified; waiting for audio. ":selected->connected?"Phone detected; audio not verified. ":"No phone detected. ");
-  detail+=current&&!v.message.empty()?v.message:selected->detail;
-  detail+=" Unlock iPhone; allow Trust if asked. Charging alone is not audio. Experimental.";
- }else if(detail.empty())detail=v.message.empty()?"Choose a source, then Start. USB charging alone is not audio. Software monitoring is off.":v.message;
+ label(c,"A  REFRESH MIC / USB INPUTS",31,402,s.studioRow==6?t.rowCursor:t.textParam,359,12);
+ studio_card(c,416,184,208,235,t);
+ std::string status,detail;
+ if(internal){
+  c.draw_label("Internal output",430,196,t.textParam);
+  label(c,"POST FX / MASTER",430,220,t.rowCursor,180,12);
+  label(c,"Punch-in included",430,238,t.textParam,180,12);
+  status=rv.active?(rv.frames>0?"REC - internal mix":"Waiting for frames"):rv.saving?"Saving take...":rv.failed?"Save failed - retry":rv.frames>0?"Resample ready":"Ready: internal mix";
+  detail=rv.message.empty()?"Start: play song. A starts or stops resampling. No USB input needed. Stop playback before Use Take.":rv.message;
+ }else{
+  c.draw_label("Actual input level",430,196,t.textParam);
+  meter(c,430,221,180,12,v.receiving()?v.peakL:0.f,t);meter(c,430,242,180,12,v.receiving()?v.peakR:0.f,t);
+  status=studio_capture_status(v);detail=v.inputError;
+  if(detail.empty()&&disconnected)detail=selected->detail.empty()?"Selected input disconnected. Reconnect it or choose another source; recording has not started.":selected->detail;
+  if(detail.empty()&&phone){
+   const bool current=v.requestedId==selected->id&&v.state!="idle";
+   detail=(v.receiving()?"Receiving audio. ":v.phoneTrusted&&current?"Trust verified; waiting for audio. ":selected->connected?"Phone detected; audio not verified. ":"No phone detected. ");
+   detail+=current&&!v.message.empty()?v.message:selected->detail;
+   detail+=" Power warning is not an audio connection. Direct iPhone USB remains unverified.";
+  }else if(detail.empty())detail=v.state=="idle"&&selected&&!selected->detail.empty()?selected->detail:v.message.empty()?"Choose a source, then Start. USB charging alone is not audio. Software monitoring is off.":v.message;
+ }
+ label(c,status,430,266,receiving?t.meterHigh:t.rowCursor,180,14);
  // Keep real backend errors readable rather than silently clipping to one line.
  size_t offset=0;for(int line=0;line<8&&offset<detail.size();++line){
   size_t end=std::min(detail.size(),offset+26);
@@ -232,46 +393,59 @@ void style_page(Canvas& c,const AppState& s){
  c.draw_text("0/O  1/I/l  8/B  E/F  #",30,371,t.textValue,1,2);
  label(c,"SAMPLE / SLICE / SYNTH / PUNCH",30,396,t.textParam,580,12);
 }
-void punch_icon(Canvas& c,int bank,int x,int y,Argb ink){
- const auto faint=with_alpha(ink,.25f);
- for(int i=0;i<4;++i){
-  const int xx=x+i*12;
-  if(bank==0||bank==4){c.fill_rect(xx,y+2+(i%2)*4,7,bank==4?5:14-(i%2)*4,ink);}
-  else if(bank==1){c.line(xx,y+15,xx+5,y+2,ink);c.line(xx+5,y+2,xx+10,y+15,faint);}
-  else if(bank==2){c.line(xx,y+13-i*3,xx+12,y+10-i*3,ink);}
-  else if(bank==3){c.panel_rect(xx,y+2+i,9,14-i*3,0x00000000u,with_alpha(ink,1-i*.19f),3);}
-  else if(bank==5){c.fill_rect(xx+(i*5)%9,y+3+(i*7)%10,3+i%3,3,ink);c.fill_rect(xx+7,y+12-i*2,2,2,faint);}
-  else if(bank==6){c.line(xx,y+10,xx+6,y+2,ink);c.line(xx+6,y+2,xx+12,y+10,faint);}
-  else{c.line(xx,y+3,xx+3,y+15,ink);c.line(xx+3,y+15,xx+7,y+3,ink);c.line(xx+7,y+3,xx+11,y+10,faint);}
- }
+Argb punch_ink(const Theme& theme,int bank){
+ // Keep custom monochrome/OLED palettes exact; other themes gain a restrained family tint.
+ if(theme.name=="MONO"||theme.name.find("OLED")!=std::string::npos)return theme.rowCursor;
+ static constexpr Argb colors[]={0xFF72E2D4,0xFFF3BE73,0xFFB3EB83,0xFF77BFF2,
+                                0xFFFF91C4,0xFFBCA3FF,0xFF7FE2EA,0xFFFF9D7B};
+ return mix(theme.rowCursor,colors[std::clamp(bank,0,7)],theme.surfaceStyle>=12?.62f:.42f);
 }
 void punch_page(Canvas& c,const AppState& s){
  const auto& t=s.theme;const int bank=studio::punch_bank(s.studioPunch),pad=studio::punch_pad(s.studioPunch);
- studio_card(c,16,102,608,51,t);
- c.draw_label(studio::punch_bank_name(bank),31,113,t.textValue,18);
- label(c,s.studioAUsed?std::string(studio::punch_name(s.studioPunch))+" / release A to restore":"64 gestures / 8 banks. Select a pad, then hold A.",31,136,s.studioAUsed?t.rowCursor:t.textParam,485);
- chip(c,s.studioAUsed?"HELD A":"DRY",535,115,73,t,s.studioAUsed);
+ const Argb accent=punch_ink(t,bank);
+ const char* banks[]={"RHYTHM","TAPE","FILTER","DUB","GLITCH","GRAIN","MOD","DAMAGE"};
+ for(int i=0;i<studio::kPunchBanks;++i)chip(c,banks[i],16+i*77,94,72,t,i==bank);
+ c.fill_rect(28+bank*77,115,48,1,accent);
+ studio_card(c,16,126,608,51,t,s.studioAUsed);
+ c.draw_label(studio::punch_bank_name(bank),31,137,t.textValue,18);
+ label(c,studio::punch_name(s.studioPunch),31,160,s.studioAUsed?accent:t.textParam,227);
+ // A large effect diagram supplies the performance movement. Its raster never crosses labels.
+ c.fill_rect(275,133,242,36,darken(t.vizBackground,.72f));
+ for(int yy=136;yy<169;yy+=6)c.fill_rect(278,yy,236,1,with_alpha(t.textParam,.07f));
+ brand::punch_gesture(c,bank,s.studioPunch,279,135,234,31,s.blinkPhaseMs,s.studioAUsed,accent);
+ c.panel_rect(535,139,73,23,mix(t.rowEvery4th,accent,s.studioAUsed?.17f:.04f),with_alpha(accent,s.studioAUsed?.8f:.32f),4);
+ label(c,s.studioAUsed?"HELD A":"READY",546,143,accent,53);
+ // This cursor is real sequencer readback, not a decorative beat/level estimate.
+ int sequenceStep=-1;
+ if(s.isPlaying)for(const auto& playhead:s.playheads)if(playhead.step>=0){sequenceStep=playhead.step&15;break;}
  for(int i=0;i<studio::kPunchPads;++i){
-  const int x=16+(i%4)*154,y=166+(i/4)*92,id=studio::punch_id(bank,i);
+  const int x=16+(i%4)*154,y=188+(i/4)*74,id=studio::punch_id(bank,i);
   const bool selected=i==pad,active=selected&&s.studioAUsed;
-  studio_card(c,x,y,146,81,t,selected);
-  if(selected)c.fill_rect(x+1,y+9,3,63,active?t.rowCursor:with_alpha(t.rowCursor,.65f));
-  label(c,std::to_string(i+1),x+12,y+10,t.textParam,20);
-  if(active)chip(c,"HELD",x+91,y+7,44,t,true);
-  else if(selected)label(c,"READY",x+93,y+12,t.rowCursor,43);
-  if(active)brand::punch_motion(c,bank,i,x+35,y+11,49,24,s.blinkPhaseMs,t.rowCursor);
-  else punch_icon(c,bank,x+38,y+12,selected?t.rowCursor:with_alpha(t.textTitle,.48f));
-  label(c,studio::punch_name(id),x+12,y+48,selected?t.textValue:t.textParam,124);
-  c.fill_rect(x+12,y+69,122,1,with_alpha(selected?t.rowCursor:t.textParam,selected?.32f:.12f));
+  studio_card(c,x,y,146,65,t,selected);
+  if(selected)c.fill_rect(x+1,y+8,3,49,active?accent:with_alpha(t.rowCursor,.65f));
+  label(c,std::to_string(i+1),x+12,y+7,selected?accent:t.textParam,20);
+  if(selected)label(c,active?"HELD":"READY",x+94,y+7,accent,42);
+  if(active)c.fill_rect(x+10,y+23,126,16,with_alpha(accent,.075f));
+  brand::punch_gesture(c,bank,id,x+12,y+24,122,15,s.blinkPhaseMs,active,
+                       selected?accent:with_alpha(accent,.50f));
+  label(c,studio::punch_name(id),x+12,y+43,selected?t.textValue:t.textParam,124);
+  c.fill_rect(x+12,y+60,122,1,with_alpha(selected?t.rowCursor:t.textParam,selected?.32f:.12f));
   if(active){
-   // A short moving highlight describes the held gesture, not input level or render progress.
-   const int position=std::clamp(s.blinkPhaseMs,0,999)*102/1000;
-   c.fill_rect(x+12+position,y+69,20,2,t.rowCursor);
-   c.stroke_rect(x+4,y+4,138,73,with_alpha(t.rowCursor,.22f));
+   c.stroke_rect(x+5,y+4,136,57,with_alpha(accent,.50f));
+   for(int edge:{0,1}){
+    const int xx=edge?x+131:x+5;
+    c.fill_rect(xx,y+4,10,2,accent);c.fill_rect(xx,y+59,10,2,accent);
+   }
+  }
+  if(selected&&sequenceStep>=0){
+   for(int step=0;step<16;++step)c.fill_rect(x+12+step*7,y+60,5,step==sequenceStep?2:1,
+                                      with_alpha(accent,step==sequenceStep?.9f:.24f));
   }
  }
- studio_card(c,16,355,608,23,t);
- label(c,studio::punch_detail(s.studioPunch),30,360,t.textValue,572);
+ studio_card(c,16,340,608,27,t);
+ label(c,studio::punch_detail(s.studioPunch),30,348,t.textValue,416);
+ c.draw_label("OUT",467,348,t.textParam);
+ scope(c,503,346,104,16,s.waveform,WAVEFORM_SIZE,t);
  draw_live_resample_strip(c,s,16,382,608,35);
 }
 
@@ -279,7 +453,11 @@ void punch_page(Canvas& c,const AppState& s){
 void draw_studio(Canvas& c,const AppState& s){
  c.set_surface_style(s.theme.surfaceStyle);c.set_font_style(s.settings.fontStyle);heading(c,s);const auto& t=s.theme;
  if(s.studioHelp){draw_studio_help(c,s);return;}
- if(s.studioTab==0)synth_page(c,s);
+ if(draw_studio_workspace(c,s))return;
+ if(studio_synth_picker_open(s)){synth_picker_page(c,s);return;}
+ if(sample_granular_preset_picker_open(s)){draw_sample_granular(c,s);return;}
+ if(sample_granular_studio(s))draw_sample_granular(c,s);
+ else if(s.studioTab==0)synth_page(c,s);
  else if(s.studioTab==1||s.studioTab==2)list_page(c,s);
  else if(s.studioTab==3)punch_page(c,s);
  else if(s.studioTab==4)input_page(c,s);
@@ -288,9 +466,23 @@ void draw_studio(Canvas& c,const AppState& s){
  else if(s.studioTab==7){source_sampler_draw(c,s.sourceSampler,t,*s.project);return;}
  // Drumlab draws its own grid between the shared heading and footer.
  c.fill_rect(18,424,606,1,with_alpha(t.textParam,.2f));
- const std::string hint=s.studioTab==3?"L / R: Category     D-pad: Select pad     Select: Help":s.studioTab==0?"B + Left / Right: Studio pages     Select: Help":s.studioTab==4?"B + Left / Right: Studio pages    Select: Recording help":"B + Left / Right: Page     A + D-pad: Edit     Select: Help";
+ const bool granular=sample_granular_studio(s);
+ const char* synthHint=s.studioRow==1?"A: Choose model    A + Down: Sample Granular":
+    s.studioRow==2?"A: Choose preset    A + Left / Right: Step presets":
+    s.studioRow==0?"A + arrows: Change target slot":
+    s.studioRow==studio_synth_apply_row(s)?(s.studioSynthCompare.focused?
+      "Left: Apply    A: Store or swap    A + Up: Store new A":"Right: A/B compare    A: Apply    Hold L: Audition"):
+    "A + arrows: Edit    R + Left / Right: Parameter page";
+ const char* granularHint=s.studioRow==1?"A: Choose synth model":
+    s.studioRow==2?"A: Browse presets    A + arrows: Quick change":
+    s.studioRow==kGranularWaveRow?(s.sampleGranular.waveformMode==GranularWaveformMode::Position?
+      "A: View mode    A + arrows: Move grain position":"A: Position mode    A + Up / Down: Zoom    A + Left / Right: Pan"):
+    s.studioRow==studio_synth_apply_row(s)?(s.sampleGranular.action==kGranularCompareAction?
+      "A: Store / toggle    A + Left / Right: Morph    A + Up: Set A":"Left / Right: Action    A: Run"):
+    s.studioRow==0?"A + arrows: Change target slot":"A + arrows: Edit    R + Left / Right: Parameter page";
+ const std::string hint=granular?granularHint:s.studioAppearanceSettings?"Appearance / your saved themes and typefaces":s.studioTab==3?"L / R: Category     D-pad: Select pad     Select: Help":s.studioTab==0?synthHint:s.studioTab==4?"B + Left / Right: Studio pages    Select: Recording help":"B + Left / Right: Page     A + D-pad: Edit     Select: Help";
  label(c,s.studioMessage.empty()?hint:s.studioMessage,22,435,s.studioMessage.empty()?t.textParam:t.rowCursor,590);
- const auto controls=s.studioTab==3?"Hold A: Punch    Release A: Restore    Start: Play / Stop    B: Back":s.studioTab==0?"A + arrows: Edit     Hold L: Audition     Start: Playback     B: Back":s.studioTab==4?"Up / Down: Select    Left / Right: Change    A: Action    B: Back":"A: Apply     Start: Playback     B: Back";
+ const auto controls=granular?"Hold R + Select: Audition    Select: Help    B: Back":s.studioAppearanceSettings?"Up / Down: Choose     A + arrows: Change     B: Back to Settings":s.studioTab==3?"Hold A: Punch    Release A: Restore    Start: Play / Stop    B: Back":s.studioTab==0?"L + R + Start: Record / Stop    B + Down: Length    Select: Help    B: Back":s.studioTab==4?"Up / Down: Select    Left / Right: Change    A: Action    B: Back":"A: Apply     Start: Playback     B: Back";
  label(c,controls,22,458,t.textEmpty,590);
 }
 } // namespace pt::ui

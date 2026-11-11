@@ -4,7 +4,9 @@
 // cursor_context() (what is under the cursor and what can be done to it), handle_input(). Coordinates
 // are 640×480 design pixels; the shell scales the frame.
 
+#include <array>
 #include <functional>
+#include <optional>
 
 #include "songcore/automation.h"
 #include "songcore/model.h"
@@ -14,6 +16,36 @@
 #include "ui/theme.h"
 
 namespace pt::ui {
+
+enum class PhraseOverview { AUDIO, NOTES, VELOCITY };
+
+struct PhraseOverviewState {
+    const songcore::Phrase& phrase;
+    const TrackPlayhead (&playheads)[8];
+    const Theme& theme;
+    PhraseOverview view;
+    int cursorRow = 0;
+    int selectedFirst = -1, selectedLast = -1;
+};
+
+// Session-local history for one phrase. Only an exact expected revision may be restored.
+class PhraseEditHistory {
+public:
+    using Rows = std::array<songcore::PhraseStep, songcore::PHRASE_ROWS>;
+    enum class Result { APPLIED, EMPTY, DIVERGED };
+
+    static std::optional<Rows> snapshot(const songcore::Phrase&);
+    void record(const Rows& before, const songcore::Phrase& after);
+    Result apply(songcore::Phrase&, bool redo);
+    int available(int phraseId, bool redo) const;
+    void clear();
+
+private:
+    static constexpr int CAPACITY = 24;
+    struct Edit { Rows before, after; };
+    std::array<Edit, CAPACITY> edits_{};
+    int phraseId_ = -1, cursor_ = 0, size_ = 0;
+};
 
 struct PhraseEditorState {
     const songcore::Phrase& phrase;
@@ -61,6 +93,7 @@ public:
     static constexpr int HEIGHT = 392;
 
     void draw(Canvas& c, int x, int y, const PhraseEditorState& s) const;
+    void draw_overview(Canvas& c, int x, int y, const PhraseOverviewState& s) const;
 
     CursorContext cursor_context(const PhraseEditorState& s) const;
 

@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Broken Shuttle",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 51.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.30000001192092896,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.4000000059604645,
+    "position": 0.21000000834465027,
+    "releaseMs": 96.0,
+    "reverseProbability": 0.30000001192092896,
+    "scanSpeed": -0.5,
+    "sizeMs": 22.0,
+    "sprayMs": 150.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

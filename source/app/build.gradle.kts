@@ -32,10 +32,10 @@ android {
                 .orElse("com.kidbunka.trackwerk").get()
         minSdk = 26
         targetSdk = 34
-        // Hand-bumped per release: 990 = 0.9.9, 991 = 0.9.9.1, 1000 = 1.0.0 next. F-Droid's update check and
+        // Keep versionCode increasing for in-place APK updates. F-Droid's update check and
         // the changelog file name (changelogs/<versionCode>.txt) need a literal value.
-        versionCode = 90000
-        versionName = "0.9.0"
+        versionCode = 100000
+        versionName = "1.0.0"
         testInstrumentationRunner = providers.gradleProperty("ptTestRunner")
             .orElse("com.conanizer.pockettracker.CaptureSmoke").get()
 

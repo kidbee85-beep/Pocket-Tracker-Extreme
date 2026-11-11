@@ -132,7 +132,7 @@ void SettingsModule::draw(Canvas& c, int x, int y, const SettingsState& s) const
     }
 
     {
-        static constexpr const char* HELP_NAMES[3] = {"OFF", "SHORT", "FULL"};
+        static constexpr const char* HELP_NAMES[3] = {"NO HINT", "QUICK", "DETAIL"};
         param_row(SettingsRow::HELP, "HELP", HELP_NAMES[clamp(v.helpMode, 0, 2)]);
     }
 
@@ -140,7 +140,8 @@ void SettingsModule::draw(Canvas& c, int x, int y, const SettingsState& s) const
     // long name cannot push the ">" out.
     {
         constexpr int VALUE_COLS = (WIDTH - 10 - VAL1_X) / CHAR_W;
-        param_row(SettingsRow::THEME, "THEME",
+        param_row(SettingsRow::APPEARANCE, "APPEARANCE", "PALETTE / FONT >");
+        param_row(SettingsRow::THEME, "THEME COLORS",
                   Canvas::clip_text(s.themeName, VALUE_COLS - 2) + " >");
     }
 
@@ -218,6 +219,7 @@ CursorContext SettingsModule::cursor_context(const SettingsState& s) const {
         case SettingsRow::HELP:       return cc::enum_cycle(v.helpMode, 3);
 
         // A opens the theme editor.
+        case SettingsRow::APPEARANCE: return cc::read_only();
         case SettingsRow::THEME:      return cc::read_only();
         // A triggers SAVE or CLEAR.
         case SettingsRow::TEMPLATE:   return cc::read_only();
@@ -293,6 +295,7 @@ SettingsInputResult SettingsModule::handle_input(SettingsValues& v, Theme& theme
         case SettingsRow::HELP: v.helpMode = clamp(value, 0, 2); break;
 
         // A-only rows: the dispatcher's.
+        case SettingsRow::APPEARANCE:
         case SettingsRow::THEME:
         case SettingsRow::TEMPLATE:
             break;

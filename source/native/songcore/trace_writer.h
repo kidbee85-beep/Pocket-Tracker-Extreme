@@ -89,6 +89,7 @@ class TraceWriter : public IMidiConsumer {
                         }
                     }
                 }
+                append_granular(s, n.granular);
                 break;
             }
             case EV_NOTE_OFF:
@@ -125,6 +126,9 @@ class TraceWriter : public IMidiConsumer {
             case EV_EXT_MASTER_EQ:
                 s += " slot="; s += std::to_string(static_cast<int>(ev.extMasterEq.slot));
                 break;
+            case EV_EXT_GRANULAR:
+                append_granular(s, ev.extGranular);
+                break;
             // Every payload field, always all of them, in struct order — twelve here.
             case EV_EXT_EQ_MORPH:
             case EV_EXT_MASTER_EQ_MORPH: {
@@ -144,6 +148,18 @@ class TraceWriter : public IMidiConsumer {
     }
 
   private:
+    static void append_granular(std::string& out, const studio::granular::step::Delta& delta) {
+        using namespace studio::granular::step;
+        if (delta.count == 0) return;
+        out += " granular=";
+        for (uint8_t i = 0; i < delta.count && i < kRowSlots; ++i) {
+            if (i > 0) out += ',';
+            out += hex2(kFirstFx + delta.ops[i].field);
+            out += ':';
+            out += hex2(delta.ops[i].value);
+        }
+    }
+
     // Lower 8 bits as 2-digit UPPERCASE hex.
     static std::string hex2(int v) {
         static const char* H = "0123456789ABCDEF";

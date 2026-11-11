@@ -284,7 +284,7 @@ void QwertyKeyboardOverlay::draw(Canvas& c, const QwertyKeyboardState& s, const 
     }
 
     // ── ABORT / APPLY ───────────────────────────────────────────────────────────────────────────
-    // A virtual row, also bound to SELECT and START — the labels say so.
+    // A virtual row, also bound to SELECT+B and START.
     const int actionRow  = s.action_row_index();
     const int actionRowY = rowBaseY + actionRow * (CELLH + ROWGAP);
     constexpr int AFS    = 3;
@@ -292,7 +292,7 @@ void QwertyKeyboardOverlay::draw(Canvas& c, const QwertyKeyboardState& s, const 
     constexpr int AGAP   = 10;
     const int     ABTNW  = (INNERW - AGAP) / 2;
 
-    const char* labels[QWERTY_ACTION_COLS] = {"ABORT(SEL)", "APPLY(START)"};
+    const char* labels[QWERTY_ACTION_COLS] = {"ABORT(SEL+B)", "APPLY(START)"};
     for (int col = 0; col < QWERTY_ACTION_COLS; ++col) {
         const int  btnX   = INNERX + col * (ABTNW + AGAP);
         const bool cursor = (s.keyCursorRow == actionRow && s.keyCursorCol == col);

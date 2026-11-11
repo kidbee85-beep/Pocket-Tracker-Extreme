@@ -7,6 +7,7 @@
 
 #include "ui/fx_preset_io.h"
 #include "ui/studio_preset_io.h"
+#include "ui/sample_granular_presets.h"
 #include "ui/groove_io.h"
 #include "ui/scale_io.h"
 #include "ui/std_filesystem.h"   // path_name / path_stem / path_extension / to_lower
@@ -31,6 +32,9 @@ bool probe_wav_size(const BrowserItem& item){
     const auto available=pt::available_memory_bytes();
     return available>0&&item.size>std::max<int64_t>(64*1024,(available-8ll*1024*1024)/3)/4;
 }
+bool audio_source_browser(AppState::BrowserPurpose p){
+    return p==AppState::BrowserPurpose::LOAD_SOURCE||p==AppState::BrowserPurpose::LOAD_SAMPLE_EDITOR||p==AppState::BrowserPurpose::LOAD_GRANULAR_SAMPLE;
+}
 
 void end_selection(FileBrowserState& b) {
     b.selectionMode   = false;
@@ -43,6 +47,15 @@ void end_selection(FileBrowserState& b) {
 
 GestureResult InputDispatcher::file_browser_screen(Gesture g) {
     FileBrowserState& fb = s_.fileBrowser;
+    if (fb.mode == BrowserMode::DELETE) {
+        switch (g) {
+            case Gesture::A: browser_confirm(); break;
+            case Gesture::B: browser_back(); break;
+            case Gesture::STOP_PREVIEW: host_.stop_preview(); break;
+            default: break;
+        }
+        return GestureResult::TAKEN;
+    }
     switch (g) {
         // UP/DOWN move a row; LEFT/RIGHT page by a screenful.
         case Gesture::DPAD_UP:    browser_move_cursor(-1, /*page=*/false); break;
@@ -82,7 +95,11 @@ void InputDispatcher::browser_back() {
     FileBrowserState& fb = s_.fileBrowser;
 
     // B is the NO: it disarms any mode rather than leaving, so an accidental SELECT+A/B is harmless.
-    if (fb.mode != BrowserMode::NORMAL) { fb.mode = BrowserMode::NORMAL; return; }
+    if (fb.mode != BrowserMode::NORMAL) {
+        fb.mode = BrowserMode::NORMAL;
+        fb.pendingDelete = {};
+        return;
+    }
 
     // Inside a file selection, B COPIES it — as over a grid.
     if (fb.selectionMode) {
@@ -97,7 +114,7 @@ void InputDispatcher::browser_back() {
         return;
     }
 
-    close_file_browser();
+    close_file_browser(true);
 }
 
 void InputDispatcher::browser_audition() {
@@ -146,12 +163,14 @@ void InputDispatcher::open_file_browser(AppState::BrowserPurpose purpose, const 
 
     s_.fileBrowser.fileExtensions = extensions;
     s_.fileBrowser.mode           = BrowserMode::NORMAL;
+    s_.fileBrowser.pendingDelete  = {};
     s_.fileBrowser.sampleDomain   = sampleDomain || purpose == AppState::BrowserPurpose::LOAD_SAMPLE_EDITOR;
     s_.fileBrowser.sourceBookmarks.clear();
     if(purpose==AppState::BrowserPurpose::LOAD_SOURCE){
         s_.fileBrowser.fileExtensions=instrument_source_extensions();
         auto add=[&](const char* action,const char* title){BrowserItem item;item.kind=BrowserItem::Kind::ACTION;item.path=std::string(SOURCE_BOOKMARK_PREFIX)+action;item.displayName=title;s_.fileBrowser.sourceBookmarks.push_back(std::move(item));};
         add("synth","Synthesizers / Factory Presets");
+        add("sample-granular","Sample Granular / PCM Studio");
         add("presets","Instrument Presets (.pti)");
         add("samples","Samples / Audio");
         add("soundfonts","Soundfonts (.sf2 / .sf3)");
@@ -204,7 +223,7 @@ void InputDispatcher::open_sample_browser_folder(const std::string& fallback) {
     if (restore) restore_browser_position(b, v.lastSampleSelection, v.lastSampleCursor, v.lastSampleScroll);
 }
 
-void InputDispatcher::close_file_browser() {
+void InputDispatcher::close_file_browser(bool viaBack) {
     remember_sample_browser();
     // The audition is over; a preview left resident is PCM nothing will play again.
     host_.clear_previews();
@@ -212,6 +231,14 @@ void InputDispatcher::close_file_browser() {
     s_.currentScreen = s_.previousScreen;
     if (s_.browserPurpose == AppState::BrowserPurpose::LOAD_STUDIO_FX ||
         s_.browserPurpose == AppState::BrowserPurpose::LOAD_STUDIO_MASTER) s_.studioOpen = true;
+    if(s_.sampleGranular.browserReturn&&(s_.browserPurpose==AppState::BrowserPurpose::LOAD_GRANULAR_SAMPLE||s_.browserPurpose==AppState::BrowserPurpose::LOAD_GRANULAR_PRESET)){
+        if(s_.browserPurpose==AppState::BrowserPurpose::LOAD_GRANULAR_PRESET)s_.sampleGranular.presetDirectory=s_.fileBrowser.currentDirectory;
+        if(s_.sampleGranular.browserFromEditor)s_.previousScreen=s_.sampleGranular.browserEditorReturn;
+        s_.sampleGranular.browserFromEditor=false;
+        s_.sampleGranular.browserReturn=false;s_.sampleGranular.browserInstrument=-1;
+        s_.sampleGranular.returnReleaseMask|=viaBack?2u:s_.aHeld?1u:0u;
+        s_.studioOpen=true;s_.studioTab=0;s_.sampleGranular.open=true;s_.sampleGranular.nextPollMs=0;
+    }
 }
 
 void InputDispatcher::refresh_browser() {
@@ -270,25 +297,29 @@ void InputDispatcher::browser_move_cursor(int delta, bool page) {
 void InputDispatcher::browser_confirm() {
     FileBrowserState& b = s_.fileBrowser;
 
-    // DELETE mode: A is the YES, on what the question named — the selection, or the cursor's entry.
+    // Delete only the paths captured for the question. If an outside browser
+    // transition changed the listing or selection, the user must choose again.
     if (b.mode == BrowserMode::DELETE) {
+        auto request = std::move(b.pendingDelete);
+        b.pendingDelete = {};
         b.mode = BrowserMode::NORMAL;
-        // Copied out first: the refresh below rebuilds the list the targets point into.
-        const std::vector<const BrowserItem*> targets = b.delete_targets();
-        if (targets.empty()) return;
-        const std::string        name = targets.front()->displayName;
-        std::vector<std::string> paths;
-        for (const BrowserItem* item : targets) paths.push_back(item->path);
+        const auto selected = b.delete_targets();
+        if (request.paths.empty() || request.directory != b.currentDirectory ||
+            !std::equal(request.paths.begin(), request.paths.end(), selected.begin(), selected.end(),
+                        [](const std::string& path, const BrowserItem* item) { return path == item->path; })) {
+            set_status(b, "Delete selection changed. Select again.", false);
+            return;
+        }
 
         int done = 0, failed = 0;
-        for (const std::string& path : paths) {
+        for (const std::string& path : request.paths) {
             if (fs_.delete_path(path)) ++done; else ++failed;
         }
         end_selection(b);
         if (done > 0) refresh_browser();
 
-        if (paths.size() == 1)
-            set_status(b, done ? "DELETED: " + name : "DELETE FAILED", failed == 0);
+        if (request.paths.size() == 1)
+            set_status(b, done ? "DELETED: " + request.name : "DELETE FAILED", failed == 0);
         else
             set_status(b, "DELETED " + file_count(static_cast<size_t>(done)) +
                               (failed ? ", FAILED " + std::to_string(failed) : ""), failed == 0);
@@ -331,6 +362,11 @@ void InputDispatcher::browser_confirm() {
             if(action=="synth"){
                 close_file_browser();
                 open_studio_synth(s_,host_.project().instruments[s_.currentInstrument]);
+            }else if(action=="sample-granular"){
+                close_file_browser();
+                open_studio_synth(s_,host_.project().instruments[s_.currentInstrument]);
+                sample_granular_select(s_,host_,true);
+                if(s_.aHeld)s_.sampleGranular.returnReleaseMask|=1u;
             }else if(action=="presets"){
                 remember_sample_browser();b.sampleDomain=false;
                 navigate_to_folder(b,fs_,browser_dir(BrowserDir::INSTRUMENTS));
@@ -357,9 +393,7 @@ void InputDispatcher::browser_confirm() {
     const std::string ext  = to_lower(item->extension);
     const std::string path = item->path;
     const std::string stem = item->displayName;
-    if(ext=="wav"&&probe_wav_size(*item)&&
-       (s_.browserPurpose==AppState::BrowserPurpose::LOAD_SOURCE||
-        s_.browserPurpose==AppState::BrowserPurpose::LOAD_SAMPLE_EDITOR)&&
+    if(ext=="wav"&&probe_wav_size(*item)&&audio_source_browser(s_.browserPurpose)&&
        open_large_sample(path,stem,false,true))return;
 
     // The SAMPLE EDITOR's LOAD targets the editor's slot, which need not be INSTRUMENT's last one.
@@ -396,6 +430,22 @@ void InputDispatcher::browser_confirm() {
             // The editor's own LOAD: the same load, returning to the EDITOR.
             ok = host_.load_sample(s_.sampleEditor.instrumentId, path);
             break;
+
+        case AppState::BrowserPurpose::LOAD_GRANULAR_SAMPLE:
+            if(id!=s_.sampleGranular.browserInstrument){set_status(b,"TARGET CHANGED / REOPEN LOAD",false);return;}
+            ok=sample_granular_load_source(s_,host_,path);
+            break;
+
+        case AppState::BrowserPurpose::LOAD_GRANULAR_PRESET: {
+            if(id!=s_.sampleGranular.browserInstrument){set_status(b,"TARGET CHANGED / REOPEN LOAD",false);return;}
+            bool sampleReplaced=false;
+            if(ext!=kSampleGranularPresetExtension||!sample_granular_load_preset(s_,host_,fs_,path,&sampleReplaced)){
+                set_status(b,s_.studioMessage.empty()?"INVALID GRAIN PRESET / SOUND KEPT":s_.studioMessage,false);return;
+            }
+            close_file_browser();
+            if(sampleReplaced&&s_.currentScreen==ScreenType::SAMPLE_EDITOR&&s_.sampleEditor.instrumentId==id)init_sample_editor_state();
+            mark_modified();return;
+        }
 
         case AppState::BrowserPurpose::LOAD_PROJECT:
             if(ext=="m8s"){
@@ -542,10 +592,9 @@ void InputDispatcher::browser_confirm() {
             set_status(b, "CANCELLED", true);
             return;
         }
-        if(ext=="wav"&&host_.last_load_ran_out_of_memory()&&
-           (s_.browserPurpose==AppState::BrowserPurpose::LOAD_SOURCE||
-            s_.browserPurpose==AppState::BrowserPurpose::LOAD_SAMPLE_EDITOR)&&
+        if(ext=="wav"&&host_.last_load_ran_out_of_memory()&&audio_source_browser(s_.browserPurpose)&&
            open_large_sample(path,stem,false))return;
+        if(s_.browserPurpose==AppState::BrowserPurpose::LOAD_GRANULAR_SAMPLE){set_status(b,s_.studioMessage.empty()?"SOURCE LOAD FAILED / OLD SOUND KEPT":s_.studioMessage,false);return;}
         // ⚠️ A file too big for the device is not corrupt; say so.
         set_status(b, host_.last_load_ran_out_of_memory() ? "FILE TOO BIG" : "LOAD FAILED", false);
         return;
@@ -573,7 +622,9 @@ void InputDispatcher::browser_confirm() {
         return;
     }
 
+    const bool granularSource=s_.browserPurpose==AppState::BrowserPurpose::LOAD_GRANULAR_SAMPLE;
     close_file_browser();
+    if(granularSource&&s_.currentScreen==ScreenType::SAMPLE_EDITOR&&s_.sampleEditor.instrumentId==id)init_sample_editor_state();
 }
 
 // ─── The multi-select and the file clipboard ─────────────────────────────────────────────────────
@@ -704,23 +755,34 @@ void InputDispatcher::browser_rename() {
 }
 
 void InputDispatcher::browser_arm_delete() {
-    if (s_.fileBrowser.mode != BrowserMode::NORMAL) return;
+    auto& browser = s_.fileBrowser;
+    if (browser.mode != BrowserMode::NORMAL) return;
 
-    const BrowserItem* item = s_.fileBrowser.current();
+    const BrowserItem* item = browser.current();
 
     // ⚠️ On a granted tree this is FORGET: deleting "pt://<id>" would remove the whole directory. Handing
     // back the permission touches no file.
-    if (!s_.fileBrowser.selectionMode && item && item->isRoot) {
-        s_.fileBrowser.mode = BrowserMode::FORGET_ROOT;
-        set_status(s_.fileBrowser, "", true);
+    if (!browser.selectionMode && item && item->isRoot) {
+        browser.mode = BrowserMode::FORGET_ROOT;
+        set_status(browser, "", true);
         return;
     }
 
-    if (s_.fileBrowser.delete_targets().empty()) return;
+    const auto targets = browser.delete_targets();
+    if (targets.empty()) return;
 
-    // ARM the confirm; never delete on this press ("DELETE <name>? A=YES B=NO", or "DELETE 3 FILES?").
-    s_.fileBrowser.mode          = BrowserMode::DELETE;
-    set_status(s_.fileBrowser, "", true);
+    auto& request = browser.pendingDelete;
+    request = {};
+    request.directory = browser.currentDirectory;
+    request.name = targets.front()->displayName;
+    request.paths.reserve(targets.size());
+    for (const auto* target : targets) {
+        request.paths.push_back(target->path);
+        request.includesFolder |= target->kind == BrowserItem::Kind::FOLDER;
+    }
+    host_.stop_preview(/*cut=*/true);
+    browser.mode = BrowserMode::DELETE;
+    set_status(browser, "", true);
 }
 
 void InputDispatcher::browser_new_folder() {

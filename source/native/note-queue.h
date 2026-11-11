@@ -227,6 +227,8 @@ enum ParamUpdateAction {
     PARAM_UPDATE_INSTRUMENT,      // every sounding voice of `instrId` re-reads that instrument
     PARAM_UPDATE_WHEEL,           // the track's voices, fading ones too: midiWheel = value   [MIDI in]
     PARAM_UPDATE_STUDIO_VOICE,    // targeted live synth gain/pan/tuning/envelope edit
+    PARAM_UPDATE_GRANULAR_STEP,   // ordered Gxx FX-only row
+    PARAM_UPDATE_GRANULAR_RESET,  // a LIVE boundary or switch to an external instrument
 };
 
 // One EQ setting in the file's hex, not Hz/dB/Q: interpolating hex keeps a sweep linear in
@@ -250,9 +252,13 @@ struct ScheduledParamUpdate {
     int instrId = -1;        // INSTRUMENT only
     uint32_t gen = 0;        // stamped by the queue — see CancelLedger
     float studioPan=.5f,studioTune=1.f;
+    studio::granular::step::Delta granular{};
 
     bool operator>(const ScheduledParamUpdate& other) const {
-        return targetFrame > other.targetFrame;
+        if (targetFrame != other.targetFrame) return targetFrame > other.targetFrame;
+        // A reset must be visible before same-frame updates or a new note.
+        // Every old action keeps its original equal-frame ordering.
+        return action != PARAM_UPDATE_GRANULAR_RESET && other.action == PARAM_UPDATE_GRANULAR_RESET;
     }
 };
 

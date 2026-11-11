@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Deep Frame",
+  "parameters": {
+    "attackMs": 120.0,
+    "densityHz": 12.0,
+    "freeze": true,
+    "level": 0.4399999976158142,
+    "panSpread": 0.7900000214576721,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.1599999964237213,
+    "position": 0.6800000071525574,
+    "releaseMs": 2600.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 588.0,
+    "sprayMs": 27.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

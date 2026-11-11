@@ -34,7 +34,11 @@ int main(int argc,char**argv) {
     Canvas metrics;size_t maxRows=0;int checked=0;
     for(int topic=0;topic<8;++topic) {
         s.studioTab=topic;s.studioRow=0;s.studioHelp=false;s.studioHelpHeldButtons=0;
-        tap(Button::SELECT);assert(s.studioHelp&&s.studioHelpTopic==topic&&s.studioHelpPage==0);
+        tap(Button::SELECT);assert(s.studioHelp&&s.studioHelpTopic==topic&&s.studioHelpPage==STUDIO_HELP_QUICK);
+        const auto quick=studio_help_quick_content(s);
+        assert(!quick.title.empty()&&quick.lines.size()>=3&&quick.lines.size()<=5);
+        assert(studio_help_wrapped_lines(metrics,quick).size()<=7);
+        tap(Button::A);assert(s.studioHelp&&s.studioHelpPage==0);
         for(int page=0;page<3;++page){
             const auto c=studio_help_content(s,topic,page);assert(!c.title.empty()&&!c.lines.empty());
             const auto lines=studio_help_wrapped_lines(metrics,c);maxRows=std::max(maxRows,lines.size());

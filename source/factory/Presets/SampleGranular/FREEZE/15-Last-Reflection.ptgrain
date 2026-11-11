@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Last Reflection",
+  "parameters": {
+    "attackMs": 120.0,
+    "densityHz": 16.0,
+    "freeze": true,
+    "level": 0.4399999976158142,
+    "panSpread": 0.8299999833106995,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.23999999463558197,
+    "position": 0.7800000309944153,
+    "releaseMs": 2800.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 646.0,
+    "sprayMs": 31.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

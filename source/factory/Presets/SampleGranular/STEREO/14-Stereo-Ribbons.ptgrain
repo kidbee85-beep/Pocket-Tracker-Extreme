@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Stereo Ribbons",
+  "parameters": {
+    "attackMs": 80.0,
+    "densityHz": 16.0,
+    "freeze": false,
+    "level": 0.36000001430511475,
+    "panSpread": 0.9599999785423279,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.7199999690055847,
+    "position": 0.7050000429153442,
+    "releaseMs": 700.0,
+    "reverseProbability": 0.30000001192092896,
+    "scanSpeed": 0.32999998331069946,
+    "sizeMs": 452.0,
+    "sprayMs": 106.0,
+    "windowShape": 0.15000000596046448
+  },
+  "version": 1
+}

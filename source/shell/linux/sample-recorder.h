@@ -8,7 +8,9 @@
 namespace ptshell {
 
 // SDL capture for the Linux/PortMaster shell. SDL_INIT_AUDIO must outlive this
-// object. All device opening, PCM reads and disk writes run on its worker.
+// object. Discovery is lazy and cached; driver enumeration, opening, PCM reads,
+// closing and disk writes run on background workers, never on the UI caller.
+// Stop requests cancellation but does not pretend a blocked OS driver is closed.
 // There is deliberately no path from this input to the audio output.
 class SdlSampleRecorder final : public pt::ui::CaptureBackend {
 public:

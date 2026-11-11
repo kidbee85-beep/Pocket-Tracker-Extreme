@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "ui/helpers.h"
+#include "ui/step_grid.h"
 #include "ui/theme_rules.h"
 
 namespace pt::ui {
@@ -22,7 +23,7 @@ int ThemeEditorModule::visible_row_count() {
 
 int ThemeEditorModule::scroll_offset(int cursor_row) {
     const int visible   = visible_row_count();
-    const int max_scroll = std::max(0, total_rows() - visible);   // 18 − 16 = 2
+    const int max_scroll = std::max(0, total_rows() - visible);
     const int wanted    = (cursor_row >= visible) ? cursor_row - visible + 1 : 0;
     return std::min(std::max(wanted, 0), max_scroll);
 }
@@ -91,7 +92,28 @@ void ThemeEditorModule::draw(Canvas& c, int x, int y, const ThemeState& s) const
                          value_color(on_row, 2), t);
     }
 
-    // ── Row 1: RANDOMIZE — the colour scheme, and the roll itself ────────────────────────────────
+    const auto grid_row = [&](int logical, const char* label, StepGridStyle style) {
+        if (!row_visible(logical)) return;
+        const bool on_row = es.cursorRow == logical;
+        const int ry = row_top(logical);
+        const int ty = ry + TEXT_PADDING;
+        c.draw_text(label, x + NAME_COL_X, ty, on_row ? cursor_mark_ink(t) : t.textParam,
+                    CHAR_SPACING, FONT_SCALE);
+        draw_cursor_cell(c, step_grid_style_name(style), x + 205, ty, on_row, value_color(on_row, 0), t);
+
+        constexpr int previewWidth = 142, previewRowHeight = 7;
+        const int left = x + WIDTH - previewWidth - 10;
+        const int top = ry + 3;
+        c.fill_rect(left, top, previewWidth, previewRowHeight * 2, t.background);
+        c.fill_rect(left, top, previewWidth, previewRowHeight, t.rowEvery4th);
+        for (int row = 0; row < 2; ++row)
+            draw_step_grid(c, t, style, row, left, top + row * previewRowHeight,
+                           previewWidth, previewRowHeight, {left + 28, left + 78});
+    };
+    grid_row(THEME_ROW_CHAIN_GRID, "CHAIN GRID", t.chainGrid);
+    grid_row(THEME_ROW_PHRASE_GRID, "PHRASE GRID", t.phraseGrid);
+
+    // The colour scheme and the roll itself.
     if (row_visible(THEME_ROW_RANDOM)) {
         const bool on_row = (es.cursorRow == THEME_ROW_RANDOM);
         const int  ry     = row_top(THEME_ROW_RANDOM);

@@ -61,7 +61,13 @@ int main(int argc,char**argv){
  for(int font:{0,7,16}){s.settings.fontStyle=font;layout.draw(c,s);assert(c.font_style()==font&&screens.insert(pixels(c)).second);ppm(out/("local-range-font"+std::to_string(font)+".ppm"),c);d.on_select();assert(s.localSampleRange.help);layout.draw(c,s);assert(c.font_style()==font&&screens.insert(pixels(c)).second);ppm(out/("local-help-font"+std::to_string(font)+".ppm"),c);d.on_select();assert(!s.localSampleRange.help);}
  s.settings.fontStyle=16;d.on_button_b();assert(!s.localSampleRange.isOpen&&s.currentScreen==ScreenType::FILE_BROWSER);assert(s.fileBrowser.currentDirectory==folder&&s.fileBrowser.cursor==cursor&&s.fileBrowser.scroll==scroll&&s.fileBrowser.current()->path==big);
  d.on_start();poll();assert(s.localSampleRange.isOpen&&s.localSampleRange.source.playing);d.on_stop_preview();poll();assert(s.localSampleRange.source.playing);
- d.on_select();assert(s.localSampleRange.help);d.on_start();poll();assert(s.localSampleRange.source.playing);d.on_select();d.on_start();poll();assert(!s.localSampleRange.source.playing);
+ const auto rangeIn=s.localSampleRange.inFrame,rangeOut=s.localSampleRange.outFrame;
+ const int rangeRow=s.localSampleRange.row;
+ d.on_select();assert(s.localSampleRange.help);d.on_start();poll();assert(s.localSampleRange.source.playing);
+ d.on_button_b();poll();
+ assert(s.localSampleRange.isOpen&&!s.localSampleRange.help&&s.localSampleRange.source.playing);
+ assert(s.localSampleRange.inFrame==rangeIn&&s.localSampleRange.outFrame==rangeOut&&s.localSampleRange.row==rangeRow);
+ d.on_start();poll();assert(!s.localSampleRange.source.playing);
  setenv("PT_MEMORY_LIMIT_MB","16",1);d.on_button_b();d.on_button_a();assert(s.localSampleRange.isOpen);s.localSampleRange.row=6;d.on_button_a();assert(s.localSampleRange.isOpen&&s.localSampleRange.message.find("RAM")!=std::string::npos&&s.localSampleRange.message.find("Crop")!=std::string::npos);assert(songcore::serialize_project(host.project())==before);
  // A small raw8-bit file can need four times its byte size as float PCM.
  d.on_button_b();focus(d,s,expanded8);d.on_button_a();assert(s.localSampleRange.isOpen&&s.localSampleRange.source.bits==8&&s.localSampleRange.source.channels==1);assert(songcore::serialize_project(host.project())==before);d.on_button_b();focus(d,s,big);d.on_button_a();assert(s.localSampleRange.isOpen);

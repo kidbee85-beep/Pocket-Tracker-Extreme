@@ -1,6 +1,7 @@
 #include "ui/live_resample.h"
 #include "ui/live_resample_files.h"
 #include "ui/studio.h"
+#include "ui/studio_synth_picker.h"
 #include "ui/helpers.h"
 #include "songcore/project_io.h"
 #include "common/platform_memory.h"
@@ -92,6 +93,11 @@ void tell(AppState& s,const std::string& message){
     s.resampleView.message=message;s.studioMessage=message;
     s.statusMessage=message;s.statusSuccess=true;
 }
+void release_synth_root(AppState& s, songcore::SongcoreHost& host) {
+    if (!s.resampleView.ownsSynthRoot) return;
+    s.resampleView.ownsSynthRoot = false;
+    studio_synth_stop_audition(s, host);
+}
 bool write_take(const LiveResampleSave& job){
     if(job.frames<=0||job.pcm.size()<static_cast<size_t>(job.frames)*2)return false;
     const std::string temp=job.path+".part";
@@ -171,7 +177,7 @@ void live_resample_toggle(AppState& s,songcore::SongcoreHost& host,AudioEngine& 
         if(retry.empty()){tell(s,"Storage unavailable; take remains in memory");return;}
         v.path=retry;v.job->path=retry;launch_save(s);return;
     }
-    if(v.active){live_resample_stop(s,engine,fs);return;}
+    if(v.active){live_resample_stop(s,engine,fs);release_synth_root(s,host);return;}
     if(s.loading.running||s.renderDialog.isOpen||s.qwerty.isOpen){tell(s,"Finish this dialog before resampling");return;}
     const std::string path=take_path(fs);if(path.empty()){tell(s,"Resample storage unavailable");return;}
     const int rate=engine.getSampleRate();
@@ -181,39 +187,63 @@ void live_resample_toggle(AppState& s,songcore::SongcoreHost& host,AudioEngine& 
     const int64_t needed=static_cast<int64_t>(requestedFrames)*2*sizeof(int16_t);
     const int64_t available=pt::available_memory_bytes();
     if(available>0&&needed>available){tell(s,"Not enough free RAM for this length; previous take kept");return;}
-    if(!engine.liveResampler.start(rate,frames)){tell(s,"Not enough memory for this resample length");return;}
+    const bool soloSynth = s.studioOpen && s.studioTab == 0 && !sample_granular_studio(s)
+                          && !s.studioHelp && !s.studioWorkspace.open && !studio_synth_picker_open(s)
+                          && !host.is_playing();
+    const bool startAudition = soloSynth && !s.studioAuditionHeld;
+    if (startAudition) studio_synth_audition(s, host, true);
+    if (soloSynth && !s.studioAuditionHeld) { tell(s, "Could not audition this synth"); return; }
+    if(!engine.liveResampler.start(rate,frames)){
+        if (startAudition) studio_synth_stop_audition(s,host);
+        tell(s,"Not enough memory for this resample length");return;
+    }
+    v.previousPath=v.path;v.previousImportedPath=v.importedPath;
+    v.previousFrames=v.frames;v.previousRate=v.rate;v.previousLimit=v.limit;
     v.job.reset();v.active=true;v.saving=false;v.failed=false;v.frames=0;v.rate=rate;
+    v.ownsSynthRoot = soloSynth;
     v.limit=engine.liveResampler.limit();v.path=path;v.importedPath.clear();
-    tell(s,"RESAMPLING - L+R+Start stops / saves");
+    tell(s,soloSynth?"REC SYNTH ROOT / L+R+Start to save":"RESAMPLING - L+R+Start stops / saves");
 }
 void live_resample_stop(AppState& s,AudioEngine& engine,FileSystem& fs){
     auto& v=s.resampleView;if(!v.active)return;
     engine.liveResampler.stop();v.active=false;v.frames=engine.liveResampler.frames();
-    if(v.frames<=0){engine.liveResampler.take_pcm();tell(s,"No audio frames received; take not created");return;}
+    if(v.frames<=0){
+        engine.liveResampler.take_pcm();
+        v.path=v.previousPath;v.importedPath=v.previousImportedPath;
+        v.frames=v.previousFrames;v.rate=v.previousRate;v.limit=v.previousLimit;
+        tell(s,"No audio frames received; previous take kept");return;
+    }
     auto job=std::make_shared<LiveResampleSave>();job->frames=v.frames;job->rate=v.rate;job->path=v.path;
     job->manifestPath=(std::filesystem::path(fs.settings_path()).parent_path()/".live-resample/last-take.json").string();
     job->pcm=engine.liveResampler.take_pcm();v.job=std::move(job);launch_save(s);
     if(v.saving)tell(s,"Saving live take in background...");
 }
-bool live_resample_poll(AppState& s,AudioEngine& engine,FileSystem& fs){
+bool live_resample_poll(AppState& s,AudioEngine& engine,FileSystem& fs,songcore::SongcoreHost* auditionHost){
     restore_latest(s,fs);
     auto& v=s.resampleView;bool changed=false;
     if(v.active){const int frames=engine.liveResampler.frames();changed=frames!=v.frames;v.frames=frames;
         if(!engine.liveResampler.recording()){live_resample_stop(s,engine,fs);changed=true;}}
+    if (auditionHost && v.ownsSynthRoot && (!v.active || !s.studioOpen || s.studioTab != 0
+            || sample_granular_studio(s) || !s.studioAuditionHeld || auditionHost->is_playing())) {
+        release_synth_root(s,*auditionHost);
+        changed=true;
+    }
     if(v.saving&&v.job&&v.job->done.load(std::memory_order_acquire)){
         v.job->worker.join();v.saving=false;v.failed=!v.job->ok;
         if(v.failed)tell(s,"Save failed; take kept - L+R+Start retries");
-        else{std::vector<int16_t>().swap(v.job->pcm);tell(s,"Take ready - Punch B+Up loads into empty slot");}
+        else{std::vector<int16_t>().swap(v.job->pcm);tell(s,"Take ready / B+Up loads into empty slot");}
         changed=true;
     }
     return changed;
 }
-void live_resample_use(AppState& s,songcore::SongcoreHost& host,AudioEngine& engine,FileSystem& fs){
+void live_resample_use(AppState& s,songcore::SongcoreHost& host,AudioEngine& engine,FileSystem& fs,int targetInstrument){
     auto& v=s.resampleView;
     if(v.active||v.saving||v.failed||v.frames<=0||v.path.empty()){tell(s,"Finish and save a resample take first");return;}
     if(host.is_playing()){tell(s,"Stop playback, then B+Up loads the saved take");return;}
     if(s.currentScreen==ScreenType::SAMPLE_EDITOR&&s.sampleEditor.isModified){tell(s,"Save current sample edits first; take is kept");return;}
-    int slot=-1;for(int i=0;i<int(host.project().instruments.size());++i)
+    int slot=targetInstrument;
+    if(slot>=int(host.project().instruments.size())||(slot>=0&&!songcore::instrument_is_free(host.project().instruments[slot]))){tell(s,"Choose an empty target slot; saved resample is kept");return;}
+    if(slot<0)for(int i=0;i<int(host.project().instruments.size());++i)
         if(songcore::instrument_is_free(host.project().instruments[i])){slot=i;break;}
     if(slot<0){tell(s,"No free instrument; saved take is kept");return;}
     const int previous=s.currentInstrument;s.currentInstrument=slot;
@@ -222,9 +252,9 @@ void live_resample_use(AppState& s,songcore::SongcoreHost& host,AudioEngine& eng
         s.studioOpen=false;s.pendingSampleEditor=true;v.message="Resample loaded into "+std::to_string(slot);
     }else s.currentInstrument=previous;
 }
-void live_resample_cycle_length(AppState& s){auto& v=s.resampleView;
+void live_resample_cycle_length(AppState& s,int direction){auto& v=s.resampleView;
     if(v.active||v.saving||v.failed){tell(s,"Finish this take before changing length");return;}
-    v.lengthIndex=(v.lengthIndex+1)%5;tell(s,"Next resample: "+length_name(v));
+    v.lengthIndex=(v.lengthIndex+(direction>0?1:4))%5;tell(s,"Next resample: "+length_name(v));
 }
 void draw_live_resample_strip(Canvas& c,const AppState& s,int x,int y,int w,int h){
     const auto& v=s.resampleView;const auto& t=s.theme;

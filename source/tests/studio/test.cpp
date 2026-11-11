@@ -9,8 +9,9 @@
 #include <string>
 int main(){
  studio::Synth s;
- assert(studio::model_count()==112);
+ assert(studio::model_count()==116);
  assert(std::string(studio::model_name(0))=="P VCF"&&std::string(studio::model_name(81))=="E OMINOUS");
+ assert(std::string(studio::model_name(111))=="S WAVEFOLD");
  assert(studio::preset_code(81,3)==327&&studio::preset_code(0,4)==((1<<29)|4));
  for(int model=0;model<studio::model_count();++model)for(int variant=0;variant<studio::variation_count();++variant){
   const int c=studio::preset_code(model,variant);
@@ -40,6 +41,49 @@ int main(){
   for(int i=0;i<frames;++i){const float v=s.next(hz,rate);if(i>skip&&previous<=0&&v>0)++crossings;previous=v;}
   const float measured=crossings*rate/(frames-skip);assert(std::fabs(measured-hz)<3.f);
  }
+ // Extreme forward and backward orbit sweeps cross several octave wraps.
+ // Keep phase through the wrap and leave headroom even with no root anchor.
+ for(int rate:{0,255}) {
+  s.reset();
+  s.start(studio::custom_code(studio::kOctaveOrbitModel,rate,255,0));
+  float previous=0.f;
+  double energy=0;
+  for(int i=0;i<96000;++i){
+   const float value=s.next(110.f,48000.f);
+   assert(std::isfinite(value)&&std::fabs(value)<.65f);
+   if(i>0)assert(std::fabs(value-previous)<.16f);
+   energy+=double(value)*value;
+   previous=value;
+  }
+  assert(energy/96000>.005);
+ }
+ std::puts("PASS Octave Orbit forward/backward wrap continuity and headroom");
+ // All three motions make distinct, repeatable recordings from fresh voices.
+ // Changing the scale affects subsequent impacts and leaves onset/root intact.
+ std::vector<float> previousGravity;
+ for(int model=studio::kGravityFirstModel;model<studio::model_count();++model){
+  assert(studio::synth_param_count(model)==3);
+  assert(std::string(studio::synth_param_name(model,2))=="Pitch scale");
+  const int code=studio::custom_code(model,255,185,255);
+  std::vector<float> take(64000);
+  s.reset();s.start(code);
+  for(float& sample:take){sample=s.next(185.f,48000.f);assert(std::isfinite(sample)&&std::fabs(sample)<.69f);}
+  assert(take!=previousGravity);
+  s.reset();s.start(code);
+  for(float sample:take)assert(s.next(185.f,48000.f)==sample);
+  s.reset();s.start(code);
+  auto params=studio::default_synth_params();params[2]=255;
+  s.update(code,params);
+  double difference=0;
+  for(size_t i=0;i<take.size();++i){
+   const float sample=s.next(185.f,48000.f);
+   if(i<2048)assert(sample==take[i]);
+   difference+=std::abs(sample-take[i]);
+  }
+  assert(difference>5.);
+  previousGravity=std::move(take);
+ }
+ std::puts("PASS distinct Gravity motions, deterministic replay, scale-quantized variation and safe output");
  // A damped/dispersive Karplus loop must compensate its filter delay, rather than playing
  // progressively flatter as the brightness/dispersion preset changes.
  for(float hz:{220.f,440.f})for(int variant=0;variant<studio::variation_count();++variant){

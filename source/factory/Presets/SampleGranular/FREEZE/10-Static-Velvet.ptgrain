@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Static Velvet",
+  "parameters": {
+    "attackMs": 120.0,
+    "densityHz": 12.0,
+    "freeze": true,
+    "level": 0.4399999976158142,
+    "panSpread": 0.7300000190734863,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.03999999910593033,
+    "position": 0.5300000309944153,
+    "releaseMs": 2300.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 501.0,
+    "sprayMs": 21.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

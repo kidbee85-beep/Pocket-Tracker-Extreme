@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "High Sixth",
+  "parameters": {
+    "attackMs": 60.0,
+    "densityHz": 23.0,
+    "freeze": false,
+    "level": 0.3700000047683716,
+    "panSpread": 0.6200000047683716,
+    "pitchSemitones": 21.0,
+    "pitchSpraySemitones": 0.15000000596046448,
+    "position": 0.7050000429153442,
+    "releaseMs": 800.0,
+    "reverseProbability": 0.20000000298023224,
+    "scanSpeed": 0.10000000149011612,
+    "sizeMs": 272.0,
+    "sprayMs": 0.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

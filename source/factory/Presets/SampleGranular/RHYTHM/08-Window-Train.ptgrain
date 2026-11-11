@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Window Train",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 64.0,
+    "freeze": false,
+    "level": 0.5,
+    "panSpread": 0.3799999952316284,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.0,
+    "position": 0.4350000023841858,
+    "releaseMs": 100.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 1.0,
+    "sizeMs": 40.0,
+    "sprayMs": 28.0,
+    "windowShape": 0.6000000238418579
+  },
+  "version": 1
+}

@@ -124,22 +124,28 @@ int main(int argc,char** argv){
     evicted.sourceImportedPath=(out/"no-longer-present.wav").string();action(evicted,host,*engine,fs);
     assert(evicted.pendingSampleEditor&&fs.file_exists(evicted.sourceImportedPath)&&bytes(evicted.sourceImportedPath)==bytes(file));
 
-    // The eighth page participates in wrap navigation. A held edit key must not cause the release
+    // Sources participates in the seven musical tabs, skipping Settings-only Appearance.
+    // A held edit key must not cause the release
     // to execute a source command or a synth action after changing pages.
-    AppState navigation;navigation.project=&host.edit_project();navigation.studioOpen=true;navigation.studioTab=6;
+    AppState navigation;navigation.project=&host.edit_project();navigation.studioOpen=true;navigation.studioTab=5;
     navigation.sourceSampler.backend=&backend;backend.snapshot="{\"providers\":[{\"id\":\"archive\",\"available\":true}]}";
     ButtonMods page;page.b=true;
     studio_button({Button::DPAD_RIGHT,ButtonAction::PRESSED,page},navigation,host,*engine,fs);assert(navigation.studioTab==7);
     studio_button({Button::B,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);assert(navigation.studioOpen);
+    ButtonMods select;select.select=true;
+    studio_button({Button::SELECT,ButtonAction::PRESSED,select},navigation,host,*engine,fs);assert(!navigation.studioHelp);
     studio_button({Button::SELECT,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);assert(navigation.studioHelp&&!navigation.sourceSampler.showHelp&&navigation.studioTab==7);
+    studio_button({Button::B,ButtonAction::PRESSED,page},navigation,host,*engine,fs);
     studio_button({Button::B,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);assert(!navigation.studioHelp&&!navigation.sourceSampler.showHelp&&navigation.studioOpen);
-    page.a=true;studio_button({Button::DPAD_RIGHT,ButtonAction::PRESSED,page},navigation,host,*engine,fs);assert(navigation.studioTab==0);
+    page.a=true;studio_button({Button::DPAD_RIGHT,ButtonAction::PRESSED,page},navigation,host,*engine,fs);assert(navigation.studioTab==7);
     const auto version=navigation.projectVersion;
     studio_button({Button::A,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);assert(navigation.projectVersion==version);
+    studio_button({Button::B,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);assert(navigation.studioOpen);
+    page.a=false;studio_button({Button::DPAD_RIGHT,ButtonAction::PRESSED,page},navigation,host,*engine,fs);assert(navigation.studioTab==0);
     studio_button({Button::B,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);assert(navigation.studioOpen);
     page.a=false;studio_button({Button::DPAD_LEFT,ButtonAction::PRESSED,page},navigation,host,*engine,fs);assert(navigation.studioTab==7);
     studio_button({Button::B,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);
     studio_button({Button::B,ButtonAction::RELEASED,{}},navigation,host,*engine,fs);assert(!navigation.studioOpen);
     assert(!backend.actions.empty());
-    std::puts("PASS: source page import/editor handoff, fresh instrument, provenance failure/retry, cached/stale destinations, eight-page navigation and help");
+    std::puts("PASS: source page import/editor handoff, fresh instrument, provenance failure/retry, cached/stale destinations, seven music tabs and settings-only Appearance");
 }

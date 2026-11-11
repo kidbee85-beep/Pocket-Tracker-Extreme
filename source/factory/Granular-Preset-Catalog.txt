@@ -1,0 +1,150 @@
+TrackWerk | Sample Granular Factory Library
+128 settings presets, 8 categories. No samples are embedded or required at install.
+In Synth, select Sample Granular, load your source, and use the Preset row.
+A + Up/Down changes category; A + Left/Right changes preset.
+Factory settings presets retain the currently loaded sample and the other instrument settings.
+The complete .ptgrain format may explicitly reference a sample beneath the preset folder.
+
+Atmosphere [ATMOS]
+  01 Velvet Canopy
+  02 Glass Loom
+  03 Hush Field
+  04 Soft Assembly
+  05 Paper Aurora
+  06 Low Orbit
+  07 Moss Circuit
+  08 Dawn Raster
+  09 Silver Veil
+  10 Warm Horizon
+  11 Quiet Vectors
+  12 Cloud Harbour
+  13 Slow Bloom
+  14 Linen Signal
+  15 Moon Weave
+  16 Endless Room
+
+Frozen Spaces [FREEZE]
+  01 Held Smoke
+  02 Glass Suspension
+  03 Still Water
+  04 Locked Mist
+  05 Frozen Prism
+  06 Amber Memory
+  07 Fixed Horizon
+  08 Violet Hold
+  09 Paused Garden
+  10 Static Velvet
+  11 Crystal Breath
+  12 Suspended Dust
+  13 Deep Frame
+  14 Quiet Orbit
+  15 Last Reflection
+  16 Infinite Postcard
+
+Dust / Tape [TAPE]
+  01 Dust Reel
+  02 Bent Shellac
+  03 Flutter Pocket
+  04 Worn Cassette
+  05 Loose Capstan
+  06 Needle Haze
+  07 Faded Print
+  08 Spliced Air
+  09 Warm Dropout
+  10 Secondhand Grain
+  11 Dusty Fifth
+  12 VHS Flecks
+  13 Reel Shadow
+  14 Old Copper
+  15 Slow Spool
+  16 Tape Weather
+
+Pitch Layers [PITCH]
+  01 Lower Octave
+  02 Low Fifth
+  03 Root Halo
+  04 Fifth Mist
+  05 Octave Bloom
+  06 Upper Fifth
+  07 Two Octaves
+  08 Sub Cloud
+  09 Fourth Light
+  10 High Fourth
+  11 Second Drift
+  12 High Second
+  13 Sixth Glass
+  14 High Sixth
+  15 Falling Fourth
+  16 Minor Third
+
+Rhythmic Grains [RHYTHM]
+  01 Woven Pulse
+  02 Grain Ladder
+  03 Click Lattice
+  04 Pocket Motor
+  05 Small Ratchet
+  06 Dotted Thread
+  07 Tight Relay
+  08 Window Train
+  09 Pulse Braids
+  10 Tumbling Steps
+  11 Mechanical Rain
+  12 Busy Loom
+  13 Sparse Ticks
+  14 Signal Patches
+  15 Dry Carousel
+  16 Raster Groove
+
+Micro Percussion [DRUM]
+  01 Needle Click
+  02 Tiny Knocker
+  03 Paper Hat
+  04 Metal Speck
+  05 Wood Packet
+  06 Dust Snare
+  07 Soft Rim Grain
+  08 Wire Tap
+  09 Dry Shaker
+  10 Micro Conga
+  11 Glass Tick
+  12 Stone Chip
+  13 Brush Fragments
+  14 Pixel Clap
+  15 Loose Bolts
+  16 Grain Tom
+
+Stereo Drift [STEREO]
+  01 Open Wings
+  02 Left Bank
+  03 Right Current
+  04 Sideways Haze
+  05 Wide Copper
+  06 Floating Pair
+  07 Twin Horizon
+  08 Drifting Rails
+  09 Tilted Room
+  10 Orbit Threads
+  11 Pan Garden
+  12 Distant Edges
+  13 Passing Lights
+  14 Stereo Ribbons
+  15 Crossing Dust
+  16 Broad Sky
+
+Glitch Motion [GLITCH]
+  01 Buffer Confetti
+  02 Reverse Sparks
+  03 Broken Shuttle
+  04 Packet Storm
+  05 Scattered Tape
+  06 Staccato Glass
+  07 Xeno Mosaic
+  08 Wild Raster
+  09 Cut-Up Weather
+  10 Byte Sprinkles
+  11 Backward Rain
+  12 Short Circuit
+  13 Pixel Swerve
+  14 Lost Reels
+  15 Fractured Air
+  16 Mirror Fragments

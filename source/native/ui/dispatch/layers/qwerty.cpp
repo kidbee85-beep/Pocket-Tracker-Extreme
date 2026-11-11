@@ -27,8 +27,8 @@ GestureResult InputDispatcher::qwerty_layer(Gesture g) {
 
         case Gesture::B:      delete_char(k);  break;
         case Gesture::START:  qwerty_apply();  break;
-        // B backspaces, so SELECT is the quick way to abandon a rename.
-        case Gesture::SELECT: qwerty_cancel(); break;
+        // B backspaces. SELECT+B abandons the edit, while bare SELECT opens help.
+        case Gesture::SELECT_B: qwerty_cancel(); break;
 
         // R+UP/DOWN switch the layout; R+LEFT/RIGHT move the text cursor.
         case Gesture::R_UP:    k.layout = 0; clamp_col(k); break;

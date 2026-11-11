@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Floating Pair",
+  "parameters": {
+    "attackMs": 80.0,
+    "densityHz": 10.0,
+    "freeze": false,
+    "level": 0.36000001430511475,
+    "panSpread": 0.800000011920929,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.4000000059604645,
+    "position": 0.3449999988079071,
+    "releaseMs": 700.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": -0.14999999105930328,
+    "sizeMs": 260.0,
+    "sprayMs": 50.0,
+    "windowShape": 0.75
+  },
+  "version": 1
+}

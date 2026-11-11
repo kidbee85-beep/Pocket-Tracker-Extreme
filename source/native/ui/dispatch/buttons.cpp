@@ -14,27 +14,25 @@ void InputDispatcher::on_button_a() { route(Gesture::A); }
 void InputDispatcher::on_button_b() { route(Gesture::B); }
 
 void InputDispatcher::on_select() {
-    if (route(Gesture::SELECT)) return;
-    // ⚠️ Bare SELECT is HELP, and arrives on the RELEASE (ui/button_mapper.h): on the browser SELECT is a
-    // modifier, and any other press cancels this. FULL opens the overlay; SHORT toggles the compact
-    // panel, which has no room on the FILE BROWSER.
-    switch (static_cast<HelpMode>(s_.settings.helpMode)) {
-        case HelpMode::OFF:
-            return;
-        case HelpMode::FULL:
-            s_.helpOpen = false;
-            s_.helpFull = true;
-            return;
-        case HelpMode::SHORT:
-            if (on_browser()) return;
-            s_.helpOpen = !s_.helpOpen;
-            return;
+    if (load_running()) return;
+    if (local_sample_range_open()) {
+        route(Gesture::SELECT);
+        return;
+    }
+    s_.helpFull = static_cast<HelpMode>(s_.settings.helpMode) == HelpMode::FULL;
+    s_.helpOpen = !s_.helpFull;
+}
+
+void InputDispatcher::on_help_button(Button button) {
+    if (button == Button::A) {
+        s_.helpFull = !s_.helpFull;
+        s_.helpOpen = !s_.helpFull;
+    } else if (button == Button::B || button == Button::SELECT) {
+        on_help_dismiss();
     }
 }
 
 void InputDispatcher::on_help_dismiss() {
-    // ⚠️ The compact panel closes and the press still does its job; the FULL overlay's press is consumed
-    // by the mapper. Both flags go, so the two are never up together.
     s_.helpOpen = false;
     s_.helpFull = false;
 }

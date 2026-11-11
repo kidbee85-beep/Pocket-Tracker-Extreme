@@ -31,9 +31,10 @@ enum class SettingsRow {
     METRONOME  = 16,   // ON / OFF, + VOL
     HELP       = 17,   // OFF / SHORT / FULL
     AUDIO_OUT  = 18,   // the output device (Windows)
+    APPEARANCE = 19,   // global palette/material/typeface; stable previous IDs retained
 };
 
-inline constexpr int SETTINGS_ROW_COUNT = 19;
+inline constexpr int SETTINGS_ROW_COUNT = 20;
 
 // The order rows are drawn and walked; every SettingsRow exactly once.
 inline constexpr SettingsRow SETTINGS_DISPLAY_ORDER[SETTINGS_ROW_COUNT] = {
@@ -43,7 +44,7 @@ inline constexpr SettingsRow SETTINGS_DISPLAY_ORDER[SETTINGS_ROW_COUNT] = {
     SettingsRow::METRONOME,
     SettingsRow::KB_INSERT, SettingsRow::CURSOR,    SettingsRow::NAV,
     SettingsRow::FOLDER,    SettingsRow::NOTE_PREV,
-    SettingsRow::VISUALIZER, SettingsRow::HELP,     SettingsRow::THEME,
+    SettingsRow::VISUALIZER, SettingsRow::HELP, SettingsRow::APPEARANCE, SettingsRow::THEME,
     SettingsRow::TEMPLATE,
     SettingsRow::RESUME,    SettingsRow::TRACE,
 };

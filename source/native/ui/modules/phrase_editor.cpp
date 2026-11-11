@@ -2,11 +2,166 @@
 
 #include "songcore/scales.h"
 #include "ui/helpers.h"
+#include "ui/modules/oscilloscope.h"
+#include "ui/step_grid.h"
+
+#include <algorithm>
+#include <iterator>
 
 namespace pt::ui {
 
 using songcore::Note;
 using songcore::PhraseStep;
+
+namespace {
+bool same_rows(const PhraseEditHistory::Rows& a, const PhraseEditHistory::Rows& b) {
+    return std::equal(a.begin(), a.end(), b.begin(), [](const PhraseStep& x, const PhraseStep& y) {
+        return x.note == y.note && x.instrument == y.instrument && x.volume == y.volume &&
+               x.fx1Type == y.fx1Type && x.fx1Value == y.fx1Value &&
+               x.fx2Type == y.fx2Type && x.fx2Value == y.fx2Value &&
+               x.fx3Type == y.fx3Type && x.fx3Value == y.fx3Value;
+    });
+}
+
+int overview_pitch(const Note& note) {
+    if (note.pitch < 0 || note.pitch > 11 || note.octave < -1 || note.octave > 9) return -1;
+    return songcore::note_to_midi(note);
+}
+} // namespace
+
+std::optional<PhraseEditHistory::Rows> PhraseEditHistory::snapshot(const songcore::Phrase& phrase) {
+    if (phrase.steps.size() != songcore::PHRASE_ROWS) return std::nullopt;
+    Rows rows;
+    std::copy(phrase.steps.begin(), phrase.steps.end(), rows.begin());
+    return rows;
+}
+
+void PhraseEditHistory::record(const Rows& before, const songcore::Phrase& phrase) {
+    const auto after = snapshot(phrase);
+    if (!after || same_rows(before, *after)) return;
+    if (phraseId_ != phrase.id) clear();
+    if (size_) {
+        const auto& expected = cursor_ ? edits_[cursor_ - 1].after : edits_[0].before;
+        if (!same_rows(before, expected)) clear();
+    }
+    phraseId_ = phrase.id;
+    if (cursor_ == CAPACITY) {
+        std::move(edits_.begin() + 1, edits_.end(), edits_.begin());
+        --cursor_;
+    }
+    edits_[cursor_++] = {before, *after};
+    size_ = cursor_;
+}
+
+int PhraseEditHistory::available(int phraseId, bool redo) const {
+    if (phraseId != phraseId_) return 0;
+    return redo ? size_ - cursor_ : cursor_;
+}
+
+PhraseEditHistory::Result PhraseEditHistory::apply(songcore::Phrase& phrase, bool redo) {
+    if (!available(phrase.id, redo)) return Result::EMPTY;
+    const auto current = snapshot(phrase);
+    const auto& edit = edits_[cursor_ - (redo ? 0 : 1)];
+    const auto& expected = redo ? edit.before : edit.after;
+    if (!current || !same_rows(*current, expected)) {
+        clear();
+        return Result::DIVERGED;
+    }
+    const auto& restored = redo ? edit.after : edit.before;
+    std::copy(restored.begin(), restored.end(), phrase.steps.begin());
+    cursor_ += redo ? 1 : -1;
+    return Result::APPLIED;
+}
+
+void PhraseEditHistory::clear() {
+    phraseId_ = -1;
+    cursor_ = size_ = 0;
+}
+
+void PhraseEditorModule::draw_overview(Canvas& c, int x, int y, const PhraseOverviewState& s) const {
+    const Theme& t = s.theme;
+    constexpr int width = OscilloscopeModule::WIDTH, height = OscilloscopeModule::HEIGHT;
+    constexpr int slotWidth = 28, slots = songcore::PHRASE_ROWS;
+    constexpr int plotWidth = slots * slotWidth;
+    const int left = x + 10, top = y + 28, baseline = y + 61;
+    const bool velocity = s.view == PhraseOverview::VELOCITY;
+    c.panel_rect(x, y, width, height, t.vizBackground, with_alpha(t.textParam,.18f), 4);
+
+    std::array<int, slots> notes;
+    notes.fill(-1);
+    std::array<int, slots> playing{};
+    const int count = static_cast<int>(std::min<size_t>(slots, s.phrase.steps.size()));
+    int low = 132, high = -1;
+    for (int step = 0; step < count; ++step) {
+        notes[step] = overview_pitch(s.phrase.steps[step].note);
+        if (notes[step] < 0) continue;
+        low = std::min(low, notes[step]);
+        high = std::max(high, notes[step]);
+    }
+    for (const auto& head : s.playheads)
+        if (head.phraseId == s.phrase.id && head.step >= 0 && head.step < slots) ++playing[head.step];
+    const int hop = songcore::phrase_certain_hop_row(s.phrase);
+    const int midpoint = (low + high) / 2;
+    // Give a repeated note or a very narrow melody some headroom in the same viewport.
+    const int range = std::max(12, high - low);
+    const int bottomPitch = range == 12 ? midpoint - 6 : low;
+
+    for (int step = 0; step < slots; ++step) {
+        const int col = left + step * slotWidth;
+        const int mid = col + slotWidth / 2;
+        if ((step / 4) % 2 == 0)
+            c.fill_rect(col, top, slotWidth, baseline - top + 2, with_alpha(t.rowEvery4th,.52f));
+        if (s.selectedFirst >= 0 && step >= s.selectedFirst && step <= s.selectedLast)
+            c.fill_rect(col, top, slotWidth, baseline - top + 2, with_alpha(t.rowSelection,.22f));
+        if (step % 4 == 0)
+            c.fill_rect(col, top, 1, baseline - top + 2, with_alpha(t.textParam,.48f));
+        if (playing[step]) {
+            c.fill_rect(mid - 3, top, 7, 2, t.textPlayhead);
+            c.fill_rect(mid - 1, top + 2, 3, std::min(playing[step] + 1, 4), t.textPlayhead);
+        }
+    }
+    for (int guide : {top + 9, top + 17, top + 25, baseline + 1})
+        c.fill_rect(left, guide, plotWidth, 1, with_alpha(t.textParam,.22f));
+
+    int previousX = -1, previousY = -1;
+    for (int step = 0; step < slots; ++step) {
+        const int mid = left + step * slotWidth + slotWidth / 2;
+        const bool reached = hop < 0 || step < hop;
+        const Argb ink = reached ? t.vizWave : with_alpha(t.vizWave,.36f);
+        if (notes[step] < 0) {
+            if (step < count && songcore::note_is_off(s.phrase.steps[step].note)) {
+                c.line(mid - 3, baseline - 5, mid + 3, baseline, with_alpha(t.textTitle,reached?.88f:.38f));
+                c.line(mid + 3, baseline - 5, mid - 3, baseline, with_alpha(t.textTitle,reached?.88f:.38f));
+            } else {
+                c.fill_rect(mid - 1, baseline, 3, 1, with_alpha(t.textEmpty,.6f));
+            }
+            previousX = -1;
+        } else if (velocity) {
+            const int value = std::clamp(s.phrase.steps[step].volume, 0, 127);
+            const int bar = std::max(2, value * 24 / 127);
+            c.fill_rect(mid - 6, baseline - bar + 1, 13, bar, ink);
+        } else {
+            const int point = baseline - 3 - std::clamp(notes[step] - bottomPitch, 0, range) * 22 / range;
+            if (reached && previousX >= 0)
+                c.line(previousX, previousY, mid, point, with_alpha(t.vizWave,.48f));
+            c.fill_rect(mid - 5, point - 1, 11, 3, ink);
+            previousX = reached ? mid : -1;
+            previousY = point;
+        }
+    }
+
+    const int cursor = std::clamp(s.cursorRow, 0, slots - 1);
+    c.stroke_rect(left + cursor * slotWidth + 1, top + 6, slotWidth - 2, baseline - top - 3, t.rowCursor, 2);
+    std::string readout = velocity ? "VELOCITY" : "NOTES";
+    readout += "  " + hex1(cursor) + "  ";
+    if (cursor < count && songcore::note_is_off(s.phrase.steps[cursor].note)) readout += "OFF";
+    else if (notes[cursor] >= 0)
+        readout += velocity ? hex2(std::clamp(s.phrase.steps[cursor].volume,0,127))
+                            : songcore::note_name(s.phrase.steps[cursor].note);
+    else readout += "---";
+    // Status and the two clipboard/selection lines retain the upper portion of the strip.
+    c.draw_label(Canvas::clip_label(readout,140,12), x + width - 150, y + 53, t.textValue,12);
+}
 
 void PhraseEditorModule::draw(Canvas& c, int x, int y, const PhraseEditorState& s) const {
     const Theme& t = s.theme;
@@ -38,15 +193,16 @@ void PhraseEditorModule::draw(Canvas& c, int x, int y, const PhraseEditorState& 
         c.draw_text(via, x + 190, rowY, t.textParam, CHAR_SPACING, FONT_SCALE);
     }
 
-    // The header lights for the cursor's column, the row number for its row.
-    rowY = y + ROW_HEIGHT + 14 + TEXT_PADDING;
+    // Keep the fixed grid for cells. The proportional labels fit full field names in the same columns.
+    rowY = y + ROW_HEIGHT + 14 + TEXT_PADDING + 1;
     const int cc = s.cursorColumn;
-    c.draw_text("N",   noteX,    rowY, header_color(cc, 1, 1, t), CHAR_SPACING, FONT_SCALE);
-    c.draw_text("V",   volX,     rowY, header_color(cc, 2, 2, t), CHAR_SPACING, FONT_SCALE);
-    c.draw_text("I",   instX,    rowY, header_color(cc, 3, 3, t), CHAR_SPACING, FONT_SCALE);
-    c.draw_text("FX1", fx1NameX, rowY, header_color(cc, 4, 5, t), CHAR_SPACING, FONT_SCALE);
-    c.draw_text("FX2", fx2NameX, rowY, header_color(cc, 6, 7, t), CHAR_SPACING, FONT_SCALE);
-    c.draw_text("FX3", fx3NameX, rowY, header_color(cc, 8, 9, t), CHAR_SPACING, FONT_SCALE);
+    c.draw_label("STEP", stepX, rowY, header_color(cc, 0, 0, t));
+    c.draw_label("NOTE", noteX, rowY, header_color(cc, 1, 1, t));
+    c.draw_label("VOL", volX, rowY, header_color(cc, 2, 2, t));
+    c.draw_label("INST", instX, rowY, header_color(cc, 3, 3, t));
+    c.draw_label("FX 1", fx1NameX, rowY, header_color(cc, 4, 5, t));
+    c.draw_label("FX 2", fx2NameX, rowY, header_color(cc, 6, 7, t));
+    c.draw_label("FX 3", fx3NameX, rowY, header_color(cc, 8, 9, t));
 
     // An AUS/AUF cell no ramp uses draws dimmed — the emitter's own pairing over every chain row that
     // plays this phrase, asked once per draw.
@@ -76,15 +232,25 @@ void PhraseEditorModule::draw_row(Canvas& c, int x, int y, int index, const Phra
     const int dataRowY = y + ROW_HEIGHT + 14 + ROW_HEIGHT + (index * ROW_HEIGHT);
 
     c.fill_rect(x, dataRowY, WIDTH, ROW_HEIGHT, row_bg_color(index, t));
+    draw_step_grid(c, t, t.phraseGrid, index, x, dataRowY, WIDTH, ROW_HEIGHT,
+                   {noteX - 6, fx1NameX - 8, fx2NameX - 8, fx3NameX - 8});
+    if (index == s.cursorRow)
+        c.fill_rect(x + 2, dataRowY + 4, 3, ROW_HEIGHT - 8, t.rowCursor);
 
     const int textY = dataRowY + TEXT_PADDING;
 
     // Left to right: RowCells joins a selected run across the gutters only in layout order.
     RowCells cells(c, textY, t);
 
-    // Note-emptiness dims NOTE/VOL/INST; fx-emptiness its own pair.
     const auto cur = [&](int col) { return index == s.cursorRow && s.cursorColumn == col; };
     const auto sel = [&](int col) { return s.selectionMode && s.isCellSelected(index, col); };
+    const auto draw_cell = [&](std::string value, int cellX, int col, bool dim, Argb ink,
+                               const char* placeholder = nullptr) {
+        const bool focused = cur(col), selected = sel(col);
+        // The placeholder occupies the original cell width. Selection still joins across gutters.
+        if (placeholder && !focused && !selected) value = placeholder;
+        cells.cell(value, cellX, focused, selected, dim, ink);
+    };
 
     // Every 4th row number is brighter (a beat). Column 0 is a real cursor position.
     const Argb stepColor = (index == s.cursorRow) ? cursor_mark_ink(t)
@@ -92,16 +258,21 @@ void PhraseEditorModule::draw_row(Canvas& c, int x, int y, int index, const Phra
                                                          : t.textEmpty;
     cells.cell(hex1(index), stepX, cur(0), /*is_selected=*/false, /*is_empty=*/false, stepColor);
 
-    // The playhead marker, in the gutter beside the row number.
-    for (const TrackPlayhead& ph : s.playheads)
-        if (ph.phraseId == s.phrase.id && ph.step == index) draw_playhead(c, stepX + CHAR_W, textY, t);
+    // Playback uses an arrow beside STEP; the edit cursor has a tick at the far left and a cell fill.
+    if (std::any_of(std::begin(s.playheads), std::end(s.playheads), [&](const TrackPlayhead& ph) {
+            return ph.phraseId == s.phrase.id && ph.step == index;
+        }))
+        draw_playhead(c, stepX + CHAR_W, textY, t);
 
     // An OFF plays nothing: its V and I dim.
-    const bool noteEmpty = cutOff || (step.note == Note::EMPTY());
-    const bool noNote    = cutOff || !songcore::step_has_note(step);
-    cells.cell(note_name(step.note),  noteX, cur(1), sel(1), noteEmpty, t.textValue);
-    cells.cell(hex2(step.volume),     volX,  cur(2), sel(2), noNote, t.textParam);
-    cells.cell(hex2(step.instrument), instX, cur(3), sel(3), noNote, t.textParam);
+    const PhraseStep defaults;
+    const bool emptyNote = step.note == Note::EMPTY();
+    const bool hasNote = songcore::step_has_note(step);
+    draw_cell(note_name(step.note), noteX, 1, cutOff || emptyNote, t.textValue, emptyNote ? " - " : nullptr);
+    draw_cell(hex2(step.volume), volX, 2, cutOff || !hasNote, t.textParam,
+              !hasNote && step.volume == defaults.volume ? "  " : nullptr);
+    draw_cell(hex2(step.instrument), instX, 3, cutOff || !hasNote, t.textParam,
+              !hasNote && step.instrument == defaults.instrument ? "  " : nullptr);
 
     // A pair dims when unset, an AUS/AUF when no ramp uses it.
     const auto fxDim = [&](int type, int slot) {
@@ -109,15 +280,19 @@ void PhraseEditorModule::draw_row(Canvas& c, int x, int y, int index, const Phra
         return type == 0x00 || !rampCells.active(type, index, slot);
     };
 
-    const bool fx1Dim = fxDim(step.fx1Type, 1);
-    cells.cell(effect_name(step.fx1Type), fx1NameX,  cur(4), sel(4), fx1Dim, t.textValue);
-    cells.cell(hex2(step.fx1Value),       fx1ValueX, cur(5), sel(5), fx1Dim, t.textParam);
-    const bool fx2Dim = fxDim(step.fx2Type, 2);
-    cells.cell(effect_name(step.fx2Type), fx2NameX,  cur(6), sel(6), fx2Dim, t.textValue);
-    cells.cell(hex2(step.fx2Value),       fx2ValueX, cur(7), sel(7), fx2Dim, t.textParam);
-    const bool fx3Dim = fxDim(step.fx3Type, 3);
-    cells.cell(effect_name(step.fx3Type), fx3NameX,  cur(8), sel(8), fx3Dim, t.textValue);
-    cells.cell(hex2(step.fx3Value),       fx3ValueX, cur(9), sel(9), fx3Dim, t.textParam);
+    const auto draw_fx = [&](int slot, int nameX, int valueX) {
+        const int type = songcore::step_fx_type(step, slot);
+        const int value = songcore::step_fx_value(step, slot);
+        const int typeColumn = 2 + slot * 2;
+        const bool empty = type == songcore::FX_NONE;
+        const bool dim = fxDim(type, slot);
+        draw_cell(effect_name(type), nameX, typeColumn, dim, t.textValue, empty ? "   " : nullptr);
+        draw_cell(hex2(value), valueX, typeColumn + 1, dim, t.textParam,
+                  empty && value == 0 ? "  " : nullptr);
+    };
+    draw_fx(1, fx1NameX, fx1ValueX);
+    draw_fx(2, fx2NameX, fx2ValueX);
+    draw_fx(3, fx3NameX, fx3ValueX);
 }
 
 CursorContext PhraseEditorModule::cursor_context(const PhraseEditorState& s) const {

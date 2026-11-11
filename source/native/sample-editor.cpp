@@ -51,6 +51,18 @@ void AudioEngine::getSampleDataRight(int id, float* out) {
     std::memcpy(out, samplesRight[id], sampleLengths[id] * sizeof(float));
 }
 
+bool AudioEngine::copySampleRegion(int id, int first, int end, float* left, float* right) const {
+    if (id < 0 || id >= 256 || !samples[id] || first < 0 || end <= first || end > sampleLengths[id])
+        return false;
+    const size_t bytes = static_cast<size_t>(end - first) * sizeof(float);
+    if (left) std::memcpy(left, samples[id] + first, bytes);
+    if (right) {
+        const float* channel = samplesRight[id] ? samplesRight[id] : samples[id];
+        std::memcpy(right, channel + first, bytes);
+    }
+    return true;
+}
+
 void AudioEngine::getSampleWaveformRangeSource(int id, int startFrame, int endFrame, float* out, int numBins, int channel) {
     if (id < 0 || id >= 256 || !samples[id] || numBins <= 0) {
         for (int i = 0; i < numBins * 2; i++) out[i] = 0.0f;
@@ -107,26 +119,148 @@ float AudioEngine::getSamplePlaybackPosition(int id) {
     return -1.0f;
 }
 
-void AudioEngine::normalizeSample(int id, int startFrame, int endFrame) {
-    if (id < 0 || id >= 256 || !samples[id]) return;
-    // In place: no voice stop, but the lock, so no half-edited block plays. Same below.
-    std::lock_guard<std::mutex> lock(sampleEditMutex);
+float AudioEngine::samplePeak(int id, int startFrame, int endFrame) const {
+    if (id < 0 || id >= 256 || !samples[id]) return 0.f;
     startFrame = std::max(0, startFrame);
     endFrame   = std::min(sampleLengths[id].load(), endFrame);
-    if (startFrame >= endFrame) return;
-    float* bufR = samplesRight[id];
-    // One peak over both channels keeps the stereo image.
+    const float* bufR = samplesRight[id];
     float peak = 0.0f;
     for (int i = startFrame; i < endFrame; i++) {
-        float v = std::abs(samples[id][i]);
-        if (v > peak) peak = v;
-        if (bufR) { float r = std::abs(bufR[i]); if (r > peak) peak = r; }
+        const float left = samples[id][i];
+        if (std::isfinite(left)) peak = std::max(peak, std::abs(left));
+        if (bufR && std::isfinite(bufR[i])) peak = std::max(peak, std::abs(bufR[i]));
     }
-    if (peak < 0.0001f) return;
-    float gain = 1.0f / peak;
+    return peak;
+}
+
+std::pair<int, int> AudioEngine::sampleLevelSourceRange(int id, int first, int end) const {
+    const int length = originalSampleLengths[id];
+    if (!length) return {first, end};
+    const int rate = sampleLevel[id].rate;
+    return {
+        static_cast<int>(std::min<int64_t>(length, int64_t(first) * rate)),
+        end == sampleLengths[id].load()
+            ? length : static_cast<int>(std::min<int64_t>(length, int64_t(end) * rate))
+    };
+}
+
+float AudioEngine::rateCacheValue(int id, bool right, int frame) const {
+    if (originalSamplesF[id]) return (right ? originalSamplesRightF[id] : originalSamplesF[id])[frame];
+    return cacheI16ToF32((right ? originalSamplesRight[id] : originalSamples[id])[frame]);
+}
+
+float AudioEngine::sampleLevelPeak(int id, int first, int end) const {
+    float peak = samplePeak(id, first, end);
+    if (id < 0 || id >= 256 || originalSampleLengths[id] <= 0) return peak;
+    first = std::max(0, first);
+    end = std::min(sampleLengths[id].load(), end);
+    if (end <= first) return peak;
+    const auto [sourceFirst, sourceEnd] = sampleLevelSourceRange(id, first, end);
+    const bool right = originalSamplesRightF[id] || originalSamplesRight[id];
+    for (int frame = sourceFirst; frame < sourceEnd; ++frame) {
+        const float l = rateCacheValue(id, false, frame);
+        if (std::isfinite(l)) peak = std::max(peak, std::abs(l));
+        if (right) {
+            const float r = rateCacheValue(id, true, frame);
+            if (std::isfinite(r)) peak = std::max(peak, std::abs(r));
+        }
+    }
+    return peak;
+}
+
+bool AudioEngine::editSampleLevel(int id, int first, int end, float factor) {
+    if (id < 0 || id >= 256 || !std::isfinite(factor) || factor <= 0.f) return false;
+    std::lock_guard<std::mutex> lock(sampleEditMutex);
+    const int activeLength = sampleLengths[id];
+    if (!samples[id] || first < 0 || first >= end || end > activeLength) return false;
+    const bool cached = originalSampleLengths[id] > 0;
+    const bool activeStereo = samplesRight[id] != nullptr;
+    const bool sourceStereo = cached ? (originalSamplesRightF[id] || originalSamplesRight[id]) : activeStereo;
+    const auto [sourceFirst, sourceEnd] = sampleLevelSourceRange(id, first, end);
+    const int sourceCount = sourceEnd - sourceFirst;
+    const int sourceLength = cached ? originalSampleLengths[id] : activeLength;
+    const bool promote = cached && originalSamples[id];
+    const int64_t bytes = (int64_t(sourceCount) * (sourceStereo ? 2 : 1) +
+                          (cached ? int64_t(end - first) * (activeStereo ? 2 : 1) : 0) +
+                          (promote ? int64_t(sourceLength) * (sourceStereo ? 2 : 1) : 0)) * sizeof(float);
+    const int64_t budget = pt::load_budget_bytes();
+    if (budget > 0 && bytes > budget) return false;
+
+    const auto allocate = [](int count) { return std::unique_ptr<float[]>(new (std::nothrow) float[count]); };
+    SampleLevelUndo undo;
+    undo.sourceLeft = allocate(sourceCount);
+    if (sourceStereo) undo.sourceRight = allocate(sourceCount);
+    if (cached) {
+        undo.activeLeft = allocate(end - first);
+        if (activeStereo) undo.activeRight = allocate(end - first);
+    }
+    auto promotedLeft = promote ? allocate(sourceLength) : nullptr;
+    auto promotedRight = promote && sourceStereo ? allocate(sourceLength) : nullptr;
+    if (!undo.sourceLeft || (sourceStereo && !undo.sourceRight) ||
+        (cached && (!undo.activeLeft || (activeStereo && !undo.activeRight))) ||
+        (promote && (!promotedLeft || (sourceStereo && !promotedRight)))) return false;
+
+    float* const activeLeft = samples[id];
+    float* const activeRight = samplesRight[id];
+    const size_t activeBytes = size_t(end - first) * sizeof(float);
+    if (cached) {
+        std::memcpy(undo.activeLeft.get(), activeLeft + first, activeBytes);
+        if (activeStereo) std::memcpy(undo.activeRight.get(), activeRight + first, activeBytes);
+        if (promote) {
+            for (int frame = 0; frame < sourceLength; ++frame) {
+                promotedLeft[frame] = rateCacheValue(id, false, frame);
+                if (sourceStereo) promotedRight[frame] = rateCacheValue(id, true, frame);
+            }
+            delete[] originalSamples[id];
+            delete[] originalSamplesRight[id];
+            originalSamples[id] = nullptr;
+            originalSamplesRight[id] = nullptr;
+            originalSamplesF[id] = promotedLeft.release();
+            originalSamplesRightF[id] = promotedRight.release();
+        }
+        float* const sourceLeft = originalSamplesF[id] + sourceFirst;
+        float* const sourceRight = sourceStereo ? originalSamplesRightF[id] + sourceFirst : nullptr;
+        for (int i = 0; i < sourceCount; ++i) {
+            undo.sourceLeft[i] = sourceLeft[i];
+            sourceLeft[i] *= factor;
+            if (sourceRight) {
+                undo.sourceRight[i] = sourceRight[i];
+                sourceRight[i] *= factor;
+            }
+        }
+    } else {
+        std::memcpy(undo.sourceLeft.get(), activeLeft + first, activeBytes);
+        if (activeStereo) std::memcpy(undo.sourceRight.get(), activeRight + first, activeBytes);
+    }
+    for (int frame = first; frame < end; ++frame) {
+        activeLeft[frame] *= factor;
+        if (activeStereo) activeRight[frame] *= factor;
+    }
+    auto& quality = sampleLevel[id];
+    undo.sourceFirst = sourceFirst;
+    undo.sourceCount = sourceCount;
+    undo.sourceLength = sourceLength;
+    undo.activeFirst = first;
+    undo.activeCount = end - first;
+    undo.activeLength = activeLength;
+    undo.rate = quality.rate;
+    undo.bits = quality.bits;
+    freeSampleUndo(id);
+    quality.undo = std::move(undo);
+    quality.preserveFloat = true;
+    return true;
+}
+
+void AudioEngine::applySampleGain(int id, int startFrame, int endFrame, float factor) {
+    if (id < 0 || id >= 256 || !samples[id] || !std::isfinite(factor) || factor <= 0.f) return;
+    // In place with one gain over both channels to keep the stereo image.
+    std::lock_guard<std::mutex> lock(sampleEditMutex);
+    startFrame = std::max(0, startFrame);
+    endFrame = std::min(sampleLengths[id].load(), endFrame);
+    float* bufR = samplesRight[id];
     for (int i = startFrame; i < endFrame; i++) {
-        samples[id][i] *= gain;
-        if (bufR) bufR[i] *= gain;
+        samples[id][i] *= factor;
+        if (bufR) bufR[i] *= factor;
     }
 }
 
@@ -254,8 +388,7 @@ bool AudioEngine::backupSample(int id) {
     std::memcpy(left.get(), samples[id], static_cast<size_t>(len) * sizeof(float));
     if (stereo) std::memcpy(right.get(), samplesRight[id], static_cast<size_t>(len) * sizeof(float));
     // Publish only after both channels are copied successfully.
-    delete[] sampleBackups[id];
-    delete[] sampleBackupsRight[id];
+    freeSampleUndo(id);
     sampleBackups[id] = left.release();
     sampleBackupsRight[id] = right.release();
     sampleBackupLengths[id] = len;
@@ -263,7 +396,12 @@ bool AudioEngine::backupSample(int id) {
 }
 
 void AudioEngine::undoSample(int id) {
-    if (id < 0 || id >= 256 || !sampleBackups[id]) return;
+    if (id < 0 || id >= 256) return;
+    if (sampleLevel[id].undo.sourceLeft) {
+        undoSampleLevel(id);
+        return;
+    }
+    if (!sampleBackups[id]) return;
     const int len = sampleBackupLengths[id];
     if (len <= 0) return;
     const bool stereo = sampleBackupsRight[id] != nullptr;
@@ -291,6 +429,7 @@ void AudioEngine::freeSampleUndo(int id) {
     delete[] sampleBackups[id];      sampleBackups[id] = nullptr;
     delete[] sampleBackupsRight[id]; sampleBackupsRight[id] = nullptr;
     sampleBackupLengths[id] = 0;
+    sampleLevel[id].undo = {};
 }
 
 void AudioEngine::saveFxPreviewBackup(int id) {
@@ -417,6 +556,27 @@ void AudioEngine::prepareSourcePreview(int dstId, int srcId, int mode) {
     setSampleBuffers(dstId, out, outR, len);
 }
 
+bool AudioEngine::prepareSourcePreviewRange(int dstId, int srcId, int mode, int first, int end) {
+    if (dstId < 0 || dstId >= 256 || srcId < 0 || srcId >= 256 || dstId == srcId ||
+        first < 0 || end <= first || end > getSampleLength(srcId)) return false;
+    const int frames = end - first;
+    const bool stereo = mode == 2 && hasStereoData(srcId);
+    const bool downmix = mode == 3 && hasStereoData(srcId);
+    std::unique_ptr<float[]> left(new (std::nothrow) float[frames]);
+    std::unique_ptr<float[]> right(stereo || downmix ? new (std::nothrow) float[frames] : nullptr);
+    if (!left || ((stereo || downmix) && !right)) return false;
+
+    auto editLock = beginSampleEdit(dstId);
+    float* leftOut = mode == 1 ? nullptr : left.get();
+    float* rightOut = mode == 1 ? left.get() : right.get();
+    if (!copySampleRegion(srcId, first, end, leftOut, rightOut)) return false;
+    if (downmix) {
+        for (int i = 0; i < frames; ++i) left[i] = (left[i] + right[i]) * 0.5f;
+    }
+    setSampleBuffers(dstId, left.release(), stereo ? right.release() : nullptr, frames);
+    return true;
+}
+
 void AudioEngine::pasteRegion(int id, int insertAt) {
     if (id < 0 || id >= 256 || !samples[id] || !sampleClipboard || sampleClipboardLength <= 0) return;
     auto editLock = beginSampleEdit(id);
@@ -469,6 +629,7 @@ void AudioEngine::freeRateCache(int id) {
 void AudioEngine::setSampleSourceFormat(int id, int bits, bool isFloat) {
     if (id < 0 || id >= 256) return;
     freeRateCache(id);
+    sampleLevel[id] = {};
     sampleBitDepth[id] = static_cast<uint8_t>(bits);
     sampleIsFloat[id]  = isFloat;
 }
@@ -496,33 +657,31 @@ void AudioEngine::applyRateAndBits(int id, int factor, int bits) {
     auto editLock = beginSampleEdit(id);
 
     const bool haveCache = originalSamples[id] || originalSamplesF[id];
-    const auto cached = [&](bool right, int i) -> float {
-        if (originalSamplesF[id]) return (right ? originalSamplesRightF[id] : originalSamplesF[id])[i];
-        return cacheI16ToF32((right ? originalSamplesRight[id] : originalSamples[id])[i]);
-    };
     // ⚠️ A function, not a value: before the first departure there is no cache, and a test now says mono.
     const auto stereoCache = [&] { return originalSamplesRightF[id] != nullptr || originalSamplesRight[id] != nullptr; };
 
     if (factor == 1 && bits == source) {
         // Back to HIGH at the source depth: restore the original and drop it.
+        sampleLevel[id].rate = 1;
+        sampleLevel[id].bits = source;
         if (!haveCache) return;
         int len = originalSampleLengths[id];
         float* newL = new float[len];
-        for (int i = 0; i < len; i++) newL[i] = cached(false, i);
+        for (int i = 0; i < len; i++) newL[i] = rateCacheValue(id, false, i);
         float* newR = nullptr;
         if (stereoCache()) {
             newR = new float[len];
-            for (int i = 0; i < len; i++) newR[i] = cached(true, i);
+            for (int i = 0; i < len; i++) newR[i] = rateCacheValue(id, true, i);
         }
         setSampleBuffers(id, newL, newR, len);
         freeRateCache(id);
         return;
     }
 
-    // The original, on the first departure: float when deeper than 16 bits, so 24/32 come back intact.
+    // Keep the source precision, including a level edit's fractional samples.
     if (!haveCache) {
         int len = sampleLengths[id];
-        if (source > 16) {
+        if (source > 16 || sampleLevel[id].preserveFloat) {
             originalSamplesF[id] = new float[len];
             std::memcpy(originalSamplesF[id], samples[id], (size_t)len * sizeof(float));
             if (samplesRight[id]) {
@@ -546,18 +705,62 @@ void AudioEngine::applyRateAndBits(int id, int factor, int bits) {
     if (newLen < 1) return;
     float* newL = new float[newLen];
     for (int i = 0; i < newLen; i++) {
-        const float v = cached(false, i * factor);
+        const float v = rateCacheValue(id, false, i * factor);
         newL[i] = requantise ? quantizeToBits(v, bits) : v;
     }
     float* newR = nullptr;
     if (stereoCache()) {
         newR = new float[newLen];
         for (int i = 0; i < newLen; i++) {
-            const float v = cached(true, i * factor);
+            const float v = rateCacheValue(id, true, i * factor);
             newR[i] = requantise ? quantizeToBits(v, bits) : v;
         }
     }
     setSampleBuffers(id, newL, newR, newLen);
+    sampleLevel[id].rate = factor;
+    sampleLevel[id].bits = bits;
+}
+
+void AudioEngine::undoSampleLevel(int id) {
+    const auto& quality = sampleLevel[id];
+    const auto& undo = quality.undo;
+    auto editLock = beginSampleEdit(id);
+    const int activeLength = sampleLengths[id];
+    const int sourceLength = originalSampleLengths[id] ? originalSampleLengths[id] : activeLength;
+    if (!samples[id] || sourceLength != undo.sourceLength) return;
+    const bool sameQuality = quality.rate == undo.rate && quality.bits == undo.bits &&
+                             activeLength == undo.activeLength;
+    const size_t sourceBytes = size_t(undo.sourceCount) * sizeof(float);
+    if (originalSamplesF[id]) {
+        std::memcpy(originalSamplesF[id] + undo.sourceFirst, undo.sourceLeft.get(), sourceBytes);
+        if (originalSamplesRightF[id] && undo.sourceRight) {
+            std::memcpy(originalSamplesRightF[id] + undo.sourceFirst, undo.sourceRight.get(), sourceBytes);
+        }
+    }
+    float* const left = samples[id];
+    float* const right = samplesRight[id];
+    if (sameQuality) {
+        const size_t bytes = size_t(undo.activeCount) * sizeof(float);
+        std::memcpy(left + undo.activeFirst, undo.activeLeft ? undo.activeLeft.get() : undo.sourceLeft.get(), bytes);
+        const auto* restoreRight = undo.activeRight ? undo.activeRight.get() : undo.sourceRight.get();
+        if (right && restoreRight) std::memcpy(right + undo.activeFirst, restoreRight, bytes);
+        return;
+    }
+    const int stride = quality.rate;
+    const int bits = quality.bits > 0 ? quality.bits : sampleBitDepth[id];
+    const bool quantize = bits < sampleBitDepth[id];
+    const int first = static_cast<int>((int64_t(undo.sourceFirst) + stride - 1) / stride);
+    const int last = static_cast<int>(std::min<int64_t>(activeLength,
+        (int64_t(undo.sourceFirst) + undo.sourceCount + stride - 1) / stride));
+    for (int frame = first; frame < last; ++frame) {
+        const int sourceIndex = frame * stride - undo.sourceFirst;
+        const float l = undo.sourceLeft[sourceIndex];
+        left[frame] = quantize ? quantizeToBits(l, bits) : l;
+        if (right && undo.sourceRight) {
+            const float r = undo.sourceRight[sourceIndex];
+            right[frame] = quantize ? quantizeToBits(r, bits) : r;
+        }
+    }
 }
 
 void AudioEngine::pitchShiftSample(int id, float semitones) {

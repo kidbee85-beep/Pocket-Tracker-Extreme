@@ -124,6 +124,8 @@ inline float antiClickGain(Ramp& fadeIn, const Playhead& ph) {
 
 struct Voice : public IAudioVoice {
     bool isActive = false;
+    bool granularMode = false;
+    int granularReleaseAt = -1;
     Ramp fadeIn;                       // 0 to 1 over DECLICK_SAMPLES from the note's start
     float* sampleData = nullptr;
     float* sampleDataRight = nullptr;  // null = mono
@@ -473,12 +475,14 @@ struct Voice : public IAudioVoice {
     // What an OFF note calls: ADSR/TRIG VOL mods with a release go to their release stage; with
     // none, the declicked kill fade from `atFrame`. A release begins on a block edge.
     void noteOffAt(int atFrame) {
+        if (granularMode) { releaseVolMods(); granularReleaseAt=atFrame; return; }
         if (!releaseVolMods()) startFadeOut(KILL_FADE_SAMPLES, atFrame);
     }
 
     // A live key was let go of. ⚠️ An OFF in every arm but one: with no release envelope a looping
     // voice still gets the kill fade (nothing else would end it), but a one-shot plays out.
     void keyRelease(int atFrame = 0) {
+        if (granularMode) { releaseVolMods(); granularReleaseAt=atFrame; return; }
         if (!releaseVolMods() && loopMode != 0) startFadeOut(KILL_FADE_SAMPLES, atFrame);
     }
 

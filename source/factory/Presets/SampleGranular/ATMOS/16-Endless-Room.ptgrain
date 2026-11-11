@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Endless Room",
+  "parameters": {
+    "attackMs": 750.0,
+    "densityHz": 18.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.8500000238418579,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.10000000149011612,
+    "position": 0.7950000166893005,
+    "releaseMs": 1800.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.3400000035762787,
+    "sizeMs": 585.0,
+    "sprayMs": 160.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

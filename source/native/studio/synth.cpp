@@ -35,7 +35,7 @@ const char* elementsNames[]={"E MODAL","E STRING","E CHORD","E OMINOUS"};
 constexpr int braidsCount=static_cast<int>(braids::MACRO_OSC_SHAPE_LAST);
 constexpr int legacyModels = 24 + braidsCount + 6 + 4;
 constexpr int elementsProfiles = 12;
-constexpr int additionalModels = 30;
+constexpr int additionalModels = 34;
 static_assert(legacyModels == 82, "Existing model IDs must remain stable");
 static_assert(legacyModels + additionalModels <= 128, "Custom URI has a seven-bit model field");
 const char* additionalNames[] = {
@@ -45,14 +45,60 @@ const char* additionalNames[] = {
  "G TAPE CLOUD", "G SHIMMER CLOUD", "G REVERSE DUST", "G CHORD SWARM",
  "G FORMANT GRAINS", "G SPRAY CLOUD", "G RESONANT GRAINS", "G STUTTER CLOUD",
  "S SUPER SAW", "S VECTOR", "S PHASE FM", "S RING BANK", "S ADDITIVE TILT",
- "S KARPLUS NYLON", "S BOWED COMB", "S FORMANT VOWEL", "S HARD SYNC", "S WAVEFOLD"
+ "S KARPLUS NYLON", "S BOWED COMB", "S FORMANT VOWEL", "S HARD SYNC", "S WAVEFOLD",
+ "S OCTAVE ORBIT", "S GRAVITY BOUNCE", "S ORBIT BELLS", "S GRAVITY RAIN"
 };
 static_assert(sizeof(additionalNames) / sizeof(*additionalNames) == additionalModels);
+static_assert(kGravityFirstModel + kGravityModelCount == legacyModels + additionalModels);
+static_assert(kOctaveOrbitModel + 1 == kGravityFirstModel);
 constexpr int extendedFlag = 1 << 29;
 const char* variants[]={"WARM","GLASS","DARK","AIR","PLUCK","BELL","HOLLOW","SOFT","ORGAN","METALLIC","THIN","MOTION"};
 constexpr float macroA[]={.35f,.72f,.17f,.88f,.28f,.61f,.12f,.47f,.78f,.93f,.08f,.56f};
 constexpr float macroB[]={.42f,.63f,.24f,.77f,.21f,.82f,.54f,.16f,.38f,.94f,.69f,.46f};
 constexpr float macroC[]={.50f,.23f,.75f,.60f,.14f,.37f,.85f,.29f,.68f,.48f,.11f,.92f};
+struct NamedPreset { const char* name; std::array<int, 3> macros; };
+constexpr NamedPreset kOrbitPresets[] = {
+    {"Slow Rise",     {162, 186, 102}}, {"Slow Descent", { 90, 186, 102}},
+    {"Deep Drift",    {109, 204, 181}}, {"Still Choir",  {128, 255,  75}},
+    {"Gravity Keys",  {136, 107, 232}}, {"Crystal Lift", {183, 112,  44}},
+    {"Falling Glass", { 68, 104,  51}}, {"Low Orbit",    {120, 161, 251}},
+    {"Wide Halo",     {150, 254,  19}}, {"High Spiral",  {224, 238,  32}},
+    {"Falling Debris",{ 16, 209,  49}}, {"Fast Ascent",  {255, 161,   8}},
+};
+static_assert(std::size(kOrbitPresets) == std::size(variants));
+constexpr NamedPreset kGravityPresets[kGravityModelCount][std::size(variants)] = {
+    {{"Pinball Keys", {164,192, 96}}, {"Rubber Mallet", {111,165, 38}},
+     {"Drop Counter", {202, 32, 65}}, {"Coin Cascade",  {237,222,184}},
+     {"Low Rebound",  { 78,144, 13}}, {"Copper Spring", {175,255,137}},
+     {"Slow Hopper",  { 33,186, 80}}, {"Moon Drop",     { 12,102,214}},
+     {"Loose Marbles",{209,126,213}}, {"Skitter",        {255,234,246}},
+     {"One Pitch",    {125,205,  0}}, {"Glass Floor",   {157, 64,239}}},
+    {{"Clock Bells",  {119, 75,154}}, {"Dorian Moon",    { 65,160,200}},
+     {"Tidal Clock",  { 88,239, 96}}, {"Two Satellites",{164,207,130}},
+     {"Slow Halo",    { 26,137,231}}, {"Bright Crossing",{192,171,185}},
+     {"Pendulum",     {126,249, 63}}, {"Soft Ellipse",   { 56, 48,163}},
+     {"Bell Dial",    {185, 15, 40}}, {"Comet Tail",     {239,233,255}},
+     {"Single Moon",  {111,162,  0}}, {"Fast Eclipse",   {255,255,219}}},
+    {{"Tin Roof",     {135,164, 96}}, {"Light Shower",  { 58, 26,145}},
+     {"Metal Drizzle",{104,108,187}}, {"Spring Rain",   { 79,142,205}},
+     {"Low Weather",  { 36,173, 36}}, {"Hail Bells",    {196,198,247}},
+     {"Window Drops", { 43, 76,113}}, {"Chime Mist",    { 21,216,254}},
+     {"Tin Spouts",   {154,233, 59}}, {"Glass Storm",   {246,238,229}},
+     {"Mono Rain",    {123,173,  0}}, {"Cloudburst",    {255,255,255}}},
+};
+
+const NamedPreset* named_preset(int model, int variation) {
+    if (model == kOctaveOrbitModel) return &kOrbitPresets[variation];
+    if (is_gravity_model(model)) return &kGravityPresets[model - kGravityFirstModel][variation];
+    return nullptr;
+}
+
+constexpr const char* kGravityScaleNames[] = {"Minor pentatonic", "Major pentatonic", "Dorian", "Chromatic"};
+constexpr int kGravityScaleValues[] = {0, 85, 170, 255};
+int gravity_scale_index(int value) { return std::clamp(value, 0, 255) * 4 / 256; }
+int gravity_default_scale(int model) {
+    return model == kGravityFirstModel + 1 ? 2 : model == kGravityFirstModel + 2 ? 1 : 0;
+}
 bool factory_code_valid(int code) {
  if(code<0 || (code&(1<<30)))return false;
  if(code&extendedFlag)return (code&~(extendedFlag|0x7ff))==0 && ((code>>4)&127)<model_count() && (code&15)>=4 && (code&15)<12;
@@ -98,7 +144,7 @@ const char* macro_name(int model,int index){
  static const char* braids[]={"Timbre","Color"};
  static const char* rings[]={"Structure","Brightness","Damping"};
  static const char* elements[]={"Geometry","Brightness","Damping"};
- static const char* extras[18][3]={
+ static const char* extras[][3]={
   {"Source color","Grain size","Spread / density"}, // Tape cloud
   {"Source color","Grain size","Spread / density"}, // Shimmer cloud
   {"Source color","Grain size","Spread / density"}, // Reverse dust
@@ -116,7 +162,11 @@ const char* macro_name(int model,int index){
   {"Bow speed","Friction","Brightness"},
   {"Formant 1","Formant 2","Upper formant"},
   {"Sync ratio","Wave blend","Pulse width"},
-  {"Fold amount","Wave blend","Symmetry"}
+  {"Fold amount","Wave blend","Symmetry"},
+  {"Glide rate","Octave spread","Root anchor"},
+  {"Gravity","Rebound","Pitch spread"},
+  {"Orbit speed","Eccentricity","Pitch spread"},
+  {"Gravity","Rain density","Pitch spread"}
  };
  if(model<24)return plaits[model][index];
  if(model<24+braidsCount){
@@ -150,9 +200,16 @@ int preset_model(int code){return (code&(1<<30))?code&127:(code&extendedFlag)?(c
 int preset_variation(int code){return (code&(1<<30))?0:(code&extendedFlag)?code&15:code%variations;}
 std::array<int,3> preset_macros(int code){
  const int v=std::clamp(preset_variation(code),0,variation_count()-1);
+ if(const auto* preset=named_preset(preset_model(code),v))return preset->macros;
  return {static_cast<int>(std::lround(macroA[v]*255)),static_cast<int>(std::lround(macroB[v]*255)),static_cast<int>(std::lround(macroC[v]*255))};
 }
-std::string preset_name(int code){if(!factory_code_valid(code))return "UNKNOWN";return std::string(model_name(preset_model(code)))+" / "+variants[preset_variation(code)];}
+std::string preset_name(int code){
+ if(!factory_code_valid(code))return "UNKNOWN";
+ const int model=preset_model(code),variant=preset_variation(code);
+ const auto* preset=named_preset(model,variant);
+ const char* name=preset?preset->name:variants[variant];
+ return std::string(model_name(model))+" / "+name;
+}
 std::string uri(int code){return "/@mutable/"+std::to_string(code)+".wav";}
 int custom_code(int model,int a,int b,int c){return (1<<30)|std::clamp(model,0,model_count()-1)|(std::clamp(a,0,255)/2<<7)|(std::clamp(b,0,255)/2<<14)|(std::clamp(c,0,255)/2<<21);}
 std::string custom_uri(int model,int a,int b,int c){return "/@mutable/p"+std::to_string(model)+"-"+std::to_string(a)+"-"+std::to_string(b)+"-"+std::to_string(c)+".wav";}
@@ -173,6 +230,7 @@ int elements_row(int model,int slot){
 
 int synth_param_count(int model){
  if(model<0||model>=model_count())return 0;
+ if(is_gravity_model(model))return 3;
  if(model<24)return plaits_lpg(model)?4:2;if(model<72)return 3;if(model<78)return model==76?4:3;
  if(model<94)return model==81?15:elements_modal(model)?16:14;if(model<102)return 5;return 2;
 }
@@ -185,12 +243,14 @@ const char* synth_param_name(int model,int index){
  static const char* ominous[]={"Osc 2 detune","Feedback","Osc 1 level","Osc 1 ratio","Osc 1 FM index","Osc 2 level","Osc 2 ratio","Osc 2 FM index","Spatial position","Space","Envelope shape","Excitation strength","Filter separation","Reverb diffusion","Reverb tone"};
  static const char* granular[]={"Grain density","Pitch spread","Grain level","Source noise","Output tone"};
  static const char* original[]={"Output tone","Drive"};
+ if(is_gravity_model(model)&&index==2)return "Pitch scale";
  if(model<24)return plaits[plaits_lpg(model)?index:index+2];
  if(model==81)return ominous[index];
  return model<72?braids[index]:model<78?rings[index]:model<94?elements[elements_slot(model,index)]:model<102?granular[index]:original[index];
 }
 int synth_param_default(int model,int index){
  if(index<0||index>=synth_param_count(model))return 0;
+ if(is_gravity_model(model)&&index==2)return kGravityScaleValues[gravity_default_scale(model)];
  const int plaits[]={204,128,0,255},braids[]={255,255,255},rings[]={77,0,0,0},granular[]={128,128,128,0,255},original[]={255,0};
  const int elements[]={0,128,0,128,128,166,128,128,77,77,128,179,23,51,159,179};
  if(model>=78&&model<94){
@@ -213,6 +273,7 @@ int synth_param_adjust(int model,int index,int value,int direction,bool coarse){
  if(index<0||index>=synth_param_count(model))return -1;
  value=value<0?synth_param_default(model,index):std::clamp(value,0,255);
  const int sign=direction>0?1:direction<0?-1:0;
+ if(is_gravity_model(model)&&index==2)return kGravityScaleValues[std::clamp(gravity_scale_index(value)+sign,0,3)];
  if(model>=24&&model<72&&index==0){const int bits=std::clamp(4+value*12/255+sign,4,16);return ((bits-4)*255+11)/12;}
  if(model>=24&&model<72&&index==1){const int step=std::clamp((value*8+127)/255+sign,0,8);return (step*255+4)/8;}
  if(model>=72&&model<78&&index==1){const int current=value<64?0:value<192?1:2;const int step=std::clamp(current+sign,0,2);return step==0?0:step==1?128:255;}
@@ -220,6 +281,7 @@ int synth_param_adjust(int model,int index,int value,int direction,bool coarse){
  return std::clamp(value+sign*(coarse?16:1),0,255);
 }
 std::string synth_param_value(int model,int index,int value){
+ if(is_gravity_model(model)&&index==2)return kGravityScaleNames[value<0?gravity_default_scale(model):gravity_scale_index(value)];
  if(value<0)return "Factory";
  value=std::clamp(value,0,255);char text[48];
  if(model>=24&&model<72&&index==0)std::snprintf(text,sizeof(text),"%d bit",4+value*12/255);
@@ -264,6 +326,7 @@ struct Synth::State {
   const int model=model_id(code),var=code&(1<<30)?0:preset_variation(code);
   float a[12],b[12],c[12];std::copy(std::begin(macroA),std::end(macroA),a);std::copy(std::begin(macroB),std::end(macroB),b);std::copy(std::begin(macroC),std::end(macroC),c);
   if(code&(1<<30)){a[0]=((code>>7)&127)/127.f;b[0]=((code>>14)&127)/127.f;c[0]=((code>>21)&127)/127.f;}
+  else if(const auto* preset=named_preset(model,var)){const auto& m=preset->macros;a[var]=m[0]/255.f;b[var]=m[1]/255.f;c[var]=m[2]/255.f;}
   float note=69.f+12.f*std::log2(std::max(8.f,hz)/440.f);
   if(model<24){
    const bool lpg=plaits_lpg(model);
@@ -330,6 +393,7 @@ struct Synth::State {
    const int extraModel=model-legacyModels-elementsProfiles;
    if(strike)additional.start(extraModel,a[var],b[var],c[var]);
    additional.update(a[var],b[var],c[var],params);
+   if(is_gravity_model(model))additional.set_gravity_scale(params[2]<0?gravity_default_scale(model):gravity_scale_index(params[2]));
    size=24;for(int i=0;i<size;++i)out[i]=additional.next(hz,a[var],b[var],c[var]);
   }
   const int toneIndex=model>=24&&model<72?2:model>=94&&model<102?4:model>=102?0:-1;

@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "VHS Flecks",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 40.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.42500001192092896,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.8799999952316284,
+    "position": 0.6150000095367432,
+    "releaseMs": 230.0,
+    "reverseProbability": 0.14999999105930328,
+    "scanSpeed": 0.8399999737739563,
+    "sizeMs": 79.0,
+    "sprayMs": 162.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

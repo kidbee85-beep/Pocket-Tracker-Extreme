@@ -9,15 +9,40 @@
 #include "ui/helpers.h"
 #include <algorithm>
 #include <cstdio>
+#include <iterator>
 #include <limits>
 #include <vector>
 
 namespace pt::ui {
 namespace {
-constexpr const char* genres[] = {"Hip Hop", "Boom Bap", "Lo-Fi", "Drum & Bass", "House", "Techno", "Dub", "Breakbeat"};
+constexpr const char* genres[] = {"Hip Hop", "Boom Bap", "Lo-Fi", "Drum & Bass", "House", "Techno", "Dub", "Breakbeat", "Euclidean"};
+constexpr int genreCount = static_cast<int>(std::size(genres));
 constexpr const char* roles[] = {"Kick", "Snare", "Closed Hat", "Open Hat", "Perc 1", "Perc 2", "Tom", "FX"};
 constexpr const char* shortRoles[] = {"KICK", "SNR", "CH", "OH", "P1", "P2", "TOM", "FX"};
 constexpr const char* settings[] = {"Style", "Sources", "Length", "Density", "Variation", "Swing", "Humanize", "Fill", "Seed"};
+constexpr int euclideanSettings[] = {0, 1, 2, 5, 6, 8};
+constexpr int laneVelocity[] = {108, 112, 84, 90, 87, 82, 99, 90};
+
+enum LaneColumn { SLOT, LOCK, PERIOD, HITS, ROTATE };
+
+bool euclidean(const DrumLabState& s) { return s.genre == DRUMLAB_EUCLIDEAN; }
+
+bool hidden_setting(const DrumLabState& s, int row) {
+    return euclidean(s) && (row == 3 || row == 4 || row == 7);
+}
+
+bool euclidean_hit(const DrumLabLane& lane, int step) {
+    // A modular accumulator spaces hits by floor(period/hits) or ceil(period/hits),
+    // including the wrap. Subtracting rotation moves each hit later in the cycle.
+    const int position = (step + lane.period - lane.rotation) % lane.period;
+    return (position * lane.hits) % lane.period < lane.hits;
+}
+
+void bound_euclidean_lane(DrumLabLane& lane, int steps) {
+    lane.period = std::clamp(lane.period, 1, steps);
+    lane.hits = std::clamp(lane.hits, 0, lane.period);
+    lane.rotation = std::clamp(lane.rotation, 0, lane.period - 1);
+}
 
 constexpr uint16_t bit(int n) { return static_cast<uint16_t>(1u << n); }
 // Original rhythmic recipes. They are not transcriptions of songs or preset banks.
@@ -40,11 +65,20 @@ struct Random {
 };
 
 bool valid_config(const DrumLabState& s) {
-    if (s.genre < 0 || s.genre >= 8 || s.activeLanes < 5 || s.activeLanes > 8 ||
+    if (s.genre < 0 || s.genre >= genreCount || s.activeLanes < 5 || s.activeLanes > 8 ||
         (s.steps != 16 && s.steps != 32 && s.steps != 64)) return false;
     for (int value : {s.density, s.variation, s.swing, s.humanize, s.fill})
         if (value < 0 || value > 100) return false;
+    if (euclidean(s)) for (int i = 0; i < s.activeLanes; ++i) {
+        const auto& lane = s.lanes[i];
+        if (lane.period < 1 || lane.period > s.steps || lane.hits < 0 || lane.hits > lane.period ||
+            lane.rotation < 0 || lane.rotation >= lane.period) return false;
+    }
     return true;
+}
+
+bool grid_current(const DrumLabState& s) {
+    return s.generated && !s.dirty && s.generatedSteps == s.steps;
 }
 
 bool source_assigned(const songcore::Project& p, int id) {
@@ -70,7 +104,7 @@ int straight_groove(const songcore::Project& p) {
 bool ready(DrumLabState& s, const songcore::Project& p) {
     if (!valid_config(s)) { s.status = "Invalid Drum Lab settings; nothing changed."; return false; }
     if (p.scaleKey < 0 || p.scaleKey > 11) { s.status = "Set a valid project scale key before generating drums."; return false; }
-    if (!s.generated || s.dirty || s.generatedSteps != s.steps) { s.status = "Generate the pattern before Preview or Apply."; return false; }
+    if (!grid_current(s)) { s.status = "Generate the pattern before Preview or Apply."; return false; }
     for (int lane = 0; lane < s.activeLanes; ++lane) {
         if (!source_assigned(p, s.lanes[lane].instrument)) {
             s.status = std::string("Assign a loaded sample / synth to ") + roles[lane] + ".";
@@ -126,9 +160,180 @@ void schedule_hit(AudioEngine& engine, const songcore::Project& project, int tra
                   const DrumLabStep& step, int64_t frame, int tempo) {
     engine.scheduleProgramNote(frame, track, instrument, drumlab_note_on(project, instrument, step), tempo, false);
 }
+
+void stop_grid_audition(DrumLabState& s, songcore::SongcoreHost& host) {
+    if (!s.gridAudition) return;
+    s.gridAudition = false;
+    host.stop_preview(true);
+}
+
+bool audition_grid_hit(DrumLabState& s, songcore::SongcoreHost& host, AudioEngine& engine,
+                       int lane, const DrumLabStep& hit) {
+    stop_grid_audition(s, host);
+    if (!hit.velocity || s.previewRunning || host.is_playing()) return true;
+    const auto& project = host.project();
+    const int instrument = s.lanes[lane].instrument;
+    if (!source_assigned(project, instrument) || !host.instrument_media_ready(instrument)) return false;
+    const auto& root = project.instruments[instrument].root;
+    if (songcore::note_is_pitch(root)) {
+        host.preview_note(instrument, root, std::max(1, engine.getSampleRate() / 5), true);
+        s.gridAudition = true;
+    }
+    return true;
+}
+
+void record_grid_edit(DrumLabState& s, int lane, int step, const DrumLabStep& next) {
+    auto& history = s.stepHistory;
+    if (s.stepHistoryCursor == DRUMLAB_STEP_HISTORY) {
+        std::move(history.begin() + 1, history.end(), history.begin());
+        --s.stepHistoryCursor;
+    }
+    auto& hit = s.grid[lane][step];
+    history[s.stepHistoryCursor++] = {lane, step, hit, next};
+    s.stepHistorySize = s.stepHistoryCursor;
+    hit = next;
+}
+
+void apply_grid_history(DrumLabState& s, songcore::SongcoreHost& host, AudioEngine& engine, bool redo) {
+    const char* action = redo ? "Redo" : "Undo";
+    const int entry = s.stepHistoryCursor - (redo ? 0 : 1);
+    if (entry < 0 || entry >= s.stepHistorySize) {
+        s.status = redo ? "Nothing to redo." : "Nothing to undo.";
+        return;
+    }
+    const auto& edit = s.stepHistory[entry];
+    if (s.lanes[edit.lane].locked) {
+        s.status = std::string("Unlock ") + roles[edit.lane] + " before " + action + ".";
+        return;
+    }
+    auto& hit = s.grid[edit.lane][edit.step];
+    hit = redo ? edit.after : edit.before;
+    s.stepHistoryCursor += redo ? 1 : -1;
+    s.confirmApply = false;
+    s.status = std::string(action) + " / " + roles[edit.lane] + " / step " + std::to_string(edit.step + 1);
+    audition_grid_hit(s, host, engine, edit.lane, hit);
+}
+
+bool grid_button(const ButtonEvent& e, DrumLabState& s, songcore::SongcoreHost& host, AudioEngine& engine) {
+    if (e.button == Button::B) {
+        s.gridAHeld = s.gridPreviewHeld = false;
+        if (e.action == ButtonAction::PRESSED || s.gridBUsed) s.gridBUsed = false;
+        else {
+            drumlab_clear_grid_input(s);
+            stop_grid_audition(s, host);
+            s.gridFocused = false;
+            s.status = "Draft ready. Preview or Apply to Song.";
+        }
+        return true;
+    }
+    if (!valid_config(s) || !grid_current(s)) {
+        drumlab_clear_grid_input(s);
+        s.gridFocused = false;
+        stop_grid_audition(s, host);
+        s.status = "Generate before editing steps.";
+        return true;
+    }
+
+    s.row = std::clamp(s.row, 9, 8 + s.activeLanes);
+    s.gridStep = std::clamp(s.gridStep, 0, s.steps - 1);
+    if (e.button == Button::DPAD_UP || e.button == Button::DPAD_DOWN) {
+        const uint8_t direction = e.button == Button::DPAD_UP ? 1u : 2u;
+        if (s.gridHistoryDirections & direction) {
+            if (e.action == ButtonAction::RELEASED) s.gridHistoryDirections &= ~direction;
+            return true;
+        }
+        if (e.action == ButtonAction::PRESSED && e.mods.b) {
+            s.gridBUsed = true;
+            s.gridAHeld = false;
+            s.gridHistoryDirections |= direction;
+            if (!e.mods.a) apply_grid_history(s, host, engine, e.button == Button::DPAD_DOWN);
+            return true;
+        }
+    }
+    if (e.button == Button::DPAD_DOWN && s.gridPreviewHeld) {
+        if (e.action == ButtonAction::RELEASED) s.gridPreviewHeld = false;
+        return true;
+    }
+    if (e.button == Button::A) {
+        if (e.action == ButtonAction::PRESSED) {
+            s.gridAHeld = !e.mods.b;
+            return true;
+        }
+        if (!s.gridAHeld) return true;
+        s.gridAHeld = false;
+        if (e.mods.b) return true;
+        s.confirmApply = false;
+        const int lane = s.row - 9;
+        if (s.lanes[lane].locked) {
+            s.status = "Lane locked. Press B and unlock it to edit steps.";
+            return true;
+        }
+        DrumLabStep hit{};
+        if (!s.grid[lane][s.gridStep].velocity) {
+            hit.velocity = static_cast<uint8_t>(laneVelocity[lane]);
+            hit.delayTicks = static_cast<uint8_t>(s.gridStep % 2 ? s.swing * 6 / 100 : 0);
+        }
+        record_grid_edit(s, lane, s.gridStep, hit);
+        s.status = hit.velocity ? "Hit added to the draft." : "Hit removed from the draft.";
+        if (!audition_grid_hit(s, host, engine, lane, hit))
+            s.status = "Hit added. Load the lane's instrument to hear it.";
+        return true;
+    }
+    if (e.button == Button::L_SHIFT || e.button == Button::R_SHIFT) {
+        s.gridAHeld = false;
+        if (e.action == ButtonAction::RELEASED) {
+            const int delta = e.button == Button::R_SHIFT ? 1 : -1;
+            const int pages = s.steps / 16;
+            s.gridStep = ((s.gridStep / 16 + delta + pages) % pages) * 16 + s.gridStep % 16;
+        }
+    } else if (is_dpad(e.button) && e.action == ButtonAction::PRESSED) {
+        if (e.mods.a) {
+            const bool togglePreview = s.gridAHeld && e.button == Button::DPAD_DOWN;
+            s.gridAHeld = false;  // A's release must never also toggle the cell.
+            if (togglePreview) {
+                drumlab_preview(s, host, engine);
+                s.gridPreviewHeld = true;
+            }
+            return true;
+        }
+        if (e.button == Button::DPAD_LEFT || e.button == Button::DPAD_RIGHT)
+            s.gridStep = std::clamp(s.gridStep + (e.button == Button::DPAD_RIGHT ? 1 : -1), 0, s.steps - 1);
+        else
+            s.row = std::clamp(s.row + (e.button == Button::DPAD_DOWN ? 1 : -1), 9, 8 + s.activeLanes);
+    }
+    s.gridPage = s.gridStep / 16;
+    return true;
+}
+
+void draw_grid_detail(Canvas& c, const DrumLabState& s, const Theme& t, const songcore::Project& project) {
+    const int lane = std::clamp(s.row - 9, 0, DRUMLAB_LANES - 1);
+    const int step = std::clamp(s.gridStep, 0, DRUMLAB_MAX_STEPS - 1);
+    const auto& hit = s.grid[lane][step];
+    const auto& source = s.lanes[lane];
+    const bool assigned = source_assigned(project, source.instrument);
+    const auto sourceName = assigned ? project.instruments[source.instrument].name : "No source assigned";
+    c.draw_label("STEP EDIT",29,168,t.rowCursor,12);
+    c.draw_label(roles[lane],29,190,t.textTitle,18);
+    c.draw_label(Canvas::clip_label(hex(source.instrument) + "  " + sourceName,184,12),29,218,t.textValue,12);
+    c.draw_label("STEP " + std::to_string(step + 1),29,247,t.textValue,14);
+    const char* state = hit.velocity ? "HIT" : "REST";
+    c.panel_rect(144,243,66,24,hit.velocity?t.rowCursor:t.background,with_alpha(t.rowCursor,.75f),4);
+    c.draw_label(state,177-Canvas::label_width(state,12)/2,248,hit.velocity?t.background:t.textValue,12);
+    c.draw_label("VELOCITY",29,280,t.textParam,12);
+    c.draw_label(hit.velocity?std::to_string(hit.velocity):"-",145,280,t.textValue,12);
+    c.draw_label("DELAY",29,303,t.textParam,12);
+    c.draw_label(hit.velocity?std::to_string(hit.delayTicks)+" ticks":"-",145,303,t.textValue,12);
+    c.draw_label(source.locked?"LOCKED":"Lane unlocked",29,333,source.locked?t.textTitle:t.textParam,12);
+    const int undo = s.stepHistoryCursor, redo = s.stepHistorySize - undo;
+    const bool canUndo = undo > 0 && !s.lanes[s.stepHistory[undo - 1].lane].locked;
+    const bool canRedo = redo > 0 && !s.lanes[s.stepHistory[undo].lane].locked;
+    c.fill_rect(29,360,180,1,with_alpha(t.textParam,.35f));
+    c.draw_label("UNDO " + std::to_string(undo),29,371,canUndo?t.textValue:t.textParam,12);
+    c.draw_label("REDO " + std::to_string(redo),128,371,canRedo?t.textValue:t.textParam,12);
+}
 } // namespace
 
-const char* drumlab_genre_name(int genre) { return genres[std::clamp(genre, 0, 7)]; }
+const char* drumlab_genre_name(int genre) { return genres[std::clamp(genre, 0, genreCount - 1)]; }
 const char* drumlab_lane_name(int lane) { return roles[std::clamp(lane, 0, 7)]; }
 
 songcore::NoteOnPayload drumlab_note_on(const songcore::Project& project, int instrument, const DrumLabStep& step) {
@@ -164,6 +369,7 @@ bool drumlab_generate(DrumLabState& s) {
     if (!valid_config(s)) { s.status = "Invalid Drum Lab settings; pattern kept."; return false; }
     if (s.previewRunning) { s.status = "Stop Preview before generating a new pattern."; return false; }
     auto generated = s.grid;
+    const bool isEuclidean = euclidean(s);
     for (int lane = 0; lane < 8; ++lane) {
         if (s.generated && s.lanes[lane].locked) continue;
         generated[lane] = {};
@@ -171,25 +377,27 @@ bool drumlab_generate(DrumLabState& s) {
         Random random(s.seed ^ (0x9e3779b9u * static_cast<uint32_t>(lane + 1)) ^ (0x85ebca6bu * static_cast<uint32_t>(s.genre + 1)));
         for (int step = 0; step < s.steps; ++step) {
             const int position = step % 16;
-            const bool base = (masks[s.genre][lane] & bit(position)) != 0;
+            const bool base = isEuclidean ? euclidean_hit(s.lanes[lane], step) : (masks[s.genre][lane] & bit(position)) != 0;
             const bool anchor = lane < 2 && base;
-            const int chance = random.below(100), fillChance = random.below(100);
+            // The original styles retain exactly the same sequence of random draws.
+            const int chance = isEuclidean ? 0 : random.below(100);
+            const int fillChance = isEuclidean ? 0 : random.below(100);
             const int humanVelocity = random.below(2 * (s.humanize / 4) + 1) - s.humanize / 4;
             const int maxDelay = s.humanize ? 1 + (s.humanize - 1) * 3 / 100 : 0;
             const int humanDelay = random.below(maxDelay + 1);
             const int ghostProbability = s.density * s.variation / (lane == 2 ? 250 : 450);
-            bool hit = anchor || chance < (base ? s.density : ghostProbability);
-            if (lane >= 1 && lane != 3 && step >= s.steps - 4 && fillChance < s.fill &&
+            bool hit = isEuclidean ? base : anchor || chance < (base ? s.density : ghostProbability);
+            if (!isEuclidean && lane >= 1 && lane != 3 && step >= s.steps - 4 && fillChance < s.fill &&
                 (lane == 1 || lane == 6 || position % 2 == lane % 2)) hit = true;
             if (!hit) continue;
-            const int accents[] = {108,112,84,90,87,82,99,90};
             const int accent = position % 4 == 0 ? 7 : (lane == 2 && position % 4 == 2 ? -13 : 0);
             const int ghost = !base && !anchor ? -25 : 0;
-            generated[lane][step].velocity = static_cast<uint8_t>(std::clamp(accents[lane] + accent + ghost + humanVelocity, 24, 127));
+            generated[lane][step].velocity = static_cast<uint8_t>(std::clamp(laneVelocity[lane] + accent + ghost + humanVelocity, 24, 127));
             generated[lane][step].delayTicks = static_cast<uint8_t>(std::clamp((step % 2 ? s.swing * 6 / 100 : 0) + humanDelay, 0, songcore::TICS_PER_STEP - 1));
         }
     }
     s.grid = generated; s.generated = true; s.dirty = false; s.generatedSteps = s.steps; s.confirmApply = false;
+    s.stepHistoryCursor = s.stepHistorySize = 0;
     s.gridPage = std::clamp(s.gridPage, 0, s.steps / 16 - 1);
     s.status = std::to_string(drumlab_hit_count(s)) + " hits generated. Preview, then append safely with Apply.";
     return true;
@@ -264,6 +472,7 @@ bool drumlab_preview(DrumLabState& s, songcore::SongcoreHost& host, AudioEngine&
         if (!host.instrument_media_ready(s.lanes[lane].instrument)) {
             s.status = std::string("Source not loaded for ") + roles[lane] + ". Reload it in INSTRUMENT."; return false;
         }
+    stop_grid_audition(s, host);
     host.stop(); host.push_params();
     for (int table = 0; table < std::min<int>(songcore::POOL_TABLES, host.project().tables.size()); ++table)
         songcore::push_table(engine, host.project(), table);
@@ -278,8 +487,20 @@ bool drumlab_preview(DrumLabState& s, songcore::SongcoreHost& host, AudioEngine&
     drumlab_tick(s, host, engine); return true;
 }
 
+void drumlab_clear_grid_input(DrumLabState& s) {
+    s.gridAHeld = s.gridPreviewHeld = false;
+    s.gridBUsed = false;
+    s.gridHistoryDirections = 0;
+}
+
+void drumlab_release_grid_audition(DrumLabState& s, songcore::SongcoreHost& host) {
+    drumlab_clear_grid_input(s);
+    stop_grid_audition(s, host);
+}
+
 void drumlab_stop(DrumLabState& s, songcore::SongcoreHost& host, AudioEngine& engine) {
     s.confirmApply = false;
+    drumlab_release_grid_audition(s, host);
     if (!s.previewRunning) return;
     s.previewRunning = false; s.previewDisplayStep = -1;
     if (!host.is_playing()) { host.stop(); engine.clearScheduledNotes(); }
@@ -287,6 +508,13 @@ void drumlab_stop(DrumLabState& s, songcore::SongcoreHost& host, AudioEngine& en
 
 void drumlab_before_transport(DrumLabState& s, AudioEngine& engine) {
     const bool owned = s.previewRunning;
+    drumlab_clear_grid_input(s);
+    if (s.gridAudition) {
+        s.gridAudition = false;
+        const auto now = engine.getCurrentFrame();
+        engine.clearScheduledNotesFrom(now, AudioEngine::PREVIEW_LANE);
+        engine.scheduleCut(now, AudioEngine::PREVIEW_LANE);
+    }
     s.previewRunning = false; s.confirmApply = false; s.previewDisplayStep = -1;
     if (owned) { engine.clearScheduledNotes(); engine.stopAllRamped(); }
 }
@@ -346,19 +574,27 @@ void drumlab_tick(DrumLabState& s, songcore::SongcoreHost& host, AudioEngine& en
                 latest = frame; s.previewDisplayStep = step;
             }
         }
-        if (s.previewDisplayStep >= 0) s.gridPage = s.previewDisplayStep / 16;
+        if (!s.gridFocused && s.previewDisplayStep >= 0) s.gridPage = s.previewDisplayStep / 16;
     }
 }
 
 bool drumlab_button(const ButtonEvent& e, DrumLabState& s, songcore::SongcoreHost& host, AudioEngine& engine) {
-    s.row = std::clamp(s.row, 0, DRUMLAB_ROWS - 1); s.col = std::clamp(s.col, 0, 1);
+    const int lastLaneColumn = euclidean(s) ? ROTATE : LOCK;
+    s.row = std::clamp(s.row, 0, DRUMLAB_ROWS - 1);
+    s.col = std::clamp(s.col, 0, lastLaneColumn);
     s.footerAction = s.row >= 17 ? s.row - 17 : std::clamp(s.footerAction, 0, 2);
     if (e.button == Button::START) { if (e.action == ButtonAction::PRESSED) drumlab_stop(s, host, engine); return false; }
-    if (e.button == Button::SELECT && e.action == ButtonAction::RELEASED) { s.showHelp = !s.showHelp; return true; }
+    if (e.button == Button::SELECT && e.action == ButtonAction::RELEASED) {
+        drumlab_clear_grid_input(s);
+        stop_grid_audition(s, host);
+        s.showHelp = !s.showHelp;
+        return true;
+    }
     if (s.showHelp) {
         if (e.button == Button::B && e.action == ButtonAction::RELEASED) s.showHelp = false;
         return true;
     }
+    if (s.gridFocused) return grid_button(e, s, host, engine);
     if (e.button == Button::A) {
         if (e.action == ButtonAction::PRESSED) { s.aUsed = false; return true; }
         if (s.aUsed) { s.aUsed = false; return true; }
@@ -370,7 +606,18 @@ bool drumlab_button(const ButtonEvent& e, DrumLabState& s, songcore::SongcoreHos
             if (!confirmed) {
                 if (ready(s, host.project())) { s.confirmApply = true; s.status = "A again: append to a new SONG row using only empty resources."; }
             } else drumlab_apply(s, host);
-        } else if (s.row >= 9 && s.col == 1) { s.lanes[s.row - 9].locked = !s.lanes[s.row - 9].locked; s.confirmApply = false; }
+        } else if (s.row >= 9 && s.col == LOCK) { s.lanes[s.row - 9].locked = !s.lanes[s.row - 9].locked; s.confirmApply = false; }
+        else if (s.row >= 9 && s.col == SLOT) {
+            if (s.row - 9 >= s.activeLanes) s.status = "Choose an active lane to edit its steps.";
+            else if (!valid_config(s) || !grid_current(s)) s.status = "Generate before editing steps.";
+            else {
+                s.gridFocused = true;
+                drumlab_clear_grid_input(s);
+                s.confirmApply = false;
+                s.gridStep = std::clamp(s.gridPage, 0, s.steps / 16 - 1) * 16;
+                s.status = "Draft steps. Use Apply to add them to the song.";
+            }
+        }
         return true;
     }
     if ((e.button == Button::L_SHIFT || e.button == Button::R_SHIFT) && e.action == ButtonAction::RELEASED) {
@@ -386,73 +633,115 @@ bool drumlab_button(const ButtonEvent& e, DrumLabState& s, songcore::SongcoreHos
             if (e.button == Button::DPAD_UP) s.row = s.row >= 17 ? 16 : std::max(0, s.row - 1);
             else if (s.row == 16) s.row = 17 + s.footerAction;
             else if (s.row < 16) ++s.row;
+            while (hidden_setting(s, s.row)) s.row += e.button == Button::DPAD_UP ? -1 : 1;
             s.confirmApply = false;
         } else if (s.row >= 17) {
             s.row = std::clamp(s.row + (positive ? 1 : -1), 17, 19);
             s.footerAction = s.row - 17; s.confirmApply = false;
-        } else if (s.row >= 9 && s.row <= 16) s.col = e.button == Button::DPAD_RIGHT ? 1 : 0;
+        } else if (s.row >= 9 && s.row <= 16) s.col = std::clamp(s.col + (positive ? 1 : -1), 0, lastLaneColumn);
         return true;
     }
     s.aUsed = true; s.confirmApply = false;
-    if (s.row >= 17) return true; // An edit chord cannot press or invalidate an action button.
+    if (s.row >= 17 || hidden_setting(s, s.row)) return true;
     drumlab_stop(s, host, engine);
     const bool coarse = e.button == Button::DPAD_UP || e.button == Button::DPAD_DOWN;
     const int delta = (positive ? 1 : -1) * (coarse ? 10 : 1);
-    if (s.row == 0) s.genre = (s.genre + 8 + (positive ? 1 : -1)) % 8;
+    if (s.row == 0) {
+        s.genre = (s.genre + genreCount + (positive ? 1 : -1)) % genreCount;
+        if (euclidean(s)) for (auto& lane : s.lanes) bound_euclidean_lane(lane, s.steps);
+    }
     else if (s.row == 1) s.activeLanes = std::clamp(s.activeLanes + (positive ? 1 : -1), 5, 8);
-    else if (s.row == 2) s.steps = positive ? (s.steps < 32 ? 32 : 64) : (s.steps > 32 ? 32 : 16);
+    else if (s.row == 2) {
+        s.steps = positive ? (s.steps < 32 ? 32 : 64) : (s.steps > 32 ? 32 : 16);
+        if (euclidean(s)) for (auto& lane : s.lanes) bound_euclidean_lane(lane, s.steps);
+    }
     else if (s.row >= 3 && s.row <= 7) {
         int* values[] = {&s.density, &s.variation, &s.swing, &s.humanize, &s.fill};
         *values[s.row - 3] = std::clamp(*values[s.row - 3] + delta, 0, 100);
     } else if (s.row == 8) s.seed += static_cast<uint32_t>(delta);
     else if (s.row >= 9 && s.row <= 16) {
         auto& lane = s.lanes[s.row - 9];
-        if (s.col == 0) lane.instrument = std::clamp(lane.instrument + (positive ? 1 : -1) * (coarse ? 16 : 1), 0, 127);
-        else lane.locked = !lane.locked;
-        return true;
+        if (s.col == SLOT) {
+            lane.instrument = std::clamp(lane.instrument + (positive ? 1 : -1) * (coarse ? 16 : 1), 0, 127);
+            return true;
+        }
+        if (s.col == LOCK) { lane.locked = !lane.locked; return true; }
+        if (lane.locked) { s.status = "Unlock the lane to edit its Euclidean rhythm."; return true; }
+        const int change = (positive ? 1 : -1) * (coarse ? 4 : 1);
+        const std::array previous{lane.period, lane.hits, lane.rotation};
+        if (s.col == PERIOD) lane.period += change;
+        if (s.col == HITS) lane.hits += change;
+        if (s.col == ROTATE) {
+            const int period = std::clamp(lane.period, 1, s.steps);
+            lane.rotation = (lane.rotation + change % period + period) % period;
+        }
+        bound_euclidean_lane(lane, s.steps);
+        if (std::array{lane.period, lane.hits, lane.rotation} == previous) return true;
     } else return true;
     s.dirty = true; s.status = "Settings changed. Generate updates unlocked lanes."; return true;
 }
 
 void drumlab_draw(Canvas& c, const DrumLabState& s, const Theme& t, const songcore::Project& project) {
     const Argb panel = t.rowEvery4th, accent = t.rowCursor, muted = t.textParam, ink = t.textValue;
+    const bool assignments = s.row >= 9 && s.row <= 16;
+    const bool editGrid = s.gridFocused && assignments && !s.showHelp;
+    const bool editRhythm = !editGrid && euclidean(s) && assignments && !s.showHelp;
     c.panel_rect(18,104,604,44,panel,with_alpha(muted,.2f),6);
     c.draw_label("DRUM LAB",30,111,accent,12);
-    c.draw_label(drumlab_genre_name(s.genre),30,127,ink,12);
-    const std::string summary = std::to_string(std::clamp(s.activeLanes,5,8)) + " sources / " + std::to_string(s.steps) + " steps / " + std::to_string(drumlab_hit_count(s)) + " hits";
-    c.draw_label(summary,260,120,muted,12);
+    if (editRhythm) {
+        const int index = s.row - 9;
+        const auto& lane = s.lanes[index];
+        c.draw_label(std::string("Euclidean / ") + roles[index],30,127,ink,12);
+        constexpr const char* fields[] = {"PERIOD", "HITS", "ROTATE"};
+        const int values[] = {lane.period, lane.hits, lane.rotation};
+        for (int i = 0; i < 3; ++i) {
+            const int x = 278 + i * 112;
+            const bool selected = s.col == PERIOD + i;
+            if (selected) c.panel_rect(x,109,107,34,with_alpha(accent,.14f),accent,4);
+            c.draw_label(fields[i],x+10,110,muted,12);
+            c.draw_label(std::to_string(values[i]),x+10,126,selected?accent:ink,14);
+        }
+    } else {
+        c.draw_label(drumlab_genre_name(s.genre),30,127,ink,12);
+        const std::string summary = std::to_string(std::clamp(s.activeLanes,5,8)) + " sources / " + std::to_string(s.steps) + " steps / " + std::to_string(drumlab_hit_count(s)) + " hits";
+        c.draw_label(summary,260,120,muted,12);
+        if (s.previewRunning) c.draw_label("LOOPING",540,120,t.textPlayhead,12);
+    }
     if (s.showHelp) {
         c.panel_rect(18,158,604,282,panel,with_alpha(muted,.2f),7);
         const char* lines[] = {"Assign 5-8 sample or synth slots already loaded in INSTRUMENT.",
             "A + arrows edits a setting. Up / Down chooses the next field.",
-            "Left / Right selects SLOT / LOCK or the bottom action buttons.",
+            euclidean(s)?"Left / Right: Slot, Lock, Period, Hits or Rotate on the selected lane.":
+                         "Left / Right selects SLOT / LOCK or the bottom action buttons.",
             "Locks preserve a lane's triggers, velocities and timing on Generate.",
-            "Generate creates an editable 16 / 32 / 64-step pattern.",
-            "Preview loops without changing your song. A on Preview stops it.",
+            "Generate a pattern. A on a lane's SLOT opens Step Edit.",
+            "In Step Edit, A toggles a hit, A+Down loops Preview, B returns.",
             "Apply needs A twice; only empty, unused chains / phrases are claimed.",
-            "New music is appended after the last song row. Save your project.",
+            "B+Up undoes and B+Down redoes the last step edit.",
             "L / R changes the visible bar. Select or B closes this help."};
         for (int i=0;i<9;++i) c.draw_label(lines[i],30,173+i*27,i==7?accent:ink,12);
         return;
     }
-    const bool assignments = s.row >= 9 && s.row <= 16;
     c.panel_rect(18,158,208,242,panel,with_alpha(muted,.18f),6);
-    c.draw_label(assignments ? "SOURCES / LANE LOCKS" : "GROOVE SETTINGS",29,168,accent,12);
-    for (int i=0;i<(assignments?8:9);++i) {
-        const int row = assignments ? i+9 : i, y = 190+i*(assignments?25:22);
+    if (editGrid) draw_grid_detail(c,s,t,project);
+    else c.draw_label(assignments ? "SOURCES / LANE LOCKS" : "GROOVE SETTINGS",29,168,accent,12);
+    const int settingsCount = euclidean(s) ? static_cast<int>(std::size(euclideanSettings)) : 9;
+    for (int i=0;i<(editGrid?0:assignments?8:settingsCount);++i) {
+        const int row = assignments ? i+9 : euclidean(s) ? euclideanSettings[i] : i;
+        const int y = 190+i*(assignments?25:euclidean(s)?29:22);
         const bool selected = s.row==row;
         if(selected)c.panel_rect(25,y-2,194,23,darken(accent,.16f),accent,3);
         if(assignments){
             const bool active=i<std::clamp(s.activeLanes,5,8);
             c.draw_label(shortRoles[i],31,y+2,active?ink:muted,12);
-            c.draw_text(hex(s.lanes[i].instrument),83,y+2,selected&&s.col==0?accent:ink,1,2);
+            c.draw_text(hex(s.lanes[i].instrument),83,y+2,selected&&s.col==SLOT?accent:ink,1,2);
             const int id=s.lanes[i].instrument;
             std::string name=source_assigned(project,id)?project.instruments[id].name:"No source";
             c.draw_label(Canvas::clip_label(name,60,12),111,y+2,muted,12);
-            c.draw_label(s.lanes[i].locked?"LOCK":"free",180,y+2,selected&&s.col==1?accent:muted,12);
+            c.draw_label(s.lanes[i].locked?"LOCK":"free",180,y+2,selected&&s.col==LOCK?accent:muted,12);
         }else{
-            c.draw_label(settings[i],31,y+2,selected?ink:muted,12);
-            const std::string text=Canvas::clip_label(setting_value(s,i),109,12);
+            c.draw_label(settings[row],31,y+2,selected?ink:muted,12);
+            const std::string text=Canvas::clip_label(setting_value(s,row),109,12);
             c.draw_label(text,212-Canvas::label_width(text,12),y+2,selected?accent:ink,12);
         }
     }
@@ -467,15 +756,27 @@ void drumlab_draw(Canvas& c, const DrumLabState& s, const Theme& t, const songco
     }
     for(int lane=0;lane<8;++lane){
         const bool active=lane<std::clamp(s.activeLanes,5,8);
+        const bool focusedLane=editGrid&&s.row==lane+9;
         const int y=gridY+lane*cellH+12;
-        c.draw_label(shortRoles[lane],247,y+1,active?muted:darken(muted,.4f),12);
+        if(focusedLane)c.fill_rect(244,y-1,348,18,with_alpha(accent,.09f));
+        c.draw_label(shortRoles[lane],247,y+1,focusedLane?ink:active?muted:darken(muted,.4f),12);
         for(int step=0;step<16;++step){
             const auto& hit=s.grid[lane][page*16+step];
             const bool on=active&&s.generated&&hit.velocity>0;
+            const bool focused=focusedLane&&s.gridStep==page*16+step;
+            const int x=gridX+step*cellW;
             const Argb base=on?darken(accent,.38f+.62f*hit.velocity/127.f):with_alpha(muted,step%4==0?.15f:.07f);
-            c.fill_rect(gridX+step*cellW+2,y+1,14,12,base);
-            if(on&&hit.delayTicks)c.fill_rect(gridX+step*cellW+3,y+13,std::min(12,static_cast<int>(hit.delayTicks)),1,t.textTitle);
+            c.fill_rect(x+2,y+1,14,12,base);
+            if(on&&hit.delayTicks)c.fill_rect(x+3,y+13,std::min(12,static_cast<int>(hit.delayTicks)),1,t.textTitle);
+            if(focused)c.stroke_rect(x,y-2,18,19,accent,2);
         }
+    }
+    if (editGrid) {
+        c.panel_rect(18,410,604,30,panel,with_alpha(accent,.35f),5);
+        c.draw_label("D-pad  Move    A  Toggle    L/R  Bar    A+Down  Preview    B  Back",29,412,ink,12);
+        c.draw_label("B+Up  Undo    B+Down  Redo    Select  Help",29,426,ink,12);
+        c.draw_label(Canvas::clip_label(s.status,604,12),18,449,muted,12);
+        return;
     }
     const char* actions[]={"GENERATE","PREVIEW","APPLY TO SONG"};
     for(int i=0;i<3;++i){
@@ -485,6 +786,9 @@ void drumlab_draw(Canvas& c, const DrumLabState& s, const Theme& t, const songco
         c.draw_label(text,x+(194-Canvas::label_width(text,12))/2,418,selected?t.background:ink,12);
     }
     c.draw_label(Canvas::clip_label(s.status,604,12),18,449,s.dirty?t.textTitle:muted,12);
-    c.draw_label("D-pad: rows / columns    A + arrows: edit    L / R: bar    Select: help",18,464,muted,12);
+    const char* footer = assignments&&s.col==SLOT?"A: Step Edit   A + arrows: Slot   L / R: Bar   Select: Help":
+                         editRhythm?"Left / Right: Field   A + arrows: Edit   L / R: Bar   Select: Help":
+                                    "D-pad: Rows / columns   A + arrows: Edit   L / R: Bar   Select: Help";
+    c.draw_label(footer,18,464,muted,12);
 }
 } // namespace pt::ui

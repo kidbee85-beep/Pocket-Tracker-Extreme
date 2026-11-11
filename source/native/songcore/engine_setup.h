@@ -39,6 +39,19 @@ auto push_studio_voice_defaults(Engine& engine,const Instrument& ins,int)
 template <typename Engine>
 void push_studio_voice_defaults(Engine&,const Instrument&,long) {}
 
+template <typename Engine>
+auto push_sample_granular(Engine& engine,const Instrument& ins,const Routing& routing,int)
+    -> decltype(engine.setSampleGranular(ins.sampleId,ins.granularEnabled,ins.granularParams,48000.,ins.granularSeed),void()) {
+    const int sid=ins.sampleId;
+    const float ratio=sid>=0&&sid<POOL_INSTRUMENTS?routing.sampleRateRatio[sid]:1.f;
+    const double rate=ratio>0?engine.getSampleRate()/double(ratio):engine.getSampleRate();
+    const bool enabled=ins.granularEnabled&&ins.instrumentType==InstrumentType::SAMPLER&&
+        ins.sampleFilePath&&ins.sampleFilePath->rfind("/@mutable/",0)!=0;
+    engine.setSampleGranular(sid,enabled,ins.granularParams,rate,ins.granularSeed);
+}
+template <typename Engine>
+void push_sample_granular(Engine&,const Instrument&,const Routing&,long) {}
+
 // ─── params: no I/O, idempotent ──────────────────────────────────────────────────────────────────
 
 // One instrument's params.
@@ -50,6 +63,7 @@ void push_instrument_params(Engine& engine, const Instrument& ins, const Routing
     push_instrument_mod_eq_sends(engine, ins, tempo, sampleRate);
     push_studio_synth_params(engine,ins,0);
     push_studio_voice_defaults(engine,ins,0);
+    push_sample_granular(engine,ins,routing,0);
     // The SF ADSR override — a live key is scheduled with no push, so the engine's copy must be current.
     const SFOverrides& ov = ins.sfOverrides;
     engine.setSoundfontEnvelopeOverride(ins.id, ov.ampAttack, ov.ampDecay, ov.ampSustain, ov.ampRelease);

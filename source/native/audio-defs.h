@@ -41,8 +41,10 @@ inline const bool debug_enabled = [] {
 #  define LOGT(...)
 #endif
 
-// One voice per track. Nine lanes (8 = preview) but eight voices: a preview steals a fading one.
-const int MAX_VOICES = 8;
+// Eight existing song voices plus one RESERVED audition slot. The regular allocator never uses it.
+const int SONG_SAMPLE_VOICES = 8;
+const int SAMPLE_PREVIEW_VOICE = SONG_SAMPLE_VOICES;
+const int MAX_VOICES = SONG_SAMPLE_VOICES + 1;
 
 // ⚠️ Must match songcore/effects.h, where the codes are defined. Only what the table engine runs.
 const int FX_CHA    = 0x04;  // CHA xy - chance: x for its nearest filled neighbour on the LEFT, y on the RIGHT

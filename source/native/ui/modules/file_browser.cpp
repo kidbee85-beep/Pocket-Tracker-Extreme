@@ -369,8 +369,11 @@ void FileBrowserModule::draw(Canvas& c, int x, int y, const FileBrowserState& s,
                  library_tint(t.rowEvery4th, accent, 18), with_alpha(accent, .22f), 4);
     c.draw_text(count, countX, y + 16, t.textTitle, 1, 2);
     c.draw_text("FOLDER", x + 20, y + 37, t.textEmpty, 1, 2);
-    c.draw_label(path_label(c, s.currentDirectory, WIDTH - 110), x + 91, y + 35,
+    constexpr const char* help = "SELECT HELP";
+    const int helpWidth = Canvas::label_width(help, 12);
+    c.draw_label(path_label(c, s.currentDirectory, WIDTH - 127 - helpWidth), x + 91, y + 35,
                  t.textParam, 12);
+    c.draw_label(help, x + WIDTH - 18 - helpWidth, y + 35, accent, 12);
 
     // Nineteen unchanged navigation rows. The left branch marks entries as children of this folder.
     constexpr int listY = 60;
@@ -448,10 +451,12 @@ void FileBrowserModule::draw(Canvas& c, int x, int y, const FileBrowserState& s,
     std::string hint;
     Argb hintColor = t.textParam;
     if (s.mode == BrowserMode::DELETE) {
-        const auto doomed = s.delete_targets();
-        const std::string what = doomed.size() == 1 ? doomed[0]->displayName : std::to_string(doomed.size()) + " files";
-        const int room = WIDTH - 40 - c.label_width("Delete ?   A Yes   B No", 12);
-        hint = "Delete " + c.clip_label(what, room, 12) + "?   A Yes   B No";
+        const auto& request = s.pendingDelete;
+        const auto count = request.paths.size();
+        const std::string what = count == 1 ? request.name : std::to_string(count) + " items";
+        const std::string suffix = request.includesFolder ? " and contents?   A Yes   B No" : "?   A Yes   B No";
+        const int room = WIDTH - 40 - c.label_width("Delete " + suffix, 12);
+        hint = "Delete " + c.clip_label(what, room, 12) + suffix;
         hintColor = accent;
     } else if (s.mode == BrowserMode::SET_HOME || s.mode == BrowserMode::FORGET_ROOT) {
         const std::string action = s.mode == BrowserMode::SET_HOME ? "Use as home: " : "Forget access: ";

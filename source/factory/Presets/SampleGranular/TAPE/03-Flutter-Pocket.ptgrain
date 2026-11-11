@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Flutter Pocket",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 35.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.20000000298023224,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.1599999964237213,
+    "position": 0.21000000834465027,
+    "releaseMs": 140.0,
+    "reverseProbability": 0.05999999865889549,
+    "scanSpeed": 0.48000001907348633,
+    "sizeMs": 34.0,
+    "sprayMs": 54.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

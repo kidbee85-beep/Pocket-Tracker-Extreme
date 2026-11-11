@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Still Water",
+  "parameters": {
+    "attackMs": 120.0,
+    "densityHz": 16.0,
+    "freeze": true,
+    "level": 0.4399999976158142,
+    "panSpread": 0.5900000333786011,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.07999999821186066,
+    "position": 0.18000000715255737,
+    "releaseMs": 1600.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 298.0,
+    "sprayMs": 7.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

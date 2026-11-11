@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cctype>
 #include <cmath>
+#include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -26,10 +27,12 @@ using Json = nlohmann::json;
 using Clock = std::chrono::steady_clock;
 constexpr uint64_t kDiskReserve = 2u * 1024u * 1024u;
 constexpr uint64_t kMaxSeconds = 600;
+constexpr auto kDriverWarningAfter = std::chrono::seconds(5);
+struct Cancelled {};
 
 struct Status {
     std::string state = "idle";
-    std::string message = "Select an input and press Record; USB needs an OS audio driver";
+    std::string message = "Select an input and press Record; its availability is checked when recording starts";
     std::string path, routedName;
     uint64_t frames = 0;
     int rate = 48000, channels = 1, requestedId = 0, routedId = 0;
@@ -130,18 +133,36 @@ std::string inputKind(std::string name) {
 } // namespace
 
 struct SdlSampleRecorder::Impl {
-    explicit Impl(std::string root) : directory(std::filesystem::path(std::move(root)) / "Recordings") {}
+    explicit Impl(std::string root) : directory(std::filesystem::path(std::move(root)) / "Recordings") {
+        // Idle until an explicit input-list request. Internal resampling must
+        // not probe the USB/audio driver merely by constructing this backend.
+        inputWorker = std::thread([this] { discoverLoop(); });
+    }
     ~Impl() {
+        std::fprintf(stderr, "capture: shutdown begin recordingPending=%d\n", running.load() ? 1 : 0);
         stopRequested.store(true);
+        { std::lock_guard<std::mutex> lock(inputMutex); inputShutdown = true; }
+        inputWake.notify_all();
         if (worker.joinable()) worker.join();
+        std::fprintf(stderr, "capture: shutdown recording worker returned\n");
+        if (inputWorker.joinable()) inputWorker.join();
+        std::fprintf(stderr, "capture: shutdown discovery worker returned\n");
     }
     std::filesystem::path directory;
-    std::mutex lifecycle, stateMutex, inputMutex;
+    std::mutex lifecycle, stateMutex, inputMutex, probeMutex;
+    std::condition_variable inputWake;
     Status status;
-    std::thread worker;
-    std::atomic<bool> running{false}, stopRequested{false};
+    std::thread worker, inputWorker;
+    std::atomic<bool> running{false}, stopRequested{false}, driverTimedOut{false};
     std::map<std::string, int> ids;
     std::map<int, std::string> currentInputs;
+    Json cachedInputs = Json::array();
+    bool haveInputs = false, inputRequested = false, inputShutdown = false;
+    bool discovering = false, discoveryFailed = false, discoveryTimeoutLogged = false;
+    Clock::time_point discoveryStarted{};
+    std::string driverPhase;
+    Clock::time_point driverStarted{};
+    bool driverTimeoutLogged = false;
     int nextId = 1;
 
     template<class F> void update(F f) {
@@ -150,22 +171,74 @@ struct SdlSampleRecorder::Impl {
     void fail(const std::string& message) {
         update([&](Status& s) { s = Status{}; s.state = "error"; s.message = message; });
     }
+    static Json defaultInput() {
+        return {{"id", 0}, {"name", "System default (check on Record)"}, {"kind", "default"},
+                {"detail", "SDL default route; capture availability is checked when Record is pressed. USB charging alone is not audio."},
+                {"channels", {1, 2}}, {"rates", {44100, 48000}}};
+    }
+    void beginDriver(const char* operation, int id, bool log = true) {
+        {
+            std::lock_guard<std::mutex> lock(stateMutex);
+            driverPhase = operation; driverStarted = Clock::now(); driverTimeoutLogged = false;
+        }
+        if (log) std::fprintf(stderr, "capture: %s begin requestedId=%d\n", operation, id);
+    }
+    void endDriver(const char* operation, int id, bool log = true) {
+        {
+            std::lock_guard<std::mutex> lock(stateMutex);
+            if (Clock::now() - driverStarted >= kDriverWarningAfter) {
+                driverTimedOut.store(true); stopRequested.store(true);
+            }
+            driverPhase.clear();
+        }
+        if (log) std::fprintf(stderr, "capture: %s end requestedId=%d\n", operation, id);
+    }
+    Json snapshot() {
+        Json result;
+        std::string logPhase;
+        int logId = 0;
+        {
+            std::lock_guard<std::mutex> lock(stateMutex);
+            const bool pending = !driverPhase.empty();
+            if (pending && Clock::now() - driverStarted >= kDriverWarningAfter) {
+                driverTimedOut.store(true); stopRequested.store(true);
+                status.state = "stopping";
+                status.message = "Input driver is not responding (" + driverPhase + "). Stop requested; waiting for the driver. Internal resampling is separate.";
+                if (!driverTimeoutLogged) {
+                    driverTimeoutLogged = true; logPhase = driverPhase; logId = status.requestedId;
+                }
+            }
+            result = encode(status);
+            result["driverPending"] = pending;
+            result["driverPhase"] = driverPhase;
+            result["driverTimedOut"] = driverTimedOut.load();
+        }
+        if (!logPhase.empty()) std::fprintf(stderr, "capture: %s timeout requestedId=%d; stop requested, driver still pending\n", logPhase.c_str(), logId);
+        return result;
+    }
     // Never recycle an ID when devices change: a stale selected USB ID must not
     // silently turn into a different microphone after hotplug.
-    Json inputs() {
-        std::lock_guard<std::mutex> lock(inputMutex);
+    // Only background workers call SDL discovery. Never hold a UI-facing mutex
+    // while entering a driver or waiting for another probe to finish.
+    Json probeInputs() {
+        std::lock_guard<std::mutex> probe(probeMutex);
         Json result = Json::array();
-        currentInputs.clear();
-        if (!(SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO)) return result;
-        const int count = SDL_GetNumAudioDevices(SDL_TRUE);
-        if (count == 0) return result;
-        result.push_back({{"id", 0}, {"name", "System default (OS route)"}, {"kind", "default"},
-                          {"channels", {1, 2}}, {"rates", {44100, 48000}}});
+        std::vector<std::string> names;
+        const bool initialized = (SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO) != 0;
+        const int count = initialized ? SDL_GetNumAudioDevices(SDL_TRUE) : 0;
+        // Enumeration is not an open test. Some drivers expose a default
+        // capture route without listing named devices; only an explicit Record
+        // request may probe it. Never substitute it for a missing named input.
+        if (initialized) result.push_back(defaultInput());
         std::set<std::string> seen;
         for (int i = 0; i < count; ++i) {
             const char* raw = SDL_GetAudioDeviceName(i, SDL_TRUE);
             if (!raw || !*raw || !seen.insert(raw).second) continue;
-            const std::string name(raw);
+            names.emplace_back(raw);
+        }
+        std::lock_guard<std::mutex> lock(inputMutex);
+        currentInputs.clear();
+        for (const auto& name : names) {
             const auto inserted = ids.emplace(name, nextId);
             if (inserted.second) ++nextId;
             const int id = inserted.first->second;
@@ -173,10 +246,52 @@ struct SdlSampleRecorder::Impl {
             result.push_back({{"id", id}, {"name", name}, {"kind", inputKind(name)},
                               {"channels", {1, 2}}, {"rates", {44100, 48000}}});
         }
+        cachedInputs = result; haveInputs = true; discoveryFailed = false;
+        return result;
+    }
+    void discoverLoop() {
+        for (;;) {
+            {
+                std::unique_lock<std::mutex> lock(inputMutex);
+                inputWake.wait(lock, [&] { return inputShutdown || inputRequested; });
+                if (inputShutdown) return;
+                inputRequested = false; discovering = true;
+                discoveryStarted = Clock::now(); discoveryTimeoutLogged = false;
+            }
+            std::fprintf(stderr, "capture: discovery begin requestedId=-1\n");
+            try { probeInputs(); }
+            catch (...) { std::lock_guard<std::mutex> lock(inputMutex); discoveryFailed = true; }
+            {
+                std::lock_guard<std::mutex> lock(inputMutex); discovering = false;
+            }
+            std::fprintf(stderr, "capture: discovery end requestedId=-1\n");
+        }
+    }
+    Json inputs() {
+        // SDL_WasInit reads initialized subsystem flags; it does not enumerate
+        // or open hardware. Preserve the pre-existing unavailable-audio guard.
+        if (!(SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO)) return Json::array();
+        std::unique_lock<std::mutex> lock(inputMutex);
+        if (!discovering && !inputShutdown) { inputRequested = true; inputWake.notify_one(); }
+        Json result = haveInputs ? cachedInputs : Json::array({defaultInput()});
+        const bool timedOut = discovering && Clock::now() - discoveryStarted >= kDriverWarningAfter;
+        const bool logTimeout = timedOut && !discoveryTimeoutLogged;
+        if (logTimeout) discoveryTimeoutLogged = true;
+        for (auto& row : result) {
+            if (timedOut || discoveryFailed) {
+                row["connected"] = false;
+                row["detail"] = timedOut ? "Input discovery is not responding. Cached input only; wait for the driver or use internal resampling."
+                                          : "Input discovery failed. Refresh inputs before recording.";
+            } else if (discovering || inputRequested) {
+                row["detail"] = row.value("detail", std::string()) + " Refreshing inputs in background; selected input is checked again before recording.";
+            }
+        }
+        lock.unlock();
+        if (logTimeout) std::fprintf(stderr, "capture: discovery timeout requestedId=-1; returning cached inputs\n");
         return result;
     }
     bool resolveInput(int id, std::string& name) {
-        inputs();
+        probeInputs();
         if (id == 0) return true;
         std::lock_guard<std::mutex> lock(inputMutex);
         const auto it = currentInputs.find(id);
@@ -186,14 +301,15 @@ struct SdlSampleRecorder::Impl {
     }
     bool stillPresent(int id, const std::string& name) {
         if (id == 0) return true; // The default route belongs to the OS, not SDL.
-        inputs();
+        probeInputs();
         std::lock_guard<std::mutex> lock(inputMutex);
         const auto it = currentInputs.find(id);
         return it != currentInputs.end() && it->second == name;
     }
-    void record(int requestedId, int channels, int rate, std::string name) {
+    void record(int requestedId, int channels, int rate) {
         SDL_AudioDeviceID device = 0;
         std::unique_ptr<WavWriter> writer;
+        std::string name;
         std::string failure, finishMessage = "Recording ready; no input monitoring";
         try {
             if (!stopRequested.load()) {
@@ -202,28 +318,38 @@ struct SdlSampleRecorder::Impl {
                 if (ec || !std::filesystem::is_directory(directory))
                     throw std::runtime_error("Cannot create Recordings folder");
                 if (!hasSpace(directory)) throw std::runtime_error("Not enough free recording space");
-                if (!stillPresent(requestedId, name))
-                    throw std::runtime_error("Selected input disconnected; refresh inputs (USB requires OS support)");
+                beginDriver("resolve", requestedId);
+                const bool found = resolveInput(requestedId, name);
+                endDriver("resolve", requestedId);
+                if (stopRequested.load()) throw Cancelled{};
+                if (!found) throw std::runtime_error("Selected input is no longer connected; refresh inputs (USB requires OS support)");
                 SDL_AudioSpec want{}, got{};
                 want.freq = rate; want.format = AUDIO_S16LSB;
                 want.channels = static_cast<Uint8>(channels); want.samples = 1024;
+                beginDriver("open", requestedId);
                 device = SDL_OpenAudioDevice(name.empty() ? nullptr : name.c_str(), SDL_TRUE, &want, &got, 0);
+                endDriver("open", requestedId);
                 if (!device) throw std::runtime_error(sdlError("Cannot open capture input; check OS/USB driver"));
                 if (got.freq != rate || got.channels != channels || got.format != AUDIO_S16LSB)
                     throw std::runtime_error("Input did not provide the requested PCM16 format");
-                if (!stopRequested.load()) SDL_PauseAudioDevice(device, 0);
+                if (!stopRequested.load()) {
+                    beginDriver("activate", requestedId); SDL_PauseAudioDevice(device, 0); endDriver("activate", requestedId);
+                }
                 const auto started = Clock::now();
                 auto lastFramesAt = started, lastCheck = started;
                 const size_t frameBytes = static_cast<size_t>(channels) * 2;
                 std::vector<unsigned char> buffer(32768 * frameBytes);
                 while (!stopRequested.load()) {
                     const auto now = Clock::now();
+                    // Track an outstanding read without logging per audio poll.
+                    beginDriver("read", requestedId, false);
                     if (SDL_GetAudioDeviceStatus(device) != SDL_AUDIO_PLAYING)
                         throw std::runtime_error("Input stopped or disconnected; partial take kept");
                     const Uint32 queued = SDL_GetQueuedAudioSize(device);
                     if (queued > static_cast<Uint32>(rate * frameBytes * 2))
                         throw std::runtime_error("Input overrun; partial take kept");
                     const size_t gotBytes = SDL_DequeueAudio(device, buffer.data(), static_cast<Uint32>(buffer.size()));
+                    endDriver("read", requestedId, false);
                     const size_t aligned = gotBytes - gotBytes % frameBytes;
                     if (aligned) {
                         lastFramesAt = now;
@@ -244,7 +370,7 @@ struct SdlSampleRecorder::Impl {
                             s.message = "Recording PCM16; software monitoring off";
                             s.path = writer->path; s.frames = writer->frames;
                             s.routedId = requestedId;
-                            s.routedName = name.empty() ? "System default (route managed by OS)" : name;
+                            s.routedName = name.empty() ? "System default (route managed by SDL)" : name;
                             s.peakL = peakL; s.peakR = channels == 1 ? peakL : peakR;
                         });
                         if (writer->frames >= static_cast<uint64_t>(rate) * kMaxSeconds) {
@@ -257,7 +383,10 @@ struct SdlSampleRecorder::Impl {
                     }
                     if (now - lastCheck >= std::chrono::seconds(1)) {
                         lastCheck = now;
-                        if (!stillPresent(requestedId, name))
+                        beginDriver("hotplug-check", requestedId);
+                        const bool present = stillPresent(requestedId, name);
+                        endDriver("hotplug-check", requestedId);
+                        if (!present)
                             throw std::runtime_error("Selected input disconnected; partial take kept");
                         if (!hasSpace(directory)) { finishMessage = "Low free space; recording stopped and kept"; break; }
                         if (now - started >= std::chrono::seconds(kMaxSeconds)) {
@@ -266,15 +395,25 @@ struct SdlSampleRecorder::Impl {
                     }
                 }
             }
-        } catch (const std::exception& e) { failure = e.what(); }
+        } catch (const Cancelled&) { /* A normal Stop during discovery is not a driver failure. */ }
+        catch (const std::exception& e) { failure = e.what(); }
         catch (...) { failure = "Audio input failed"; }
-        if (device) { SDL_PauseAudioDevice(device, 1); SDL_ClearQueuedAudio(device); SDL_CloseAudioDevice(device); }
+        // Preserve a valid file before any driver-close operation that might
+        // stall. Do not publish completion or allow another start until the
+        // old handle has actually finished closing.
         const uint64_t frames = writer ? writer->frames : 0;
         const std::string path = writer ? writer->path : std::string();
+        update([](Status& s) { s.state = "stopping"; s.message = "Finalizing take and closing input; waiting for the driver"; });
         bool finalized = true;
         if (writer) finalized = writer->finish();
         if (!finalized) failure = "Cannot finalize WAV; file kept in Recordings for recovery";
         if (writer && frames == 0) { std::error_code ec; std::filesystem::remove(path, ec); }
+        if (device) {
+            beginDriver("close", requestedId);
+            SDL_PauseAudioDevice(device, 1); SDL_ClearQueuedAudio(device); SDL_CloseAudioDevice(device);
+            endDriver("close", requestedId);
+        }
+        if (driverTimedOut.load() && failure.empty()) failure = "Input driver timed out; recording stopped and any valid partial take was kept";
         {
             // Publishing a completed take and allowing the next start are one
             // transition. A UI poll must not see READY then have start refused
@@ -288,6 +427,7 @@ struct SdlSampleRecorder::Impl {
                 s.peakL = s.peakR = 0;
             });
             running.store(false);
+            { std::lock_guard<std::mutex> lock(stateMutex); driverPhase.clear(); }
         }
     }
 };
@@ -297,7 +437,7 @@ SdlSampleRecorder::~SdlSampleRecorder() = default;
 
 std::string SdlSampleRecorder::inputs_json() { return impl_->inputs().dump(); }
 std::string SdlSampleRecorder::state_json() {
-    std::lock_guard<std::mutex> lock(impl_->stateMutex); return encode(impl_->status).dump();
+    return impl_->snapshot().dump();
 }
 bool SdlSampleRecorder::start(int id, int channels, int rate) {
     auto& s = *impl_;
@@ -310,18 +450,21 @@ bool SdlSampleRecorder::start(int id, int channels, int rate) {
     if (!(SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO)) {
         s.fail("Audio input subsystem is unavailable"); return false;
     }
-    std::string name;
-    if (!s.resolveInput(id, name)) {
-        s.fail("Selected input is no longer connected; refresh inputs (USB requires OS driver support)"); return false;
+    if (id != 0) {
+        std::lock_guard<std::mutex> lock(s.inputMutex);
+        if (s.currentInputs.find(id) == s.currentInputs.end()) {
+            s.fail("Selected input is no longer connected; refresh inputs (USB requires OS driver support)"); return false;
+        }
     }
     s.stopRequested.store(false);
+    s.driverTimedOut.store(false);
     s.update([&](Status& status) {
         status = Status{}; status.state = "starting";
-        status.message = "Opening input; software monitoring off";
+        status.message = "Checking selected input in background; software monitoring off";
         status.rate = rate; status.channels = channels; status.requestedId = id;
     });
     s.running.store(true);
-    try { s.worker = std::thread([&s, id, channels, rate, name] { s.record(id, channels, rate, name); }); }
+    try { s.worker = std::thread([&s, id, channels, rate] { s.record(id, channels, rate); }); }
     catch (...) { s.running.store(false); s.fail("Cannot start recording worker"); return false; }
     return true;
 }

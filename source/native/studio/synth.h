@@ -11,7 +11,13 @@ int preset_model(int code);
 int preset_variation(int code);
 std::array<int,3> preset_macros(int code);
 // IDs 0..81 are the original Mutable models; 82..93 add Elements articulations,
-// 94..101 synthetic granular oscillators, 102..111 original Studio algorithms.
+// 94..101 synthetic granular oscillators, 102 onward original Studio algorithms.
+inline constexpr int kOctaveOrbitModel = 112;
+inline constexpr int kGravityFirstModel = 113;
+inline constexpr int kGravityModelCount = 3;
+inline constexpr bool is_gravity_model(int model) {
+    return model >= kGravityFirstModel && model < kGravityFirstModel + kGravityModelCount;
+}
 int model_count();
 const char* model_name(int model);
 bool synth_needs_strike(int model);

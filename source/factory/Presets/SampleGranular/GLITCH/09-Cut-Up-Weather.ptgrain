@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Cut-Up Weather",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 35.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.6000000238418579,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 1.600000023841858,
+    "position": 0.48000001907348633,
+    "releaseMs": 144.0,
+    "reverseProbability": 0.6000000238418579,
+    "scanSpeed": -2.0,
+    "sizeMs": 64.0,
+    "sprayMs": 360.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

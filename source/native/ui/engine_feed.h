@@ -179,7 +179,7 @@ private:
             engine.decayWaveform();
         }
         engine.getTrackPeaks(state.trackPeaks);
-        engine.getMasterPeaks(state.masterPeaks);
+        engine.getMasterPeaks(state.masterPeaks, state.masterMaximum, &state.limiterInputMaximum);
         engine.getSendPeaks(state.sendPeaks);
         state.peaksVersion += static_cast<unsigned>(steps);
     }
@@ -265,8 +265,19 @@ private:
         // 0..1 while sounding, −1 when not, from the slot actually playing (the preview slot for
         // LEFT/RIGHT/MONO and SYNC auditions).
         se.playbackPosition = host.sample_playback_position(songcore::SOURCE_PREVIEW_SLOT);
-        if (se.playbackPosition < 0.0f && !(se.hasStereoData && se.sourceMode != 2))
+        if (se.chopReview.open() || se.levelEdit.open()) {
+            const auto& chop = se.chopReview;
+            const int64_t first = se.levelEdit.open() ? se.levelEdit.first : chop.slices[chop.selected].first;
+            const int64_t end = se.levelEdit.open() ? se.levelEdit.previewEnd : chop.previewEnd;
+            if (se.playbackPosition >= 0.f && end > first && se.totalFrames > 0) {
+                se.playbackPosition = static_cast<float>((first + double(se.playbackPosition) *
+                                      (end - first)) / se.totalFrames);
+            } else {
+                se.playbackPosition = -1.f;
+            }
+        } else if (se.playbackPosition < 0.0f && !(se.hasStereoData && se.sourceMode != 2)) {
             se.playbackPosition = host.sample_playback_position(se.instrumentId);
+        }
 
         // Hand-placed markers carry the (method, parameter) they were made under; a change clears them
         // here, once, above every reader. ⚠️ Cleared, not ignored, or BY 08 → 09 → 08 brings them back.
@@ -277,10 +288,14 @@ private:
             se.manualKeyParam  = -1;
         }
 
-        // Transients: an empty list under TRANSIENT is the trigger (entering the mode or a new SENS empties it).
+        // A completed scan can be empty. Do not analyze the same sustained or silent sample again.
         if (se.sliceMethod == SampleEditorModule::SLICE_TRANSIENT && se.totalFrames > 0 &&
-            se.transientMarkers.empty()) {
-            se.transientMarkers = host.detect_transients(se.instrumentId, se.sliceSensitivity);
+            !se.transientScanReady && !se.hitReview.open && !se.chopReview.open() &&
+            !se.levelEdit.open() && !se.manual_markers_live()) {
+            AudioEngine::TransientScan scan;
+            scan.sourceMode = se.sourceMode;
+            se.transientMarkers = host.detect_transients(se.instrumentId, se.sliceSensitivity, scan);
+            se.transientScanReady = true;
             se.sliceIndex = 0;   // the selection is not touched: detecting is not choosing
         }
 

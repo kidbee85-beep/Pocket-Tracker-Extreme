@@ -8,7 +8,7 @@
 // on authored bytes, built without fast-math and with -ffp-contract=off.
 //
 // Trace text form:
-//   # schema=1 sr=44100 tempo=128 mode=render project=<sha1>
+//   # schema=3 sr=44100 tempo=128 mode=render project=<sha1>
 //   T PLAY RENDER 00-03            (render: song-row range, hex2)
 //   T PLAY SONG 00                 (live: SONG start row / CHAIN id / PHRASE id, hex2)
 //   <frame> <track> <instr> <TT> k=v k=v ...
@@ -27,10 +27,13 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include "../studio/granular_step.h"
 
 namespace songcore {
 
-constexpr int SCHEMA_VERSION = 2;
+// v3 adds internal Gxx deltas, printed only for notes that carry one. Existing
+// payloads and tag values remain unchanged. This is not a project-file version.
+constexpr int SCHEMA_VERSION = 3;
 
 // An analog value as its binary32 bits (memcpy: pointer punning is UB). Decoder: `f32_from_bits`.
 inline uint32_t f32_bits(float f) {
@@ -63,6 +66,7 @@ enum EventType : uint8_t {
     // so it cannot be folded into the two above.
     EV_EXT_EQ_MORPH        = 0x07,  // an AUS/AUF tick over EQN
     EV_EXT_MASTER_EQ_MORPH = 0x08,  // an AUS/AUF tick over EQM (track = TRACK_GLOBAL)
+    EV_EXT_GRANULAR        = 0x09,  // Gxx on an FX-only step, never routed to external MIDI
     EV_NOTE_OFF       = 0x80,
     EV_NOTE_ON        = 0x90,
     EV_CC             = 0xB0,
@@ -173,6 +177,7 @@ struct NoteOnPayload {
     int8_t   chord[4];    //           semitones, ascending; the first chordCount are used
     uint8_t  strumOrder[4]; // strum   ARC on the chord's row: chord[i] sounds strumOrder[i] × strumStep
     uint32_t strumStep;   //           frames after the note-on; 0 = all at once (printed only then)
+    studio::granular::step::Delta granular; // applied after resolving the actual instrument, before first grain
 };
 
 // The note's velocity, 0..1. ⚠️ Every consumer reads it here, or a note and its retriggers differ.
@@ -228,6 +233,7 @@ struct Event {
         ExtEqSlotPayload    extEqSlot;
         ExtMasterEqPayload  extMasterEq;
         ExtEqMorphPayload   extEqMorph;      // EV_EXT_EQ_MORPH and EV_EXT_MASTER_EQ_MORPH both
+        studio::granular::step::Delta extGranular; // EV_EXT_GRANULAR
     };
 };
 

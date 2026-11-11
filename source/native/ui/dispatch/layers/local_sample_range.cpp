@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/dispatch/dispatch_common.h"
 #include "ui/local_sample_range.h"
+#include "ui/sample_granular_ui.h"
 #include "ui/source_sampler.h"
 #include "ui/std_filesystem.h"
 #include "common/load_progress.h"
@@ -82,7 +83,10 @@ void InputDispatcher::poll_local_sample_range(){
     v.source=host_.local_wav_source().snapshot();
     if(!v.source.error.empty())v.message=v.source.error;
     if(!v.source.open&&!s_.loading.running){
-        v.isOpen=false;set_status(s_.fileBrowser,v.message.empty()?"SOURCE CLOSED":v.message,false);
+        v.isOpen=false;
+        const auto message = v.message.empty() ? "SOURCE CLOSED" : v.message;
+        if (v.fromGranularTake) s_.studioMessage = message;
+        else set_status(s_.fileBrowser,message,false);
     }
 }
 void InputDispatcher::local_sample_range_edit(int direction,int milliseconds,bool fine){
@@ -107,6 +111,19 @@ void InputDispatcher::local_sample_range_edit(int direction,int milliseconds,boo
 void InputDispatcher::import_local_sample_range(bool wholeFile){
     auto& v=s_.localSampleRange;auto& source=host_.local_wav_source();
     if(!v.source.open)return;
+    if (v.fromGranularTake) {
+        const auto& instruments = host_.project().instruments;
+        if (v.takeProject != s_.project || v.targetInstrument < 0 ||
+            v.targetInstrument >= int(instruments.size()) ||
+            !songcore::instrument_is_free(instruments[v.targetInstrument])) {
+            v.message = "The destination changed. B returns to choose a free slot. The WAV is saved.";
+            return;
+        }
+        if (s_.currentScreen == ScreenType::SAMPLE_EDITOR && s_.sampleEditor.isModified) {
+            v.message = "Save your sample edits first. The recorded WAV is saved.";
+            return;
+        }
+    }
     const auto first=wholeFile?int64_t(0):v.inFrame,end=wholeFile?v.source.totalFrames:v.outFrame;
     v.maxImportFrames=std::min(v.maxImportFrames,import_frame_budget(v.source));
     if(end<=first){v.message="Set OUT after IN.";return;}
@@ -147,7 +164,11 @@ void InputDispatcher::import_local_sample_range(bool wholeFile){
             // A failed external copy still leaves the complete excerpt in app-owned storage.
         }
     }
-    if(!host_.load_sample(target,imported)){
+    const bool granular=!v.fromGranularTake && s_.browserPurpose==AppState::BrowserPurpose::LOAD_GRANULAR_SAMPLE;
+    if(granular&&(target!=s_.sampleGranular.browserInstrument||target!=s_.currentInstrument)){
+        v.message="Target changed; excerpt and original instrument kept";return;
+    }
+    if(!(granular?sample_granular_load_source(s_,host_,imported):host_.load_sample(target,imported))){
         source.open(original);source.seek(oldPosition);v.source=source.snapshot();
         v.message=host_.last_load_cancelled()?"Load cancelled; original instrument kept":
             "Excerpt saved; instrument kept. Free some RAM, then load the excerpt.";
@@ -158,14 +179,25 @@ void InputDispatcher::import_local_sample_range(bool wholeFile){
     if(songcore::instrument_has_default_name(ins)||(!previousName.empty()&&ins.name==previousName))
         ins.name=adopted_name(path_stem(title));
     v.isOpen=false;source.close();
-    close_file_browser();s_.currentInstrument=target;mark_modified();open_sample_editor();
+    if (v.fromGranularTake) s_.studioOpen = false;
+    else close_file_browser();
+    s_.currentInstrument=target;mark_modified();
+    if(granular)s_.studioOpen=false;
+    open_sample_editor(granular);
     set_status(s_,wholeFile?"WAV LOADED":"EXCERPT SAVED / READY TO SLICE",true);
 }
 GestureResult InputDispatcher::local_sample_range_layer(Gesture g){
     auto& v=s_.localSampleRange;auto& source=host_.local_wav_source();
-    if(g==Gesture::B){source.close();v.isOpen=false;return GestureResult::TAKEN;}
     if(g==Gesture::SELECT){v.help=!v.help;return GestureResult::TAKEN;}
-    if(v.help)return GestureResult::TAKEN;
+    if(v.help){
+        if(g==Gesture::B)v.help=false;
+        return GestureResult::TAKEN;
+    }
+    if(g==Gesture::B){
+        source.close();v.isOpen=false;
+        if (v.fromGranularTake) s_.sampleGranular.returnReleaseMask |= 2u;
+        return GestureResult::TAKEN;
+    }
     if(g==Gesture::START||g==Gesture::A_START){
         if(v.source.playing)source.pause();else source.play();
     }else if(g==Gesture::DPAD_UP)v.row=std::max(0,v.row-1);

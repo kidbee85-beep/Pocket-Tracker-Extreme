@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Sparse Ticks",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 40.0,
+    "freeze": false,
+    "level": 0.5,
+    "panSpread": 0.5799999833106995,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.0,
+    "position": 0.6600000262260437,
+    "releaseMs": 100.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 1.0,
+    "sizeMs": 60.0,
+    "sprayMs": 16.0,
+    "windowShape": 0.6000000238418579
+  },
+  "version": 1
+}

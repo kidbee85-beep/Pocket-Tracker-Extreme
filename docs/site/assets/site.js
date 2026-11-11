@@ -13,10 +13,30 @@ if (menuButton && nav) {
 }
 
 const processContent = {
-  discover: { kicker: 'DISCOVER / INTERNET ARCHIVE', title: 'Find a direction before you know a title.', copy: 'Browse by genre, try Random for inspiration or search for something you already found. A result can contain several tracks: open the result, then choose the recording you want to hear.', capture: 'archive-search' },
-  preview: { kicker: 'PREVIEW / FOLLOW YOUR EARS', title: 'Listen until a phrase catches you.', copy: 'Play the selected source and seek through the track. Listen for a chord, texture, break or small detail you can build around. A recording is more useful when you know exactly which part you want.', capture: 'archive-preview' },
-  mark: { kicker: 'IN / OUT / MAKE A NEW WAV', title: 'Keep the part that matters.', copy: 'Set an IN and an OUT at the useful passage, refine the markers and render the region. A short clip makes a practical first step. The result becomes a local WAV for the normal editor.', capture: 'archive-region' },
-  flip: { kicker: 'SLICE / PITCH / SEQUENCE', title: 'The source is only half the idea.', copy: 'Load the new WAV into an instrument. Keep a whole musical phrase or slice selected accents, then build your own arrangement around it. Bring in drums and give the source a different rhythmic role. Keep the original source details with your clip.', capture: 'sample-editor' }
+  "discover": {
+    "kicker": "LOAD / LOCAL SAMPLES",
+    "title": "Find the phrase in your library.",
+    "copy": "Open a sample in the instrument browser. Start with a few bars that have a shape you can build around.",
+    "capture": "sample-load"
+  },
+  "preview": {
+    "kicker": "PLAY / LISTEN FOR THE POCKET",
+    "title": "Hear where the phrase turns.",
+    "copy": "Preview the sample in the editor. Listen for the accents, tails and gaps that give the phrase its feel.",
+    "capture": "sample-editor"
+  },
+  "mark": {
+    "kicker": "CHOP / AUDITION",
+    "title": "Place cuts where they land naturally.",
+    "copy": "Use the waveform to adjust the boundaries. Audition the slices before sequencing and leave room for their tails.",
+    "capture": "sample-chop"
+  },
+  "flip": {
+    "kicker": "PHRASE / CHAIN",
+    "title": "Give the cuts a new rhythm.",
+    "copy": "Place the cuts in a phrase, bring in your drums and arrange contrasting sections with chains.",
+    "capture": "song-pattern"
+  }
 };
 let captures = {};
 let activeProcess = 'discover';
@@ -80,49 +100,6 @@ fetch('data/captures.json').then(response => {
     container.replaceChildren(button, caption); container.hidden = false;
   }
 }).catch(() => { /* Existing screenshots and the illustrated workflow remain usable. */ });
-
-const downloadLabels = {
-  android: 'Download Android APK ↗',
-  'brick-first': 'Download first-install pack ↗', 'brick-update': 'Download program update ↗',
-  mini: 'Download Mini offline pack ↗', plus: 'Download Mini Plus pack ↗',
-  presets: 'Factory presets ↗', source: 'Complete source ↗', 'sdl-source': 'Miyoo SDL source ↗', checksums: 'Checksums ↗'
-};
-fetch('data/releases.json').then(response => {
-  if (!response.ok) throw new Error('Release manifest unavailable');
-  return response.json();
-}).then(release => {
-  if (release.releaseReady) {
-    for (const element of document.querySelectorAll('[data-download]')) {
-      const key = element.dataset.download, asset = release.assets[key];
-      if (!asset || !asset.ready) continue;
-      const link = document.createElement('a');
-      link.className = element.className;
-      link.dataset.download = key;
-      link.href = release.repository + '/releases/download/' + encodeURIComponent(release.tag) + '/' + encodeURIComponent(asset.file);
-      link.textContent = downloadLabels[key] || asset.file;
-      element.replaceWith(link);
-    }
-    for (const notice of document.querySelectorAll('[data-release-notice]')) {
-      const p = notice.querySelector('p');
-      p.replaceChildren();
-      const title = document.createElement('strong'); title.textContent = 'TrackWerk ' + release.version + ' beta is available. ';
-      p.append(title, 'Choose the package for your platform and follow the field guide. Matching source and checksums accompany the release.');
-    }
-  }
-  if (release.film && release.film.ready) {
-    for (const stage of document.querySelectorAll('[data-film-stage]')) {
-      const video = stage.querySelector('video');
-      if (!video) continue;
-      if (video.getAttribute('src') !== release.film.file) video.src = release.film.file;
-      if (release.film.poster) video.poster = release.film.poster;
-      video.hidden = false;
-      for (const element of stage.querySelectorAll('.film-poster,.film-pending')) element.hidden = true;
-      stage.classList.add('film-ready');
-    }
-  }
-}).catch(() => {
-  for (const notice of document.querySelectorAll('[data-release-notice] p')) notice.textContent = 'Release information could not be loaded. Open this site through its local preview server, or visit the GitHub repository for the published release.';
-});
 
 const imageDialog = document.querySelector('.image-dialog');
 let previousFocus;

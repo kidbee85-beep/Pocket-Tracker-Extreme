@@ -37,6 +37,7 @@ inline constexpr int HELP_TITLE_MAX_CHARS = 26;
 
 inline constexpr int HELP_BODY_LINES = 8;   // the full overlay's room for body…
 inline constexpr int HELP_KEY_LINES = 9;    // …and for controls, one gesture per line
+inline constexpr char PHRASE_OVERVIEW_HELP[] = "SELECT+←/→ switches overview";
 
 // Three summary lines, then an optional body and controls. The compact panel shows the summary; the
 // full overlay the title, the body (or `line2`/`line3` without one), then the controls.
@@ -275,6 +276,8 @@ enum class HelpTopic {
     THEME_EQ_BORDER,
     THEME_EQ_TXT,
     THEME_EQ_BG,
+    THEME_CHAIN_GRID,
+    THEME_PHRASE_GRID,
 
     // ── The sample editor — the one full-screen module with help (its waveform panel is the strip) ──
     SE_ZOOM,
@@ -297,6 +300,7 @@ enum class HelpTopic {
     SE_OP_PASTE,
     SE_OP_DEL,
     SE_OP_NORM,
+    SE_OP_GAIN,
     SE_OP_FADE_IN,
     SE_OP_FADE_OUT,
     SE_OP_SILENCE,
@@ -351,6 +355,11 @@ enum class HelpTopic {
     INST_STUDIO,
     RECORD_INPUT,
     PROJECT_SWING,
+    SET_APPEARANCE,
+    SE_TO_INST,
+    SE_FIND_HITS,
+    OVERLAY_KEYBOARD,
+    OVERLAY_CONFIRM,
 
     COUNT
 };
@@ -392,10 +401,12 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "L+B marks cells, B copies them",
       "L+A pastes"}},
     /* SCREEN_PHRASE */
-    {"PHRASE: 16 steps of notes", "The smallest pattern. A chain", "plays phrases one after another.",
-     {"Each step can hold a note, its",
-      "volume and instrument, and three",
-      "FX commands."},
+    {"PHRASE: 16 steps of notes", "SELECT+←/→ Audio/Notes/Velocity", "SELECT+↑ Undo / SELECT+↓ Redo",
+     {"SELECT+↑ undoes, SELECT+↓ redoes",
+      PHRASE_OVERVIEW_HELP,
+      "Hold SELECT, tap A/B (+1/-1)",
+      "Wraps selection or before HOP",
+      "FX stay on their rows"},
      {"START plays this phrase",
       "R+START plays the whole song",
       "R+→ opens the instrument",
@@ -515,6 +526,8 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "R+B mutes, R+A solos a fader",
       "L+R brings everything back",
       "START plays the song from 00",
+      "A on MIX clears the peaks",
+      "L+A on MIX trims all tracks",
       "R+↓ goes to EFFECTS"}},
     /* SCREEN_EFFECTS */
     {"EFFECTS: reverb and delay", "One reverb and one delay that", "every instrument can use.",
@@ -530,7 +543,7 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "START plays the song from 00",
       "R+↑ goes to the MIXER"}},
     /* SCREEN_FILE_BROWSER */
-    {"FILE BROWSER", "A picks. SELECT+A renames,", "SELECT+B deletes.",
+    {"FILE BROWSER", "A picks. SELECT+A renames,", "SELECT+B asks to delete.",
      {"Samples reopen the last folder,",
       "file and scroll with REMEMBER.",
       "REFRESH starts at Samples.",
@@ -538,13 +551,13 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "B closes unless marking files.",
       "Files show only allowed types."},
      {"↑/↓ moves, ←/→ jumps a page",
-      "A opens a folder or picks a file",
       "START plays the file you are on",
       "R+← goes up, R+↑/↓ sorts",
       "L+B marks files, B copies them",
       "L+A cuts them, or pastes here",
       "SELECT+A renames what you are on",
-      "SELECT+B deletes it or all marks",
+      "SELECT+B asks to delete",
+      "A confirms, B cancels",
       "SELECT+R makes a new folder"}},
     /* SCREEN_SETTINGS */
     {"SETTINGS: how the app works", "Display, buttons, theme, and", "what happens after a crash.",
@@ -556,19 +569,19 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "START plays the song from 00",
       "B goes back"}},
     /* SCREEN_SAMPLE_EDITOR */
-    {"SAMPLE EDITOR", "Trim, slice and change the", "sample an instrument plays.",
-     {"Edit the sample of this",
-      "instrument: trim it, cut it into",
-      "slices, fit it to the tempo or",
-      "add effects to it. FIT frames a",
-      "selection or slice. DC FIX,",
-      "INVERT and DECLICK have UNDO.",
+    {"SAMPLE EDITOR", "Select a range and listen.", "Edit and save the audio.",
+     {"On START or END, A+←/→ trims.",
+      "FIT SEL zooms into your range.",
+      "CROP keeps the selected audio.",
+      "GAIN dB sets the audio level.",
+      "UNDO restores the last edit.",
+      "TO INST creates an instrument.",
       "SAVE writes the edited file."},
-     {"START plays the selection",
-      "START again stops it",
+     {"D-PAD moves to a control",
+      "START plays or stops the range",
       "R+↑/↓ zooms in and out",
-      "A presses a button",
-      "B leaves, and asks if unsaved"}},
+      "A uses the selected control",
+      "B leaves the editor"}},
     /* SCREEN_MIDI */
     {"MIDI: devices and clock", "The MIDI devices the app sends", "to and listens to.",
      {"Choose the MIDI devices the app",
@@ -640,13 +653,12 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
 
     // ── PHRASE ───────────────────────────────────────────────────────────────────────────────────
     /* PHRASE_NOTE */
-    {"NOTE: the pitch of a step", "A+←/→ changes it by a semitone,", "A+↑/↓ by an octave.",
-     {"With a scale on, only notes of",
-      "that scale can be typed. If the",
-      "instrument has SLICE on, the",
-      "note picks a slice: C-4 is the",
-      "first, and each semitone up is",
-      "the next."},
+    {"NOTE: the pitch of a step", "A+←/→ semitone  A+↑/↓ octave", PHRASE_OVERVIEW_HELP,
+     {"A scale limits typed pitches.",
+      "With SLICE, C-4 plays slice 1.",
+      "One semitone plays next slice.",
+      "Hold SELECT, tap A/B (+1/-1)",
+      PHRASE_OVERVIEW_HELP},
      {"A on --- puts the last note",
       "Tap A twice for a new instrument",
       "A+←/→ one note, A+↑/↓ an octave",
@@ -657,30 +669,33 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "R+→ opens its instrument",
       "L+D-PAD fills the rows below"}},
     /* PHRASE_VOLUME */
-    {"VOL: how loud this step is", "How hard the note is played,", "from 00 silent to 7F full.",
+    {"VOL: how loud this step is", "00 silent to 7F full", PHRASE_OVERVIEW_HELP,
      {"From 00 silent to 7F full. The",
       "instrument VOL and the mixer",
-      "faders also apply."},
+      "faders also apply.",
+      PHRASE_OVERVIEW_HELP},
      {"A+←/→ changes by 1, A+↑/↓ by 16",
       "A+B sets it back to 7F",
       "L+D-PAD fills the rows below",
       "START plays the phrase"}},
     /* PHRASE_INSTRUMENT */
-    {"INST: which sound to use", "The number of the instrument", "that plays the note, 00 to 7F.",
+    {"INST: which sound to use", "Instrument slot, 00 to 7F", PHRASE_OVERVIEW_HELP,
      {"The instrument that plays this",
       "note, 00 to 7F. You set up each",
       "instrument on the INSTRUMENT",
-      "screen."},
+      "screen.",
+      PHRASE_OVERVIEW_HELP},
      {"A+←/→ changes by 1, A+↑/↓ by 16",
       "R+→ opens this instrument",
       "L+D-PAD fills the rows below",
       "START plays the phrase"}},
     /* PHRASE_FX_TYPE */
-    {"FX: a command on this step", "A+↑/↓ opens the list and", "shows what each one does.",
+    {"FX: a command on this step", "A+↑/↓ opens the command list", PHRASE_OVERVIEW_HELP,
      {"A three-letter command, such as",
       "a slide, a repeat or a filter",
       "move. The number to its right",
-      "says how much."},
+      "says how much.",
+      PHRASE_OVERVIEW_HELP},
      {"A+←/→ steps through commands",
       "A+↑/↓ opens the command list",
       "Keep A held and move to browse",
@@ -689,10 +704,11 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "A+B clears the command",
       "L+D-PAD fills the rows below"}},
     /* PHRASE_FX_VALUE */
-    {"FX VALUE: what it is set to", "What it does depends on the", "command to its left.",
+    {"FX VALUE: what it is set to", "Set by the command to its left", PHRASE_OVERVIEW_HELP,
      {"What the number does depends on",
       "the command to its left. The",
-      "command list explains each one."},
+      "command list explains each one.",
+      PHRASE_OVERVIEW_HELP},
      {"A+←/→ changes by 1, A+↑/↓ by 16",
       "A+B sets it back to 00",
       "L+D-PAD fills the rows below",
@@ -1294,21 +1310,26 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
     // ── MIXER ────────────────────────────────────────────────────────────────────────────────────
     /* MIXER_TRACK_VOL */
     {"TRACK VOLUME: one fader", "00 is silent, FF is full.", "One column per track.",
-     {"The volume of this track, from",
-      "00 silent to FF full. A VTR",
-      "command in a phrase can change",
-      "it while the song plays."},
+     {"The dB readout shows the gain.",
+      "New songs start tracks at -6 dB.",
+      "A VTR command in a phrase can",
+      "move the fader during playback."},
      {"A+←/→ changes by 1, A+↑/↓ by 16",
       "A+B sets it back to FF",
       "R+B mutes, R+A solos the track"}},
     /* MIXER_MASTER_VOL */
     {"MIX: the master volume", "Sets the volume of the whole", "mix, effects included.",
-     {"The last volume before the",
-      "speakers. It turns down every",
-      "track and the reverb and delay",
-      "too. A VMV command in a phrase",
-      "can change it."},
+     {"Master gain before effects.",
+      "New songs start at -3 dB.",
+      "OUTPUT MAX is the output peak.",
+      "LIMITER IN MAX is its input.",
+      "L+A lowers tracks together.",
+      "The loudest moves to -6 dB.",
+      "A VMV command can move MIX.",
+      "FULL SCALE is 0 dBFS."},
      {"A+←/→ changes by 1, A+↑/↓ by 16",
+      "A clears both peak displays",
+      "L+A trims the track faders",
       "A+B sets it back to FF"}},
     /* MIXER_REVERB_RETURN */
     {"REV: reverb level in the mix", "How loud the reverb is.", "R+B mutes it, R+A solos it.",
@@ -1752,12 +1773,12 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
 
     // ── The theme editor ─────────────────────────────────────────────────────────────────────────
     /* SCREEN_THEME */
-    {"THEME: all the colours", "Each row is one colour, mixed", "from red, green and blue.",
-     {"Each row is one colour of the",
-      "app, mixed from red, green and",
-      "blue. Changes show at once and",
-      "stay when you close the editor."},
-     {"↑/↓ picks a row, ←/→ R, G or B",
+    {"THEME: colours and step grids", "Choose grid guides for Chain", "and Phrase above the colours.",
+     {"The two grids are independent.",
+      "Each colour row mixes red,",
+      "green and blue. Changes stay",
+      "when you close the editor."},
+     {"↑/↓ picks row, ←/→ picks cell",
       "A+←/→ changes by 1, A+↑/↓ by 16",
       "START plays, B closes"}},
     /* THEME_NAME */
@@ -1767,18 +1788,18 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "every colour below."},
      {"A+D-PAD picks a palette"}},
     /* THEME_SAVE */
-    {"SAVE: keep this palette", "Writes a theme file you can", "load again or share.",
-     {"Saves this palette under a name",
+    {"SAVE: keep this theme", "Writes a theme file you can", "load again or share.",
+     {"Saves colours and grid styles",
       "in the Themes folder, to load",
       "again or share."},
      {"A opens the keyboard to name it",
       "START on the keyboard saves",
       "SELECT on the keyboard cancels"}},
     /* THEME_LOAD */
-    {"LOAD: open a palette", "Replaces every colour row", "below.",
+    {"LOAD: open a theme", "Loads its colours and", "step-grid styles.",
      {"Opens the file browser on your",
       "saved themes. Loading one",
-      "replaces every colour."},
+      "restores colours and grids."},
      {"A opens the file browser",
       "A there loads it, B goes back"}},
     /* THEME_SCHEME */
@@ -1921,6 +1942,24 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
      {"←/→ picks R, G or B",
       "A+←/→ changes by 1",
       "A+↑/↓ changes by 16"}},
+    /* THEME_CHAIN_GRID */
+    {"CHAIN GRID: phrase slots", "Choose the guides around", "PH and TSP cells.",
+     {"OFF hides the guides.",
+      "BEATS marks rows 0, 4, 8, C.",
+      "GRID adds column dividers.",
+      "DOTS uses dotted guides.",
+      "Edit and play markers stay."},
+     {"A cycles the style",
+      "A+←/→ chooses either way"}},
+    /* THEME_PHRASE_GRID */
+    {"PHRASE GRID: note steps", "Choose guides for notes,", "instruments and effects.",
+     {"OFF hides the guides.",
+      "BEATS marks rows 0, 4, 8, C.",
+      "GRID adds column dividers.",
+      "DOTS uses dotted guides.",
+      "Edit and play markers stay."},
+     {"A cycles the style",
+      "A+←/→ chooses either way"}},
 
     // ── The sample editor ────────────────────────────────────────────────────────────────────────
     /* SE_ZOOM */
@@ -1996,9 +2035,9 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
      {"A+D-PAD picks the method"}},
     /* SE_SLICE_SENS */
     {"SENS: how many hits to find", "Higher finds more of them,", "quiet ones included.",
-     {"Each hit found starts a new",
-      "slice. Higher finds more, quiet",
-      "ones too."},
+     {"Sets detection sensitivity for",
+      "TRANSIENT and FIND HITS.",
+      "Higher can pick up quiet hits."},
      {"A+←/→ changes by 1, A+↑/↓ by 16"}},
     /* SE_SLICE_BY */
     {"BY: how many equal parts", "The sample is cut into this", "many, end to end.",
@@ -2054,10 +2093,21 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "gets shorter."},
      {"A deletes, UNDO takes it back"}},
     /* SE_OP_NORM */
-    {"NORM: as loud as it can go", "Lifts the selection until", "its loudest peak is full.",
-     {"Turns the selection up until its",
-      "loudest peak is at full level."},
+    {"NORM: set a -1 dBFS peak", "Scales the selection with", "one gain for both channels.",
+     {"Sets the peak to -1 dBFS.",
+      "GAIN dB has more target levels."},
      {"A does it, UNDO takes it back"}},
+    /* SE_OP_GAIN */
+    {"GAIN dB: set the sample level", "Adjust the selected audio", "and check the resulting peak.",
+     {"Clean Gain boosts or cuts in dB.",
+      "Boost stops at the peak limit.",
+      "Peak Normalize targets -6, -3",
+      "or -1 dBFS. Both channels move",
+      "together. UNDO restores it."},
+     {"↑ Clean Gain, ↓ Normalize",
+      "Left/Right changes the value",
+      "START auditions the selection",
+      "A applies, B cancels"}},
     /* SE_OP_FADE_IN */
     {"FADE+: fade the selection in", "It rises from silence to", "full over its own length.",
      {"It rises from silence to full",
@@ -2141,11 +2191,18 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "old file is gone for good."},
      {"A overwrites, with no undo"}},
     /* SE_CHOP */
-    {"CHOP: every slice as a file", "Writes them into a Chops", "folder named after the sample.",
-     {"Saves each slice as its own WAV,",
-      "in a folder named after this",
-      "sample inside Samples/Chops."},
-     {"A chops"}},
+    {"CHOP: preview and export", "Listen to the sliced audio.", "Export one slice or all of them.",
+     {"A opens the slice preview.",
+      "Export makes a new folder in",
+      "Samples/Chops. SOURCE and BIT",
+      "set the file format. Your edits",
+      "and selection stay in place.",
+      "Long previews may play only a",
+      "prefix. Exports use full slices."},
+     {"←/→ selects a slice",
+      "↑ all slices, ↓ one slice",
+      "START plays or stops it",
+      "A exports, B returns"}},
     /* SET_METRONOME */
     {"METRONOME: a click on the beat", "One click every four steps,", "while playing. Never exported.",
      {"One click every four steps while",
@@ -2256,13 +2313,14 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "so they ignore SIZE and MOD."},
      {"A+D-PAD picks a reverb"}},
     /* SET_HELP */
-    {"HELP: what SELECT shows", "SHORT uses the top strip, FULL", "a big page. OFF shows nothing.",
-     {"SHORT puts three lines in the",
-      "strip at the top. FULL opens a",
-      "page like this one, and any",
-      "button closes it. OFF shows",
-      "nothing."},
-     {"A+D-PAD picks OFF, SHORT, FULL"}},
+    {"HELP: default help view", "SELECT opens help on demand.", "A switches the help view.",
+     {"QUICK opens the action list.",
+      "DETAIL opens the longer guide.",
+      "NO HINT hides the tracker cue.",
+      "SELECT still opens Quick Help."},
+     {"A+D-PAD picks the default",
+      "SELECT opens help",
+      "A switches Quick and Detail"}},
     /* GROOVE_NAME */
     {"NAME: which groove this is", "A+D-PAD steps through the", "built-in grooves.",
      {"Steps through the built-in",
@@ -2453,10 +2511,12 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "R+SELECT opens it from a tracker",
       "screen without leaving the song"}},
     /* RECORD_INPUT */
-    {"RECORD: capture new audio", "Mic, USB interface or an", "experimental iPhone USB source.",
+    {"RECORD: capture or resample", "Internal master, mic or USB.", "Choose the source before Record.",
      {"A opens the recorder on START.",
       "D-pad up/down selects a row.",
       "Left/right changes the source.",
+      "Internal master records the mix",
+      "with Studio and Punch effects.",
       "Stop keeps a separate WAV.",
       "Use Take opens EDIT in a free",
       "slot. Your old sound is kept."},
@@ -2476,6 +2536,56 @@ inline constexpr HelpEntry HELP_ENTRIES[] = {
       "pair not already scheduled."},
      {"A+←/→ changes by 1, ↑/↓ by 5",
       "A+B resets to 50 (off)"}},
+    /* SET_APPEARANCE */
+    {"APPEARANCE: app design", "Palette, texture and typeface.", "A opens appearance settings.",
+     {"These are global app settings.",
+      "They do not change your song.",
+      "Palette, material and font stay",
+      "independent. Existing themes and",
+      "control mappings are retained.",
+      "B returns to Settings. Theme",
+      "Colors opens the color editor."},
+     {"A opens Appearance",
+      "A+arrows edits a value",
+      "B returns to Settings"}},
+    /* SE_TO_INST */
+    {"TO INST: selection to a slot", "Saves the selected frames as", "a WAV in Samples/Chops.",
+     {"Creates a sampler instrument in",
+      "the first unused slot. SOURCE",
+      "and BIT set the WAV format.",
+      "Applied edits are included.",
+      "Pending Pitch and FX stay here.",
+      "The original WAV and this edit",
+      "stay available."},
+     {"START previews the selection",
+      "A saves to an unused slot"}},
+    /* SE_FIND_HITS */
+    {"FIND HITS: preview cuts", "Looks for hits between S and E.", "Amber lines are suggestions.",
+     {"Analyze the selected audio.",
+      "SOURCE and SENS set detection.",
+      "Solid lines are existing cuts.",
+      "A applies cuts inside S and E.",
+      "Outside cuts and audio stay.",
+      "SAVE writes the resulting cues."},
+     {"←/→ selects a proposed slice",
+      "START plays that slice",
+      "A applies, B cancels"}},
+    /* OVERLAY_KEYBOARD */
+    {"KEYBOARD: edit text", "A types. B removes a letter.", "START keeps your text.",
+     {"D-pad moves between the keys.",
+      "R+←/→ moves the text cursor.",
+      "R+↑/↓ switches keyboard layout."},
+     {"A types the selected key",
+      "B deletes one letter",
+      "R+←/→ moves the text cursor",
+      "START applies the text",
+      "SELECT+B cancels the edit"}},
+    /* OVERLAY_CONFIRM */
+    {"CONFIRM: review the action", "Read the prompt before applying.", "",
+     {"The prompt describes the change.",
+      "Check the named item first."},
+     {"A confirms the shown action",
+      "B goes back"}},
 };
 
 // ─── Rules 2 and 3, as compile errors — at runtime they fail silently ────────────────────────────
@@ -2811,6 +2921,7 @@ inline HelpTopic settings_cell_topic(int row, int column) {
         case SettingsRow::NOTE_PREV:  return HelpTopic::SET_NOTE_PREVIEW;
         case SettingsRow::VISUALIZER: return HelpTopic::SET_VISUALIZER;
         case SettingsRow::HELP:       return HelpTopic::SET_HELP;
+        case SettingsRow::APPEARANCE: return HelpTopic::SET_APPEARANCE;
         case SettingsRow::THEME:      return HelpTopic::SET_THEME;
         case SettingsRow::TEMPLATE:
             return second ? HelpTopic::SET_TEMPLATE_CLEAR : HelpTopic::SET_TEMPLATE_SAVE;
@@ -2876,7 +2987,7 @@ inline constexpr HelpTopic THEME_COLOR_TOPICS[] = {
     HelpTopic::THEME_EQ_TXT,     HelpTopic::THEME_EQ_BG,
 };
 
-// The theme editor: THEME (name, SAVE, LOAD), RANDOMIZE (scheme, ROLL), then one row per colour.
+// The theme editor: palette, the two grid styles, randomizer, then one row per colour.
 inline HelpTopic theme_cell_topic(int row, int channel) {
     if (row == THEME_ROW_THEME) {
         if (channel == 1) return HelpTopic::THEME_SAVE;
@@ -2886,6 +2997,8 @@ inline HelpTopic theme_cell_topic(int row, int channel) {
     if (row == THEME_ROW_RANDOM) {
         return (channel == 1) ? HelpTopic::THEME_ROLL : HelpTopic::THEME_SCHEME;
     }
+    if (row == THEME_ROW_CHAIN_GRID) return HelpTopic::THEME_CHAIN_GRID;
+    if (row == THEME_ROW_PHRASE_GRID) return HelpTopic::THEME_PHRASE_GRID;
     const int index = theme_color_index(row);
     const int count = static_cast<int>(sizeof(THEME_COLOR_TOPICS) / sizeof(THEME_COLOR_TOPICS[0]));
     return (index >= 0 && index < count) ? THEME_COLOR_TOPICS[index] : HelpTopic::NONE;
@@ -2921,14 +3034,18 @@ inline HelpTopic sample_editor_cell_topic(int row, int column, int slice_method)
         case 10:
             if (column == 0) return HelpTopic::SE_SLICE_METHOD;
             if (column != 1) return HelpTopic::NONE;
-            if (slice_method == SampleEditorModule::SLICE_TRANSIENT) return HelpTopic::SE_SLICE_SENS;
             if (slice_method == SampleEditorModule::SLICE_DIVIDE)    return HelpTopic::SE_SLICE_BY;
-            return HelpTopic::NONE;
+            return HelpTopic::SE_SLICE_SENS;
         case 11:
             return (column == 1) ? HelpTopic::SE_SLICE_POS : HelpTopic::SE_SLICE_INDEX;
+        case SampleEditorModule::TO_INST_ROW:
+            if (column == SampleEditorModule::FIND_HITS_COL) return HelpTopic::SE_FIND_HITS;
+            return column == SampleEditorModule::TO_INST_COL ? HelpTopic::SE_TO_INST : HelpTopic::NONE;
 
         case 13: return op_col ? OPS_1[column] : HelpTopic::NONE;
         case 14: return op_col ? OPS_2[column] : HelpTopic::NONE;
+        case SampleEditorModule::LEVEL_ROW:
+            return column == SampleEditorModule::LEVEL_COL ? HelpTopic::SE_OP_GAIN : HelpTopic::NONE;
 
         case 16:
             if (column == 0) return HelpTopic::SE_FX_TYPE;
@@ -2965,6 +3082,9 @@ inline HelpTopic stretch_cell_topic(StretchCell cell) {
 // What the cursor is on. Never NONE: a cell with no entry falls back to its screen.
 // The arms read the same cursor fields each module's `cursor_context()` does.
 inline HelpTopic help_topic(const AppState& s) {
+    if (s.qwerty.isOpen) return HelpTopic::OVERLAY_KEYBOARD;
+    if (s.confirm.is_open() || (s.currentScreen == ScreenType::FILE_BROWSER && s.fileBrowser.mode != BrowserMode::NORMAL))
+        return HelpTopic::OVERLAY_CONFIRM;
     // ⚠️ The overlays first: neither changes `currentScreen`, and the screen under them is not on the
     // canvas. The EQ editor first of those — it can be up over the sample editor.
     if (s.eq.isOpen) {
@@ -2984,6 +3104,11 @@ inline HelpTopic help_topic(const AppState& s) {
 
     // The TSTRETCH box covers the sample editor's own cells.
     if (stretch_editor_up(s)) return detail::stretch_cell_topic(s.sampleEditor.stretchCursor);
+    if (s.currentScreen == ScreenType::SAMPLE_EDITOR) {
+        if (s.sampleEditor.levelEdit.open()) return HelpTopic::SE_OP_GAIN;
+        if (s.sampleEditor.chopReview.open()) return HelpTopic::SE_CHOP;
+        if (s.sampleEditor.hitReview.open) return HelpTopic::SE_FIND_HITS;
+    }
 
     HelpTopic cell = HelpTopic::NONE;
 

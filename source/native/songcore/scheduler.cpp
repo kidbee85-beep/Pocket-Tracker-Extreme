@@ -1310,6 +1310,7 @@ void Sequencer::schedule_step_note(StepPlay& s) {
     a.vibSpd = vibratoSpeed; a.vibDep = vibratoDepth;
     a.chord = carry.chord;
     a.strum = carry.strum; a.strumFrames = carry.strumFrames;
+    a.granular = params.granular;
     emit_note(a, note, ts);
 
     ts.lastNote = note;
@@ -1340,6 +1341,10 @@ void Sequencer::emit_step_fx(StepPlay& s) {
     const int trackId = s.trackId;
     const int64_t voiceFxFrame = s.voiceFxFrame;
     const bool triggeredNote = s.triggers();
+    // A triggering note already carries the row's ordered operations. FX-only
+    // rows use a track event; RPT/ARP will inherit the audio thread's latch.
+    if (!triggeredNote && params.granular.count != 0)
+        router_.ext_granular(voiceFxFrame, trackId, params.granular);
     if (!triggeredNote && params.panValue.has_value()) {
         router_.cc(s.effectiveTargetFrame, trackId, CC_PAN, *params.panValue / 255.0f);
         ts.carry.pan = *params.panValue / 255.0f;

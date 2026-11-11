@@ -83,6 +83,8 @@ inline std::string serialize_theme(const Theme& t) {
     if (t.visualizerType != d.visualizerType)
         w.field_string("visualizerType", visualizer_serial_name(t.visualizerType));
     if (t.surfaceStyle != d.surfaceStyle) w.field_int("surfaceStyle", t.surfaceStyle);
+    if (t.chainGrid != d.chainGrid) w.field_string("chainGrid", step_grid_style_name(t.chainGrid));
+    if (t.phraseGrid != d.phraseGrid) w.field_string("phraseGrid", step_grid_style_name(t.phraseGrid));
 
     w.end_object();
     return std::move(w.out);
@@ -138,6 +140,20 @@ inline bool parse_theme(const std::string& text, Theme& out) {
         const auto value=it->get<int64_t>();
         if(value>=0&&value<kSurfaceStyleCount)t.surfaceStyle=static_cast<int>(value);
     }
+    const auto read_grid = [&](const char* key, StepGridStyle& field) {
+        const auto it = j.find(key);
+        if (it == j.end() || !it->is_string()) return;
+        const auto& value = it->get_ref<const std::string&>();
+        for (int index = 0; index < STEP_GRID_STYLE_COUNT; ++index) {
+            const auto style = static_cast<StepGridStyle>(index);
+            if (value == step_grid_style_name(style)) {
+                field = style;
+                return;
+            }
+        }
+    };
+    read_grid("chainGrid", t.chainGrid);
+    read_grid("phraseGrid", t.phraseGrid);
 
     out = t;
     return true;

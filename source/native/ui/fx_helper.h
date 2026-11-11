@@ -125,7 +125,8 @@ constexpr int fx_max_group_rows() {
 
 // The tallest the overlay gets: a heading per group plus the biggest group (its fit is asserted in
 // modules/fx_helper_overlay.cpp).
-inline constexpr int FX_MAX_LAYOUT_ROWS = FX_GROUP_COUNT + fx_max_group_rows();
+inline constexpr int FX_GRANULAR_ROWS = (studio::granular::step::kCommandCount + FX_GRID_COLS) / FX_GRID_COLS;
+inline constexpr int FX_MAX_LAYOUT_ROWS = FX_GROUP_COUNT + 1 + std::max(fx_max_group_rows(), FX_GRANULAR_ROWS);
 
 // ─── One build's picker ──────────────────────────────────────────────────────────────────────────
 
@@ -166,7 +167,7 @@ struct FxLayout {
 
 // The picker for a build showing the first `visible_effect_count` of EFFECT_TYPES.
 // ⚠️ Empty groups are dropped before each survivor gets its `---`; the other order empties nothing.
-inline FxLayout fx_layout_for(int visible_effect_count) {
+inline FxLayout fx_layout_for(int visible_effect_count, bool phrase_granular = false) {
     FxLayout out;
     for (const FxGroupDef& def : FX_GROUP_DEFS) {
         std::vector<int> visible;
@@ -179,6 +180,16 @@ inline FxLayout fx_layout_for(int visible_effect_count) {
         g.title = def.title;
         g.codes.push_back(songcore::FX_NONE);   // clearing a command, without leaving the group
         g.codes.insert(g.codes.end(), visible.begin(), visible.end());
+        out.groups.push_back(std::move(g));
+    }
+    if (phrase_granular) {
+        // Keep the legacy cycle and Table menu unchanged. These commands are
+        // scheduled by Phrase steps, including rows without a new note.
+        FxGroup g;
+        g.title = "GRANULAR";
+        g.codes.push_back(songcore::FX_NONE);
+        for (int code = studio::granular::step::kFirstFx; code <= studio::granular::step::kLastFx; ++code)
+            g.codes.push_back(code);
         out.groups.push_back(std::move(g));
     }
     return out;
@@ -353,8 +364,19 @@ inline const std::vector<std::vector<std::string>>& effect_descriptions() {
 // The highlighted effect's lines (a cell holds a code, so through `effect_type_index`).
 inline const std::vector<std::string>& fx_description_lines(const FxHelperState& s) {
     static const std::vector<std::string> kNone{"---", "No effect"};
+    const int code = s.selected_effect_code();
+    if (studio::granular::step::isFx(code)) {
+        static const auto lines = [] {
+            std::vector<std::vector<std::string>> descriptions;
+            for (const auto& cmd : studio::granular::step::kCommands)
+                descriptions.push_back({std::string(cmd.name) + "  " + cmd.title, cmd.range,
+                                        cmd.response, "Phrase only / this track"});
+            return descriptions;
+        }();
+        return lines[static_cast<std::size_t>(code - studio::granular::step::kFirstFx)];
+    }
     const auto& all = effect_descriptions();
-    const int   i   = songcore::effect_type_index(s.selected_effect_code());
+    const int   i   = songcore::effect_type_index(code);
     if (i < 0 || i >= static_cast<int>(all.size())) return kNone;
     return all[static_cast<size_t>(i)];
 }

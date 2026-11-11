@@ -39,7 +39,7 @@ void draw_local_sample_range(Canvas& c,const LocalSampleRangeState& v,const Them
             "Quick length sets an excerpt from IN, within this device's RAM.",
             "Crop to editor saves a NEW WAV, then opens it for slicing.",
             "The source file is never replaced. Whole-file load needs more RAM.",
-            "Select closes this guide. B returns to your original folder."
+            "B or Select closes this guide and returns to your range."
         }};
         c.draw_label("LOCAL WAV / QUICK GUIDE",32,126,t.rowCursor,18);
         for(size_t i=0;i<lines.size();++i)c.draw_label(Canvas::clip_label(lines[i],576,12),32,160+int(i)*23,t.textValue,12);

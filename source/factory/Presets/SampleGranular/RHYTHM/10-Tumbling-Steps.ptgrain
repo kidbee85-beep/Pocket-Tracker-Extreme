@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Tumbling Steps",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 16.0,
+    "freeze": false,
+    "level": 0.5,
+    "panSpread": 0.4599999785423279,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.0,
+    "position": 0.5250000357627869,
+    "releaseMs": 100.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 1.0,
+    "sizeMs": 48.0,
+    "sprayMs": 4.0,
+    "windowShape": 0.6000000238418579
+  },
+  "version": 1
+}

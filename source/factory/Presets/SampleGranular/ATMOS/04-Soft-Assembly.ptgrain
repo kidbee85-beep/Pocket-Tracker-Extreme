@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Soft Assembly",
+  "parameters": {
+    "attackMs": 270.0,
+    "densityHz": 18.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.49000000953674316,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.25,
+    "position": 0.2549999952316284,
+    "releaseMs": 840.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.09999999403953552,
+    "sizeMs": 261.0,
+    "sprayMs": 52.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

@@ -22,20 +22,31 @@ bool InputDispatcher::defer_a_to_release() const {
 
     // ⚠️ No cell opens a sub-screen under a layer (else every A in the EQ editor is deferred), except the
     // send editor's own INP EQ and TIME.
-    if (top_layer()) {
-        return send_editor_on_top() &&
-               self.effects_release_action(s_.sendEditor.cursorRow, /*peek=*/true);
+    if (const auto* layer = top_layer()) {
+        return layer->handle == &InputDispatcher::sample_slice_review_layer ||
+               (send_editor_on_top() && self.effects_release_action(s_.sendEditor.cursorRow, /*peek=*/true));
     }
 
     // ⚠️ Opens nothing, but deferred too: row 11's A under MANUAL is held for the tap, the drag and the
     // delete.
     if (on_slice_tap_cell()) return true;
-    // RECORD opens an overlay focused on Start. Defer the opener so the same
-    // physical A release cannot also start recording on the destination page.
-    if(s_.currentScreen==ScreenType::SAMPLE_EDITOR&&s_.sampleEditor.cursorRow==19&&
-       s_.sampleEditor.cursorCol==(s_.sampleEditor.sliceMethod==SampleEditorModule::SLICE_OFF?3:4))return true;
+    if (s_.currentScreen == ScreenType::FILE_BROWSER && s_.fileBrowser.mode == BrowserMode::DELETE) return true;
+    if (s_.currentScreen == ScreenType::SAMPLE_EDITOR &&
+        s_.sampleEditor.cursorRow == SampleEditorModule::TO_INST_ROW &&
+        (s_.sampleEditor.cursorCol == SampleEditorModule::TO_INST_COL ||
+         s_.sampleEditor.cursorCol == SampleEditorModule::FIND_HITS_COL)) return true;
+    if (s_.currentScreen == ScreenType::SAMPLE_EDITOR &&
+        s_.sampleEditor.cursorRow == SampleEditorModule::LEVEL_ROW &&
+        s_.sampleEditor.cursorCol == SampleEditorModule::LEVEL_COL) return true;
+    // CHOP and RECORD open a review/recorder. A must finish before either can confirm.
+    if (s_.currentScreen == ScreenType::SAMPLE_EDITOR && s_.sampleEditor.cursorRow == 19 &&
+        (s_.sampleEditor.cursorCol == 3 ||
+         (s_.sampleEditor.cursorCol == 4 && s_.sampleEditor.sliceMethod != SampleEditorModule::SLICE_OFF))) return true;
 
     switch (s_.currentScreen) {
+        case ScreenType::MIXER:
+            if (mixer_cell_at(s_.mixerMasterRow, s_.mixerCursorColumn) == MixerCell::MASTER_VOL) return true;
+            break;
         case ScreenType::INSTRUMENT:
             if (self.instrument_open_at_cursor(/*peek=*/true)) return true;
             break;

@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "songcore/model.h"
@@ -91,9 +92,38 @@ struct SampleEditorState {
     // shows and saves back, and where MANUAL starts. Sorted, unique, strictly inside the sample.
     std::vector<int> fileMarkers;
 
-    // The detector's output, TRANSIENT only: N markers → N+1 slices.
-    // ⚠️ Empty is the trigger: the feed re-runs the detector when it finds TRANSIENT with none.
+    // TRANSIENT can have a valid empty result (silence or sustained material).
     std::vector<int> transientMarkers;
+    bool transientScanReady = false;
+
+    struct HitReview {
+        bool open = false;
+        int instrument = -1, first = 0, end = 0, sourceMode = 0, sensitivity = 0, auditionSlice = 0;
+        bool snap = false;
+        uint32_t generation = 0;
+        std::vector<int> hits, originalCuts;
+
+        int audition_start() const { return auditionSlice == 0 ? first : hits[auditionSlice - 1]; }
+        int audition_end() const { return auditionSlice < static_cast<int>(hits.size()) ? hits[auditionSlice] : end; }
+    } hitReview;
+
+    struct ChopReview {
+        std::vector<std::pair<int64_t, int64_t>> slices;
+        int instrument = -1, sourceMode = 0, bitDepth = 16, selected = 0;
+        uint32_t generation = 0;
+        int64_t previewEnd = 0;
+        bool single = false;
+        bool open() const { return !slices.empty(); }
+    } chopReview;
+
+    struct LevelEdit {
+        int instrument = -1, first = 0, end = 0, previewEnd = 0;
+        uint32_t generation = 0;
+        float peak = 0.f;
+        int gainDb = 6, target = 2;
+        bool normalize = false;
+        bool open() const { return instrument >= 0; }
+    } levelEdit;
 
     // The boundaries the user placed or moved, sorted, strictly increasing; they override the
     // method's. ⚠️ Live only while the stamp below matches (`manual_markers_live()`); empty is live.
@@ -221,6 +251,11 @@ public:
 
     // Rows 8..19 sit under the waveform.
     static int content_y(int row);
+    static constexpr int TO_INST_ROW = 12;
+    static constexpr int TO_INST_COL = 4;
+    static constexpr int FIND_HITS_COL = 5;
+    static constexpr int LEVEL_ROW = 15;
+    static constexpr int LEVEL_COL = 3;
 
     static const std::vector<std::string>& source_values();    // LEFT / RIGHT / STEREO / MONO
     static const std::vector<std::string>& rate_values();      // HIGH / NORM / LOFI
@@ -235,7 +270,7 @@ public:
     static const std::vector<std::string>& slice_methods();    // TRANSIENT / DIVIDE / OFF / MANUAL
     static const std::vector<std::string>& ops_row1();         // CROP COPY CUT DUPL PASTE DEL
     static const std::vector<std::string>& ops_row2();         // NORM FADE+ FADE- SLNC REV UNDO
-    static const std::vector<std::string>& ops_row3();         // DC FIX / INVERT / DECLICK
+    static const std::vector<std::string>& ops_row3();         // DC FIX / INVERT / DECLICK / GAIN dB
 
     // `fxValue` means something different under each.
     static constexpr int FX_OTT   = 0;
@@ -252,11 +287,6 @@ public:
     static constexpr int SLICE_OFF       = 2;
     // ⚠️ Appended after OFF: `sliceMethod` survives a session.
     static constexpr int SLICE_MANUAL    = 3;
-
-    // Row 10's second cell: SENS (TRANSIENT) or BY (DIVIDE).
-    static constexpr bool slice_has_parameter(int slice_method) {
-        return slice_method == SLICE_TRANSIENT || slice_method == SLICE_DIVIDE;
-    }
 
     // Rows 3–7 and the spacers are skipped, and row 11 too with slicing OFF; row 1 and 19 wrap.
     static int row_above(int row, int slice_method = -1);

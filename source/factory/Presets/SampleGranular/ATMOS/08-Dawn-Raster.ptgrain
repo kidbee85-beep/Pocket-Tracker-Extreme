@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Dawn Raster",
+  "parameters": {
+    "attackMs": 430.0,
+    "densityHz": 18.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.6100000143051147,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.20000000298023224,
+    "position": 0.4350000023841858,
+    "releaseMs": 1160.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.17999999225139618,
+    "sizeMs": 369.0,
+    "sprayMs": 88.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

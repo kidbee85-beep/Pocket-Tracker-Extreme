@@ -94,11 +94,11 @@ int main(int argc, char** argv) {
     assert(app.studioMessage.find("unavailable") != std::string::npos);
     app.captureBackend = &fake; app.studioMessage.clear();
     studio_capture_refresh(app);
-    assert(app.capture.inputs.size() == 3 && app.capture.inputs[2].id == 83);
-    app.capture.selected = 1;
+    assert(app.capture.inputs.size() == 4 && app.capture.inputs[3].id == 83 && app.capture.internal_source());
+    app.capture.selected = 2;
     std::swap(fake.inputs[0], fake.inputs[2]); studio_capture_refresh(app);
     assert(app.capture.inputs[app.capture.selected].id == 31);
-    std::swap(fake.inputs[0], fake.inputs[2]); studio_capture_refresh(app); app.capture.selected = 0;
+    std::swap(fake.inputs[0], fake.inputs[2]); studio_capture_refresh(app); app.capture.selected = 1;
 
     uint64_t clock = 1000;
     auto poll = [&] { app.studioOpen=true;app.studioTab=4;clock += 125; assert(studio_poll_capture(app, clock)); };
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     const int selected = app.capture.selected, channels = app.capture.channels, rate = app.capture.rate, target = app.currentInstrument;
     for (const char* state : {"starting", "recording", "stopping"}) {
         fake.state(state); poll();
-        for (int row = 0; row < 4; ++row) edit(row, Button::DPAD_LEFT);
+        for (int row = 1; row < 4; ++row) edit(row, Button::DPAD_LEFT);
         assert(app.capture.selected == selected && app.capture.channels == channels && app.capture.rate == rate && app.currentInstrument == target);
     }
     fake.state("recording"); poll();
@@ -225,7 +225,8 @@ int main(int argc, char** argv) {
     fake.overrideJson = "malformed JSON"; poll(); assert(app.capture.message == "Input status unavailable");
     fake.overrideJson.clear(); fake.inputs = json::array(); action(6);
     const int beforeEmpty = fake.starts; action(4);
-    assert(fake.starts == beforeEmpty && app.studioMessage.find("No input")!=std::string::npos);
+    assert(fake.starts == beforeEmpty && app.studioMessage.find("disconnected")!=std::string::npos);
+    assert(app.capture.inputs.size()==2&&app.capture.inputs[0].kind=="internal-master"&&!app.capture.inputs[1].connected&&app.capture.inputs[1].kind=="missing");
     const json report = {{"passed", true}, {"jvm_fixture", usedJvmFixture}, {"copy_attempts", fs.copies},
                          {"starts", fake.starts}, {"stops", fake.stops},
                          {"checks", "input IDs/edit locks/poll cache/state guards/exit stop/fresh sampler/import copy reuse/collision/partial error/silence/copy and decode failures"}};

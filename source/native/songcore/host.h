@@ -216,6 +216,7 @@ class SongcoreHost {
 
     // The audio callback's cost over the last second; zero without an engine.
     AudioEngine::BlockTiming block_timing() const;
+    void clear_master_maximum() { if (engine_) engine_->clearMasterMaximum(); }
 
     // A mapped knob moved: write the value into the project at once and make it heard. Returns how
     // many mappings it drove. A mapping whose destination is gone is skipped, not deleted.
@@ -295,6 +296,12 @@ class SongcoreHost {
     // An isolated held audition in the reserved media slot. The draft never enters the project.
     bool preview_studio_synth(const Instrument& draft,const std::string& uri,bool restart);
     void update_studio_voice(const Instrument& before,const Instrument& after,int sampleSlot=-1);
+    bool update_sample_granular(int id,bool enabled,const studio::granular::Parameters&);
+    bool apply_sample_granular_settings(int id,const studio::granular::Parameters&);
+    bool load_sample_granular_patch(int id,const std::string& path,
+                                   const studio::granular::Parameters&,uint32_t seed=1);
+    studio::granular::Snapshot sample_granular_snapshot(int id,int preferredTrack=-1);
+    const std::string& sample_granular_error()const{return granularError_;}
 
     // An .sf2/.sf3 → instrument `id`, which becomes a SOUNDFONT slot.
     bool load_soundfont(int id, const std::string& path);
@@ -334,7 +341,9 @@ class SongcoreHost {
                                        int channel = 2) const;
 
     // Slice boundaries at `sensitivity`, at most 128.
-    std::vector<int> detect_transients(int id, int sensitivity) const;
+    std::vector<int> detect_transients(int id, int sensitivity,
+                                       const AudioEngine::TransientScan& scan = {}) const;
+    uint32_t sample_generation(int id) const { return engine_ ? engine_->sampleGeneration(id) : 0; }
 
     // The nearest zero crossing (`dir` −1 back, +1 forward, 0 either) in the signal SOURCE will cut.
     int find_zero_crossing(int id, int frame, int dir, int sourceMode = 0) const;
@@ -351,7 +360,12 @@ class SongcoreHost {
     void copy_region(int id, int start, int end) { if (engine_) engine_->copyRegion(id, start, end); }
     void paste_region(int id, int insertAt) { if (engine_) engine_->pasteRegion(id, insertAt); }
 
-    void normalize_sample(int id, int start, int end) { if (engine_) engine_->normalizeSample(id, start, end); }
+    float sample_level_peak(int id, int start, int end) const {
+        return engine_ ? engine_->sampleLevelPeak(id, start, end) : 0.f;
+    }
+    bool edit_sample_level(int id, int start, int end, float factor) {
+        return engine_ && engine_->editSampleLevel(id, start, end, factor);
+    }
     void fade_in_sample(int id, int start, int end) { if (engine_) engine_->fadeInSample(id, start, end); }
     void fade_out_sample(int id, int start, int end) { if (engine_) engine_->fadeOutSample(id, start, end); }
     void silence_region(int id, int start, int end) { if (engine_) engine_->silenceRegion(id, start, end); }
@@ -380,6 +394,7 @@ class SongcoreHost {
     // what CROP keeps. It is read when the note fires, so `finish_sample_preview()` ends it later.
     void preview_sample_editor(int id, int sourceMode, int64_t selStart, int64_t selEnd,
                                int totalFrames, int pitchSemitones, const SampleSync& sync = {});
+    bool preview_sample_chop(int id, int sourceMode, int first, int end, float gain = 1.f);
 
     // Put the instrument back (window, EQ, sends, modulation) — on the dispatcher's 100 ms deadline,
     // or at once on a second START.
@@ -388,6 +403,8 @@ class SongcoreHost {
     // The edited PCM → a WAV, slices in the `cue ` chunk. `bits` 0 = the loaded depth.
     bool save_sample_wav(int id, const std::string& path, const std::vector<int>& cuePoints,
                          int sourceMode, bool hasStereo, int bits = 0);
+    bool save_sample_selection_wav(int id, const std::string& path, int first, int end,
+                                   const std::vector<int>& cuePoints, int sourceMode, int bits);
 
     // After a SAVE that kept the buffer: it is the file now — take its depth, drop the RATE/BIT
     // original, or the next RATE/BIT touch would restore pre-save audio.
@@ -538,6 +555,7 @@ class SongcoreHost {
     int sampleRate_ = 44100;
     MediaLoadResult lastMediaLoad_{};   // see last_media_load()
 
+    std::string granularError_;
     Project project_ = make_default_project();
     std::string projectSha_ = "-";
     // set_app_root() plus the last load_media(); both empty ⇒ no resolving (the tools' default)

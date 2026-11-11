@@ -2,10 +2,21 @@
 
 #include "ui/dispatch/dispatch_common.h"
 
+#include "common/byte_source.h"
+#include "common/load_progress.h"
+#include "common/platform_memory.h"
+#include "common/sample_level.h"
+#include "songcore/midi_map.h"
+#include "songcore/project_io.h"
+#include "ui/live_resample_files.h"
 #include "ui/std_filesystem.h"
 #include "ui/studio.h"
 
 #include <algorithm>
+#include <array>
+#include <chrono>
+#include <cstdio>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -48,6 +59,71 @@ std::vector<int> divide_points(int totalFrames, int divisions) {
     return out;
 }
 
+int unused_instrument(const songcore::SongcoreHost& host, int source) {
+    const Project& project = host.project();
+    std::array<bool, songcore::POOL_INSTRUMENTS> used{};
+    const auto reserve = [&](int slot) {
+        if (slot >= 0 && slot < static_cast<int>(used.size())) used[slot] = true;
+    };
+    reserve(source);
+    for (const auto& phrase : project.phrases) {
+        for (const auto& step : phrase.steps) {
+            if (step.instrument != 0 || songcore::step_has_note(step) ||
+                step.fx1Type != 0 || step.fx2Type != 0 || step.fx3Type != 0)
+                reserve(step.instrument);
+        }
+    }
+    for (const auto& mapping : project.midiMappings) {
+        const auto* destination = songcore::map_dest(mapping.dest);
+        if (destination && destination->scope == songcore::MapScope::INSTRUMENT)
+            reserve(mapping.scopeIndex);
+    }
+    for (const auto& instrument : project.instruments) {
+        if (instrument.sampleId != instrument.id) reserve(instrument.sampleId);
+    }
+    for (int i = 0; i < static_cast<int>(project.instruments.size()) && i < static_cast<int>(used.size()); ++i) {
+        const Instrument& instrument = project.instruments[i];
+        if (used[i] || !songcore::instrument_is_free(instrument) || host.sample_length(i) > 0) continue;
+        // A named or configured slot without PCM may still be work in progress.
+        songcore::InstrumentPreset blank, actual;
+        blank.instrument = Instrument(i);
+        blank.instrument.sampleId = instrument.sampleId == i ? i : -1;
+        actual.instrument = instrument;
+        if (songcore::serialize_instrument_preset(blank) == songcore::serialize_instrument_preset(actual)) return i;
+    }
+    return -1;
+}
+
+struct SelectionStage {
+    std::filesystem::path directory;
+    std::filesystem::path wav() const { return directory / "selection.wav"; }
+    ~SelectionStage() {
+        if (directory.empty()) return;
+        std::error_code error;
+        std::filesystem::remove(wav(), error);
+        std::filesystem::remove(directory, error);
+    }
+};
+
+bool can_export_sample_range(const SampleEditorState& se, int64_t frames) {
+    const bool stereo = se.hasStereoData && se.sourceMode == 2;
+    const bool downmix = se.hasStereoData && se.sourceMode == 3;
+    const int inputBytes = (stereo || downmix ? 2 : 1) * sizeof(float);
+    const int outputBytes = (stereo ? 2 : 1) * std::max(1, se.bitDepth / 8);
+    const int64_t available = pt::available_memory_bytes();
+    return available <= 0 || frames * (inputBytes + outputBytes) <= std::max<int64_t>(0, available - 8ll * 1024 * 1024);
+}
+
+int64_t preview_end(const SampleEditorState& se, int64_t first, int64_t end, int sourceMode) {
+    constexpr int64_t mib = 1024 * 1024;
+    const int64_t total = pt::total_memory_bytes();
+    const int64_t available = pt::available_memory_bytes();
+    int64_t budget = (total > 0 && total <= 256 * mib ? 4 : 16) * mib;
+    if (available > 0) budget = std::min(budget, std::max<int64_t>(0, available - 8 * mib));
+    const int planes = se.hasStereoData && (sourceMode == 2 || sourceMode == 3) ? 2 : 1;
+    return std::min(end, first + budget / (planes * int(sizeof(float))));
+}
+
 }  // namespace
 
 // ─── The buttons ─────────────────────────────────────────────────────────────────────────────────
@@ -73,7 +149,7 @@ GestureResult InputDispatcher::sample_editor_screen(Gesture g) {
         // ⚠️ B asks first if anything would be lost: the edits live in the engine, not the project.
         case Gesture::B:
             if (se.isModified) se.showConfirmClose = true;
-            else               close_sample_editor();
+            else               close_sample_editor(true);
             return GestureResult::TAKEN;
 
         case Gesture::START:
@@ -139,8 +215,9 @@ GestureResult InputDispatcher::sample_close_layer(Gesture g) {
     return GestureResult::TAKEN;
 }
 
-void InputDispatcher::sample_editor_audition() {
+void InputDispatcher::sample_editor_audition(int64_t first, int64_t end) {
     SampleEditorState& se = s_.sampleEditor;
+    const bool review = first >= 0 && end > first;
 
     // Only while the TRANSPORT IS STOPPED: `playbackPosition` also tracks song voices on this sample.
     if (se.playbackPosition >= 0.0f && !host_.is_playing()) {
@@ -158,26 +235,31 @@ void InputDispatcher::sample_editor_audition() {
 
     // The FX row is auditioned by applying it, and the clean audio restored after.
     host_.restore_fx_preview_backup();
-    if (se.fx_armed()) {
+    if (!review && se.fx_armed()) {
         before_long_operation();
         host_.save_fx_preview_backup(se.instrumentId);
         host_.apply_sample_fx(se.instrumentId, se.fxType, se.fx_param());
     }
 
     // SYNC is auditioned from a copy (it changes the length), taking the pending PITCH with it.
-    const songcore::SampleSync sync = planned_sample_sync();
+    const songcore::SampleSync sync = review ? songcore::SampleSync{} : planned_sample_sync();
     const bool synced = (sync.kind != songcore::SampleSync::Kind::NONE);
     if (synced) before_long_operation();
-    const int pitch = synced ? 0 : se.pitchSemitones;
+    const int pitch = synced || review ? 0 : se.pitchSemitones;
 
     host_.set_preview_track(-1);   // a waveform being edited is not in the arrangement
-    host_.preview_sample_editor(se.instrumentId, se.sourceMode, se.selectionStart, se.selectionEnd,
+    host_.preview_sample_editor(se.instrumentId, se.sourceMode, review ? first : se.selectionStart,
+                                review ? end : se.selectionEnd,
                                 se.totalFrames, pitch, sync);
 }
 
 // ─── Opening and closing ─────────────────────────────────────────────────────────────────────────
 
-void InputDispatcher::open_sample_editor() {
+void InputDispatcher::open_sample_editor(bool fromGranularCrop) {
+    // A take from Record/Resample/Sources starts a new editor session. It must
+    // never inherit a return destination belonging to an older Granular Crop.
+    auto& grain=s_.sampleGranular;
+    grain.cropReturn=false;grain.cropInstrument=-1;grain.cropProject=nullptr;
     const Instrument& ins = s_.project->instruments[static_cast<size_t>(s_.currentInstrument)];
     if (ins.instrumentType == songcore::InstrumentType::SOUNDFONT) return;
 
@@ -190,6 +272,7 @@ void InputDispatcher::open_sample_editor() {
     if(s_.currentScreen!=ScreenType::SAMPLE_EDITOR)s_.previousScreen = s_.currentScreen;
     s_.currentScreen  = ScreenType::SAMPLE_EDITOR;
     init_sample_editor_state();
+    if(fromGranularCrop){grain.cropReturn=true;grain.cropInstrument=s_.currentInstrument;grain.cropProject=s_.project;}
 }
 
 void InputDispatcher::init_sample_editor_state() {
@@ -252,7 +335,7 @@ void InputDispatcher::init_sample_editor_state() {
     se.playbackPosition = -1.0f;
 }
 
-void InputDispatcher::close_sample_editor() {
+void InputDispatcher::close_sample_editor(bool viaBack) {
     // Pay any pending audition restore now, or it lands on a slot no longer on screen.
     run_due_sample_preview_restore(/*force=*/true);
 
@@ -261,6 +344,18 @@ void InputDispatcher::close_sample_editor() {
     host_.clear_previews();                     // the 254/255 scratch slots
 
     s_.currentScreen = s_.previousScreen;
+    resume_sample_granular_from_editor(viaBack);
+}
+
+void InputDispatcher::resume_sample_granular_from_editor(bool viaBack){
+    auto& grain=s_.sampleGranular;if(!grain.cropReturn)return;
+    const bool matches=grain.cropProject==s_.project&&grain.cropInstrument==s_.sampleEditor.instrumentId;
+    grain.cropReturn=false;grain.cropInstrument=-1;grain.cropProject=nullptr;
+    if(!matches)return;
+    grain.open=true;grain.nextPollMs=0;grain.waveformReady=false;grain.waveformInstrument=-1;
+    grain.returnReleaseMask|=viaBack?2u:s_.aHeld?1u:0u;
+    s_.currentInstrument=s_.sampleEditor.instrumentId;s_.studioOpen=true;s_.studioTab=0;s_.studioHelp=false;
+    s_.studioAUsed=false;s_.studioBUsed=false;s_.studioMessage="Returned to Sample Granular / source refreshed";
 }
 
 // ─── The selection: A+DPAD on rows 3..8 ──────────────────────────────────────────────────────────
@@ -483,6 +578,8 @@ void InputDispatcher::refresh_sample_view(bool reset_selection) {
     SampleEditorState& se     = s_.sampleEditor;
     const int          newLen = host_.sample_length(se.instrumentId);
     se.totalFrames = newLen;
+    se.transientScanReady = false;
+    se.transientMarkers.clear();
 
     // ⚠️ Reset, not clamp: a clamped selection after a shortening op is one the user never made.
     if (reset_selection) {
@@ -505,7 +602,6 @@ void InputDispatcher::refresh_sample_view(bool reset_selection) {
         // ⚠️ And every marker list: they index audio just replaced, and a stale line looks right. This
         // also keeps a save after a resize from writing back half the old cue points.
         se.fileMarkers.clear();
-        se.transientMarkers.clear();
         se.manualMarkers.clear();
         se.manualKeyMethod = -1;
         se.manualKeyParam  = -1;
@@ -575,7 +671,9 @@ void InputDispatcher::sample_editor_confirm() {
             tap_slice_marker();
             break;
 
-        case 12:
+        case SampleEditorModule::TO_INST_ROW:
+            if (se.cursorCol == SampleEditorModule::TO_INST_COL) { sample_editor_to_instrument(); break; }
+            if (se.cursorCol == SampleEditorModule::FIND_HITS_COL) { sample_editor_find_hits(); break; }
             if (se.cursorCol == 2) { select_current_slice(); break; }
             if (se.cursorCol == 3) { se.selectionStart=0;se.selectionEnd=se.totalFrames; break; }
             if (se.totalFrames < 2) break;
@@ -647,7 +745,12 @@ void InputDispatcher::sample_editor_confirm() {
         // ── Row 14: NORM  FADE+  FADE-  SLNC  REV  UNDO ──────────────────────────────────────────
         case 14:
             switch (se.cursorCol) {
-                case 0: in_place([&] { host_.normalize_sample(instId, startF, endF); }); break;
+                case 0: {
+                    if (startF >= endF) break;
+                    const auto gain = sample_level::plan(host_.sample_level_peak(instId, startF, endF), true, -1);
+                    apply_sample_level(startF, endF, gain.factor, true, gain.limited);
+                    break;
+                }
                 case 1: in_place([&] { host_.fade_in_sample(instId, startF, endF); }); break;
                 case 2: in_place([&] { host_.fade_out_sample(instId, startF, endF); }); break;
                 case 3: in_place([&] { host_.silence_region(instId, startF, endF); }); break;
@@ -673,6 +776,14 @@ void InputDispatcher::sample_editor_confirm() {
                     case 1: in_place([&] { host_.invert_polarity_sample(instId, startF, endF); }); break;
                     case 2: in_place([&] { host_.declick_sample(instId, startF, endF,
                                                       std::max(1, se.sampleRate / 500)); }); break;
+                    case SampleEditorModule::LEVEL_COL:
+                        stop_sample_editor_preview();
+                        se.levelEdit.instrument = instId;
+                        se.levelEdit.first = startF;
+                        se.levelEdit.end = endF;
+                        se.levelEdit.generation = host_.sample_generation(instId);
+                        se.levelEdit.peak = host_.sample_level_peak(instId, startF, endF);
+                        break;
                 }
             }
             break;
@@ -915,29 +1026,437 @@ void InputDispatcher::save_sample_to(const std::string& path, bool adopt_name) {
 
     mark_modified();
     s_.currentScreen = s_.previousScreen;   // a save LEAVES the editor, as it does on Android
+    resume_sample_granular_from_editor();
 }
 
 // ─── CHOP ────────────────────────────────────────────────────────────────────────────────────────
 
 void InputDispatcher::sample_editor_chop() {
-    SampleEditorState& se = s_.sampleEditor;
+    auto& se = s_.sampleEditor;
     if (se.sliceMethod == SampleEditorModule::SLICE_OFF) return;
+    if (se.sliceMethod == SampleEditorModule::SLICE_TRANSIENT && !se.transientScanReady && !se.manual_markers_live()) {
+        se.toolMessage = "WAIT FOR TRANSIENT SCAN";
+        return;
+    }
+    auto slices = current_slices();
+    const int length = host_.sample_length(se.instrumentId);
+    slices.erase(std::remove_if(slices.begin(), slices.end(), [length](const auto& range) {
+        return range.first < 0 || range.first >= range.second || range.second > length;
+    }), slices.end());
+    if (slices.empty()) {
+        se.toolMessage = "NO AUDIO SLICES TO EXPORT";
+        return;
+    }
+    stop_sample_editor_preview();
+    auto& review = se.chopReview;
+    review.slices = std::move(slices);
+    review.instrument = se.instrumentId;
+    review.sourceMode = se.sourceMode;
+    review.bitDepth = se.bitDepth;
+    review.generation = host_.sample_generation(se.instrumentId);
+    review.selected = std::clamp(se.sliceIndex, 0, static_cast<int>(review.slices.size()) - 1);
+    review.single = false;
+}
 
-    const std::vector<std::pair<int64_t, int64_t>> slices = current_slices();
-    if (slices.empty()) return;
+void InputDispatcher::export_sample_chops() {
+    auto& se = s_.sampleEditor;
+    const auto& review = se.chopReview;
+    const int first = review.single ? review.selected : 0;
+    const int end = review.single ? review.selected + 1 : static_cast<int>(review.slices.size());
+    const auto tell = [&](std::string message, bool success = false) {
+        se.toolMessage = message;
+        set_status(s_, std::move(message), success);
+    };
+    int64_t largest = 0;
+    for (int i = first; i < end; ++i)
+        largest = std::max(largest, review.slices[i].second - review.slices[i].first);
+    if (!can_export_sample_range(se, largest)) {
+        tell("TOO LITTLE RAM / SPLIT THIS SLICE");
+        return;
+    }
 
-    // A slice becomes a file name, sanitized like every other the app writes.
-    const std::string base = safe_file_name(se.sampleName.empty() ? "SAMPLE" : se.sampleName);
+    before_long_operation();
+    const LoadScope loading(*this, now_ms_, "Writing reviewed slices to WAV");
+    if (!pt::load_tick(0.f)) {
+        tell("CHOP EXPORT CANCELLED");
+        return;
+    }
+    const std::string library = fs_.make_app_folder("Samples/Chops");
+    if (library.empty()) {
+        tell("CANNOT OPEN THE CHOPS FOLDER");
+        return;
+    }
+    const std::string base = safe_file_name(se.sampleName.empty() ? "SAMPLE" : se.sampleName).substr(0, 28);
+    const auto stamp = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    std::string pending, finalName;
+    for (int attempt = 0; attempt < 100; ++attempt) {
+        finalName = base + "_" + std::to_string(stamp) + "_" + std::to_string(attempt);
+        const auto final = library + "/" + finalName;
+        if (fs_.is_directory(final) || fs_.file_exists(final)) continue;
+        pending = fs_.create_folder(library, "Pending_" + finalName);
+        if (!pending.empty()) break;
+    }
+    if (pending.empty()) {
+        tell("CANNOT CREATE A NEW CHOP FOLDER");
+        return;
+    }
 
-    // Samples/Chops/<base>/ — its own folder, so a 32-slice break does not bury the sample directory.
-    const std::string samples = fs_.samples_directory();
-    fs_.create_folder(samples, "Chops");                     // "" if it already exists — either is fine
-    const std::string chops = samples + "/Chops";
-    fs_.create_folder(chops, base);
-    const std::string dir = chops + "/" + base;
+    // Expose a completed folder only after every WAV succeeded. The existing
+    // filesystem API supports this same no-overwrite rename on native and SAF.
+    bool complete = true;
+    for (int i = first; i < end; ++i) {
+        const auto [startFrame, endFrame] = review.slices[i];
+        char suffix[12];
+        std::snprintf(suffix, sizeof(suffix), "_%03d.wav", i + 1);
+        const std::string path = pending + "/" + base + suffix;
+        if (!pt::load_tick(float(i - first) / (end - first)) ||
+            review.generation != host_.sample_generation(review.instrument) || fs_.file_exists(path) ||
+            !host_.save_sample_selection_wav(review.instrument, path, static_cast<int>(startFrame),
+                                             static_cast<int>(endFrame), {}, review.sourceMode, review.bitDepth)) {
+            complete = false;
+            break;
+        }
+    }
+    if (complete && pt::load_tick(1.f) && fs_.rename_file(pending, finalName)) {
+        tell("EXPORTED " + std::to_string(end - first) + " WAV / SAMPLES/CHOPS", true);
+        return;
+    }
+    const bool removed = fs_.delete_path(pending);
+    if (!removed) tell("INCOMPLETE EXPORT / CHECK PENDING FOLDER");
+    else if (pt::load_cancelled()) tell("CHOP EXPORT CANCELLED");
+    else tell("CHOP EXPORT FAILED / ORIGINAL KEPT");
+}
 
-    const int written = host_.chop_sample(se.instrumentId, dir, base, slices, se.bitDepth);
-    set_status(s_, written > 0 ? ("CHOPPED " + std::to_string(written)) : "CHOP FAILED", written > 0);
+void InputDispatcher::sample_editor_to_instrument() {
+    SampleEditorState& se = s_.sampleEditor;
+    const auto tell = [&](std::string message, bool success = false) {
+        se.toolMessage = message;
+        set_status(s_, std::move(message), success);
+    };
+    const int source = se.instrumentId;
+    if (se.selectionStart < 0 || se.selectionEnd <= se.selectionStart ||
+        se.selectionEnd > host_.sample_length(source)) {
+        tell("SELECT AN AUDIO RANGE FIRST");
+        return;
+    }
+    const int target = unused_instrument(host_, source);
+    if (target < 0) {
+        tell("NO FREE INSTRUMENT SLOT");
+        return;
+    }
+    const int first = static_cast<int>(se.selectionStart);
+    const int end = static_cast<int>(se.selectionEnd);
+    if (!can_export_sample_range(se, int64_t(end) - first)) {
+        tell("TOO LITTLE RAM / SELECT A SHORTER RANGE");
+        return;
+    }
+
+    run_due_sample_preview_restore(/*force=*/true);
+    host_.stop_preview();
+    se.playbackPosition = -1.0f;
+    const LoadScope loading(*this, now_ms_, "Saving selection to a new instrument");
+    const std::string library = fs_.make_app_folder("Samples/Chops");
+    if (library.empty()) {
+        tell("CANNOT OPEN THE CHOPS FOLDER");
+        return;
+    }
+    const bool virtualLibrary = pt_path_is_uri(library.c_str());
+    const auto nativeDirectory = virtualLibrary ? std::filesystem::path(fs_.settings_path()).parent_path()
+                                                : std::filesystem::path(library);
+    const std::string base = safe_file_name(se.sampleName.empty() ? "SAMPLE" : se.sampleName).substr(0, 28);
+    const auto stamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    SelectionStage stage;
+    std::string destination;
+    std::error_code error;
+    for (int attempt = 0; attempt < 100; ++attempt) {
+        const std::string name = base + "_SEL_" + std::to_string(stamp) + "_" + std::to_string(attempt);
+        destination = library + "/" + name + ".wav";
+        if (fs_.file_exists(destination)) continue;
+        const auto directory = nativeDirectory / (".trackwerk-" + name);
+        if (std::filesystem::create_directory(directory, error)) {
+            stage.directory = directory;
+            break;
+        }
+        if (error) break;
+    }
+    if (stage.directory.empty()) {
+        tell("CANNOT PREPARE THE NEW WAV FILE");
+        return;
+    }
+    std::vector<int> cues = compute_slice_cue_points();
+    cues.erase(std::remove_if(cues.begin(), cues.end(), [&](int frame) { return frame <= first || frame >= end; }),
+               cues.end());
+    for (int& frame : cues) frame -= first;
+
+    const auto staged = stage.wav().string();
+    if (!host_.save_sample_selection_wav(source, staged, first, end, cues, se.sourceMode, se.bitDepth)) {
+        tell("SELECTION SAVE FAILED / ORIGINAL KEPT");
+        return;
+    }
+    const bool published = virtualLibrary ? fs_.copy_file(staged, destination)
+        : live_resample_files::publish_no_replace(staged, destination, error);
+    if (!published) {
+        tell("SELECTION COPY FAILED / ORIGINAL KEPT");
+        return;
+    }
+    if (!host_.load_sample(target, destination)) {
+        tell(pt::load_cancelled() ? "LOAD CANCELLED / WAV SAVED IN CHOPS" : "LOAD FAILED / WAV SAVED IN CHOPS");
+        return;
+    }
+    auto& instrument = host_.edit_project().instruments[target];
+    instrument.name = adopted_name(base.substr(0, 16) + " SEL");
+    mark_modified();
+    tell("NEW INSTRUMENT " + songcore::hex2(target) + " / SELECTION SAVED", true);
+}
+
+void InputDispatcher::sample_editor_find_hits() {
+    auto& se = s_.sampleEditor;
+    const int source = se.instrumentId;
+    if (se.selectionStart < 0 || se.selectionEnd <= se.selectionStart ||
+        se.selectionEnd > host_.sample_length(source)) {
+        se.toolMessage = "SELECT AN AUDIO RANGE FIRST";
+        return;
+    }
+    run_due_sample_preview_restore(/*force=*/true);
+    host_.stop_preview();
+    se.playbackPosition = -1.f;
+    const LoadScope loading(*this, now_ms_, "Finding attacks in the selected audio");
+    SampleEditorState::HitReview review;
+    review.instrument = source;
+    review.first = static_cast<int>(se.selectionStart);
+    review.end = static_cast<int>(se.selectionEnd);
+    review.sourceMode = se.sourceMode;
+    review.sensitivity = se.sliceSensitivity;
+    review.snap = se.snapEnabled;
+    review.generation = host_.sample_generation(source);
+    review.originalCuts = compute_slice_cue_points();
+    const AudioEngine::TransientScan scan{review.first, review.end, review.sourceMode, review.snap, true};
+    review.hits = host_.detect_transients(source, review.sensitivity, scan);
+    if (pt::load_cancelled()) {
+        se.toolMessage = "HIT SCAN CANCELLED";
+        return;
+    }
+    if (review.hits.empty()) {
+        se.toolMessage = "NO HITS IN THE SELECTED RANGE";
+        return;
+    }
+    review.auditionSlice = 1; // Start on the first suggested hit, after any leading silence.
+    review.open = true;
+    se.hitReview = std::move(review);
+}
+
+void InputDispatcher::stop_sample_editor_preview() {
+    host_.stop_preview();
+    run_due_sample_preview_restore(/*force=*/true);
+    auto& se = s_.sampleEditor;
+    if (se.chopReview.previewEnd > 0 || se.levelEdit.previewEnd > 0) {
+        host_.clear_previews();
+        se.chopReview.previewEnd = 0;
+        se.levelEdit.previewEnd = 0;
+    }
+    se.playbackPosition = -1.f;
+}
+
+GestureResult InputDispatcher::sample_slice_review_layer(Gesture gesture) {
+    // Help borrows the view without closing the edit or its audition.
+    if (gesture == Gesture::SELECT) return GestureResult::PASS;
+    if (gesture == Gesture::STOP_PREVIEW) {
+        stop_sample_editor_preview();
+        return GestureResult::TAKEN;
+    }
+    if (s_.sampleEditor.levelEdit.open()) return sample_level_layer(gesture);
+    return s_.sampleEditor.chopReview.open() ? sample_chop_review_layer(gesture) : sample_hit_review_layer(gesture);
+}
+
+bool InputDispatcher::apply_sample_level(int first, int end, float factor, bool normalize, bool limited) {
+    auto& se = s_.sampleEditor;
+    if (std::abs(factor - 1.f) < 0.00001f) {
+        se.toolMessage = limited ? "ALREADY NEAR FULL SCALE" : "LEVEL ALREADY MATCHES";
+        return true;
+    }
+    before_long_operation();
+    if (!host_.edit_sample_level(se.instrumentId, first, end, factor)) {
+        se.toolMessage = "EDIT CANCELLED: UNDO MEMORY UNAVAILABLE";
+        set_status(s_, se.toolMessage, false);
+        return false;
+    }
+    refresh_sample_view(/*reset_selection=*/false);
+    se.isModified = true;
+    char text[64];
+    std::snprintf(text, sizeof(text), "%s  %+.1f dB%s", normalize ? "NORMALIZED" : "GAIN APPLIED",
+                  sample_level::db(factor), limited ? "  /  -1 dBFS PEAK" : "");
+    se.toolMessage = text;
+    set_status(s_, se.toolMessage, true);
+    return true;
+}
+
+GestureResult InputDispatcher::sample_level_layer(Gesture gesture) {
+    auto& se = s_.sampleEditor;
+    auto& level = se.levelEdit;
+    if (level.instrument != se.instrumentId || level.generation != host_.sample_generation(se.instrumentId) ||
+        level.first != se.selectionStart || level.end != se.selectionEnd) {
+        stop_sample_editor_preview();
+        level = {};
+        se.toolMessage = "SELECTION CHANGED / OPEN GAIN AGAIN";
+        return GestureResult::TAKEN;
+    }
+    const int targetCount = static_cast<int>(sample_level::normalize_targets.size());
+    const int value = level.normalize ? sample_level::normalize_targets[level.target] : level.gainDb;
+    const auto gain = sample_level::plan(level.peak, level.normalize, value);
+    switch (gesture) {
+        case Gesture::DPAD_UP:
+        case Gesture::DPAD_DOWN:
+            stop_sample_editor_preview();
+            level.normalize = gesture == Gesture::DPAD_DOWN;
+            se.toolMessage.clear();
+            break;
+        case Gesture::DPAD_LEFT:
+        case Gesture::DPAD_RIGHT: {
+            const int step = gesture == Gesture::DPAD_RIGHT ? 1 : -1;
+            stop_sample_editor_preview();
+            if (level.normalize) level.target = std::clamp(level.target + step, 0, targetCount - 1);
+            else level.gainDb = std::clamp(level.gainDb + step, sample_level::min_gain_db, sample_level::max_gain_db);
+            se.toolMessage.clear();
+            break;
+        }
+        case Gesture::START: {
+            const bool wasPlaying = se.playbackPosition >= 0.f;
+            stop_sample_editor_preview();
+            if (wasPlaying) break;
+            const int end = static_cast<int>(preview_end(se, level.first, level.end, se.sourceMode));
+            if (end <= level.first ||
+                !host_.preview_sample_chop(level.instrument, se.sourceMode, level.first, end, gain.factor)) {
+                se.toolMessage = "NOT ENOUGH RAM FOR PREVIEW";
+                break;
+            }
+            level.previewEnd = end;
+            se.toolMessage = end < level.end ? "PREVIEW PARTIAL / APPLY FULL SELECTION" : "";
+            break;
+        }
+        case Gesture::A:
+            stop_sample_editor_preview();
+            if (apply_sample_level(level.first, level.end, gain.factor, level.normalize, gain.limited))
+                level = {};
+            break;
+        case Gesture::B:
+            stop_sample_editor_preview();
+            level = {};
+            se.toolMessage.clear();
+            break;
+        default: break;
+    }
+    return GestureResult::TAKEN;
+}
+
+GestureResult InputDispatcher::sample_chop_review_layer(Gesture gesture) {
+    auto& se = s_.sampleEditor;
+    auto& review = se.chopReview;
+    if (review.instrument != se.instrumentId || review.sourceMode != se.sourceMode || review.bitDepth != se.bitDepth ||
+        review.generation != host_.sample_generation(se.instrumentId)) {
+        stop_sample_editor_preview();
+        review = {};
+        se.toolMessage = "SOURCE CHANGED / OPEN CHOP AGAIN";
+        return GestureResult::TAKEN;
+    }
+    switch (gesture) {
+        case Gesture::DPAD_LEFT:
+        case Gesture::DPAD_RIGHT:
+            review.selected = std::clamp(review.selected + (gesture == Gesture::DPAD_RIGHT ? 1 : -1),
+                                         0, static_cast<int>(review.slices.size()) - 1);
+            se.toolMessage.clear();
+            break;
+        case Gesture::DPAD_UP:
+        case Gesture::DPAD_DOWN:
+            review.single = gesture == Gesture::DPAD_DOWN;
+            se.toolMessage.clear();
+            break;
+        case Gesture::START: {
+            if (se.playbackPosition >= 0.f) {
+                stop_sample_editor_preview();
+                break;
+            }
+            stop_sample_editor_preview();
+            const auto [first, end] = review.slices[review.selected];
+            const int64_t previewEnd = preview_end(se, first, end, review.sourceMode);
+            if (previewEnd <= first || !host_.preview_sample_chop(review.instrument, review.sourceMode,
+                                                               static_cast<int>(first), static_cast<int>(previewEnd))) {
+                se.toolMessage = "NOT ENOUGH RAM FOR PREVIEW";
+                break;
+            }
+            review.previewEnd = previewEnd;
+            se.toolMessage = previewEnd < end ? "PREVIEW PARTIAL / EXPORT FULL SLICE" : "";
+            break;
+        }
+        case Gesture::A:
+            stop_sample_editor_preview();
+            export_sample_chops();
+            break;
+        case Gesture::B:
+            stop_sample_editor_preview();
+            review = {};
+            break;
+        default: break;
+    }
+    return GestureResult::TAKEN;
+}
+
+GestureResult InputDispatcher::sample_hit_review_layer(Gesture gesture) {
+    auto& se = s_.sampleEditor;
+    auto& review = se.hitReview;
+    if (review.instrument != se.instrumentId || review.first != se.selectionStart ||
+        review.end != se.selectionEnd || review.sourceMode != se.sourceMode ||
+        review.sensitivity != se.sliceSensitivity || review.snap != se.snapEnabled ||
+        review.generation != host_.sample_generation(se.instrumentId)) {
+        stop_sample_editor_preview();
+        se.hitReview = {};
+        se.toolMessage = "SOURCE CHANGED / FIND HITS AGAIN";
+        return GestureResult::TAKEN;
+    }
+    switch (gesture) {
+        case Gesture::DPAD_LEFT:
+        case Gesture::DPAD_RIGHT:
+            review.auditionSlice = std::clamp(review.auditionSlice + (gesture == Gesture::DPAD_RIGHT ? 1 : -1),
+                                              0, static_cast<int>(review.hits.size()));
+            break;
+        case Gesture::START:
+            sample_editor_audition(review.audition_start(), review.audition_end());
+            break;
+        case Gesture::B:
+            stop_sample_editor_preview();
+            se.hitReview = {};
+            se.toolMessage = "HIT SUGGESTIONS CANCELLED";
+            break;
+        case Gesture::A: {
+            auto next = review.originalCuts;
+            const auto inside = [&](int frame) { return frame > review.first && frame < review.end; };
+            next.erase(std::remove_if(next.begin(), next.end(), inside), next.end());
+            next.insert(next.end(), review.hits.begin(), review.hits.end());
+            std::sort(next.begin(), next.end());
+            if (next.size() > songcore::PROGRAM_SLICE_MARKERS) {
+                se.toolMessage = "SLICE LIMIT: 256 BOUNDARIES";
+                break;
+            }
+            const auto count = review.hits.size();
+            const bool changed = next != review.originalCuts;
+            stop_sample_editor_preview();
+            se.hitReview = {};
+            if (changed) {
+                se.manualMarkers.clear();
+                for (const int frame : next) se.manualMarkers.push_back({frame, -1});
+                se.sliceMethod = SampleEditorModule::SLICE_MANUAL;
+                se.manualKeyMethod = se.sliceMethod;
+                se.manualKeyParam = 0;
+                se.sliceIndex = static_cast<int>(std::upper_bound(next.begin(), next.end(), se.selectionStart) - next.begin());
+                se.isModified = true;
+            }
+            se.toolMessage = std::to_string(count) + " HITS / " + (changed ? "SLICES UPDATED" : "CUTS ALREADY MATCH");
+            break;
+        }
+        default: break;
+    }
+    return GestureResult::TAKEN;
 }
 
 // ─── The audition's deferred restore ─────────────────────────────────────────────────────────────

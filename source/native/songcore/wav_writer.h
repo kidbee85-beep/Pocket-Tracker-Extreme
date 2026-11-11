@@ -250,6 +250,7 @@ inline bool write_wav(const std::string& path, const std::vector<float>& left,
     const int     numChannels   = (channels < 1) ? 1 : (channels > 2 ? 2 : channels);
     const int     blockAlign    = numChannels * (bits / 8);
     const int64_t dataSize      = frames * blockAlign;
+    const int64_t dataPadding   = dataSize & 1;
 
     // WAV's size fields are 32-bit. A sample big enough to overflow one is not a sample.
     if (dataSize > static_cast<int64_t>(INT32_MAX)) return false;
@@ -257,7 +258,7 @@ inline bool write_wav(const std::string& path, const std::vector<float>& left,
     const size_t  numCue           = cuePoints.size();
     const int64_t cueChunkDataSize = numCue > 0 ? static_cast<int64_t>(4 + numCue * 24) : 0;
     const int64_t cueChunkBytes    = numCue > 0 ? 8 + cueChunkDataSize : 0;
-    const int64_t riffContentSize  = 36 + dataSize + cueChunkBytes;   // everything after "RIFF" + size
+    const int64_t riffContentSize  = 36 + dataSize + dataPadding + cueChunkBytes;
 
     std::vector<uint8_t> b;
     b.reserve(static_cast<size_t>(8 + riffContentSize));
@@ -285,6 +286,7 @@ inline bool write_wav(const std::string& path, const std::vector<float>& left,
         detail::wav_put_sample(b, left[k], bits, isFloat);
         if (numChannels == 2) detail::wav_put_sample(b, right[k], bits, isFloat);
     }
+    if (dataPadding) b.push_back(0);  // A mono odd-length PCM8 region still needs a word-aligned next chunk.
 
     // cue chunk (8 + 4 + n*24), one point per slice boundary
     if (numCue > 0) {

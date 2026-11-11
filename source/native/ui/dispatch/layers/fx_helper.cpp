@@ -48,7 +48,7 @@ GestureResult InputDispatcher::fx_helper_layer(Gesture g) {
 
 void InputDispatcher::open_fx_helper() {
     s_.fxHelper = fx_helper_opened_at(current_fx_type_code(),
-                                      fx_layout_for(visible_effect_type_count()));
+                                      fx_layout_for(visible_effect_type_count(), s_.currentScreen == ScreenType::PHRASE));
 }
 
 bool InputDispatcher::on_fx_type_column() const {
@@ -72,8 +72,13 @@ int InputDispatcher::current_fx_type_code() const {
 
 void InputDispatcher::apply_fx_type_change(int effect_code) {
     if (!on_fx_type_column()) return;
+    const bool granular = studio::granular::step::isFx(effect_code);
+    if (granular && s_.currentScreen != ScreenType::PHRASE) return;
     const int slot = fx_slot_at_cursor();
-    with_fx_row(s_, host_.edit_project(), [&](auto& r) { fx_type_of(r, slot) = effect_code; });
+    with_fx_row(s_, host_.edit_project(), [&](auto& r) {
+        fx_type_of(r, slot) = effect_code;
+        if (granular) fx_value_of(r, slot) = std::clamp(fx_value_of(r, slot), 0, songcore::effect_value_max(effect_code));
+    });
     mark_modified(/*table_touched=*/s_.currentScreen == ScreenType::TABLE);
     remember_fx_at_cursor();
 }
@@ -104,6 +109,7 @@ void InputDispatcher::remember_fx_at_cursor() {
 bool InputDispatcher::fx_insert_last(bool peek) {
     if (!on_fx_type_column() || s_.selection.active) return false;
     if (s_.lastEditedFxType == songcore::FX_NONE || current_fx_type_code() != songcore::FX_NONE) return false;
+    if (studio::granular::step::isFx(s_.lastEditedFxType) && s_.currentScreen != ScreenType::PHRASE) return false;
     if (peek) return true;
 
     const int slot = fx_slot_at_cursor();

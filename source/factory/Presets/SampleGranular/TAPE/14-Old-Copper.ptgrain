@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Old Copper",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 50.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.4750000238418579,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 1.0399999618530273,
+    "position": 0.7050000429153442,
+    "releaseMs": 250.0,
+    "reverseProbability": 0.029999999329447746,
+    "scanSpeed": 0.9200000166893005,
+    "sizeMs": 89.0,
+    "sprayMs": 186.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

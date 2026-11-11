@@ -26,6 +26,25 @@ struct MapperState {
     // SELECT went down alone; any other press clears it, so help fires on release only for a bare tap
     // (on the file browser SELECT is a modifier).
     bool selectPressedAlone = false;
+    uint16_t helpHeldButtons = 0;
+
+    bool owns_help_key(Button button) const {
+        return (helpHeldButtons & (uint16_t{1} << static_cast<unsigned>(button))) != 0;
+    }
+
+    // START can claim the two shoulders for resampling before a plain L+R clears anything.
+    bool shoulderClearPending = false;
+
+    // Phrase SELECT chords consume each direction until its physical release.
+    uint8_t phraseVerticalHeld = 0, phraseSelectHeld = 0;
+    Button phraseFirstArrow = Button::COUNT;
+    Button phraseRotationKey = Button::COUNT;
+    bool phraseRotationArmed = false;
+
+    void clear_phrase_keys() {
+        phraseVerticalHeld = phraseSelectHeld = 0;
+        phraseFirstArrow = Button::COUNT;
+    }
 };
 
 // ⚠️ The order of the checks is the specification: most specific first, each arm returns. L+B+A before
@@ -35,6 +54,35 @@ struct MapperState {
 template <class Dispatcher>
 void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_t now) {
     const ButtonMods& m = e.mods;
+    const uint8_t vertical = e.button == Button::DPAD_UP ? 1u : e.button == Button::DPAD_DOWN ? 2u : 0u;
+    const uint8_t horizontal = e.button == Button::DPAD_LEFT ? 4u : e.button == Button::DPAD_RIGHT ? 8u : 0u;
+    const uint8_t direction = vertical | horizontal;
+    const bool repeatedVertical = (ms.phraseVerticalHeld & vertical) != 0;
+    if (e.action == ButtonAction::RELEASED) ms.phraseSelectHeld &= ~direction;
+    if (vertical && e.action == ButtonAction::PRESSED) {
+        ms.phraseVerticalHeld |= vertical;
+    } else if (vertical) {
+        ms.phraseVerticalHeld &= ~vertical;
+        if (ms.phraseFirstArrow == e.button) ms.phraseFirstArrow = Button::COUNT;
+    } else if (e.action == ButtonAction::PRESSED && e.button != Button::SELECT) {
+        ms.phraseFirstArrow = Button::COUNT;
+    }
+
+    // Help owns a press until its physical release, even if a different button closes it first.
+    if (d.help_full_open() || ms.owns_help_key(e.button)) {
+        const auto bit = uint16_t(1u << static_cast<unsigned>(e.button));
+        ms.selectPressedAlone = false;
+        if (e.action == ButtonAction::PRESSED && !e.cancelled) {
+            ms.helpHeldButtons |= bit;
+        } else {
+            const bool owned = ms.owns_help_key(e.button);
+            ms.helpHeldButtons &= ~bit;
+            if (e.button == Button::A) d.on_a_held(false);
+            if (e.button == Button::R_SHIFT) d.on_r_held(false);
+            if (owned && !e.cancelled && d.help_full_open()) d.on_help_button(e.button);
+        }
+        return;
+    }
 
     // R's state for MIDI learn ("hold R, turn a knob"). ⚠️ Above every early return, or R could stay held.
     if (e.button == Button::R_SHIFT) d.on_r_held(e.action == ButtonAction::PRESSED);
@@ -42,6 +90,46 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
     else if (e.action == ButtonAction::PRESSED && m.r) d.on_r_combo_press();
     // A's state for what is drawn while it is held. Above every early return too.
     if (e.button == Button::A) d.on_a_held(e.action == ButtonAction::PRESSED);
+
+    if (e.cancelled) {
+        ms.clear_phrase_keys();
+        ms.phraseRotationArmed = false;
+        if (ms.phraseRotationKey == e.button) ms.phraseRotationKey = Button::COUNT;
+        if (e.button == Button::L_SHIFT || e.button == Button::R_SHIFT) ms.shoulderClearPending = false;
+        if (ms.rComboArmed && (e.button == Button::A || e.button == Button::B || e.button == Button::R_SHIFT)) {
+            ms.rComboArmed = false;
+            d.on_r_combo_revert();
+        }
+        if (e.button == Button::A) {
+            ms.aPressedAlone = false;
+            ms.lastAPress = 0;
+            d.on_a_released(true);
+        }
+        if (e.button == Button::B) ms.bPressedAlone = false;
+        if (e.button == Button::SELECT) ms.selectPressedAlone = false;
+        return;
+    }
+
+    // A/B belongs to the rotation until it comes up. Another press cancels the
+    // rotation without sending the held A/B to the ordinary edit or copy paths.
+    if (ms.phraseRotationKey != Button::COUNT) {
+        if (e.button == ms.phraseRotationKey) {
+            if (e.action == ButtonAction::RELEASED) {
+                if (ms.phraseRotationArmed) d.on_phrase_rotate(e.button);
+                ms.phraseRotationKey = Button::COUNT;
+                ms.phraseRotationArmed = false;
+            }
+            return;
+        }
+        const bool held = ms.phraseRotationKey == Button::A ? m.a : m.b;
+        if (held) {
+            if (e.action == ButtonAction::PRESSED) ms.phraseRotationArmed = false;
+            return;
+        }
+        // An overlay may have owned the physical release.
+        ms.phraseRotationKey = Button::COUNT;
+        ms.phraseRotationArmed = false;
+    }
 
     // Punch owns A as a performance hold. START always remains transport, even
     // while that hold/modifier is down; it must never route to tracker audition.
@@ -52,6 +140,11 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
 
     // ── Release ──────────────────────────────────────────────────────────────────────────────────
     if (e.action != ButtonAction::PRESSED) {
+        if (ms.shoulderClearPending && (e.button == Button::L_SHIFT || e.button == Button::R_SHIFT)) {
+            ms.shoulderClearPending = false;
+            d.on_l_r();
+            return;
+        }
         // The mute/solo chord ends on a release and consumes it (an armed A must not reach
         // `on_a_released()`). On the A/B release, `m.r` is "is R still down?".
         if (ms.rComboArmed) {
@@ -82,34 +175,25 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
         if (e.button == Button::SELECT) {
             if (ms.selectPressedAlone) {
                 ms.selectPressedAlone = false;
+                ms.lastAPress = 0;
                 d.on_select();
             }
         }
         return;
     }
 
-    // The full help overlay: any press closes it and is consumed — it covers the editor, so a press
-    // falling through would edit a cell nobody can see. An audition is still silenced.
-    if (d.help_full_open()) {
-        ms.selectPressedAlone = false;
-        d.on_help_dismiss();
-        if (e.button != Button::START && !m.a) d.on_stop_preview();
-        return;
-    }
+    if (ms.phraseSelectHeld & direction) return;
 
-    // Any press but SELECT puts the compact panel away and falls through — it swallows nothing.
-    if (e.button != Button::SELECT) {
-        ms.selectPressedAlone = false;   // SELECT is a modifier here, not a tap
-        d.on_help_dismiss();
-    }
+    if (e.button != Button::SELECT) ms.selectPressedAlone = false;
 
-    // Any plain press silences an audition; START and A-combos (edits stay audible) do not.
-    if (e.button != Button::START && !m.a) d.on_stop_preview();
+    // SELECT may open help; leave the current audition alone while reading it.
+    if (e.button != Button::START && e.button != Button::SELECT && !m.a) d.on_stop_preview();
 
     // L+SELECT opens Punch directly. L+SELECT had no prior action; both orders work.
     if (!m.r && !m.a && !m.b &&
         ((e.button == Button::SELECT && m.l) || (e.button == Button::L_SHIFT && m.select))) {
         ms.selectPressedAlone = false;
+        ms.clear_phrase_keys();
         d.on_select_l();
         return;
     }
@@ -118,7 +202,40 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
     // the file browser. Accept either press order without leaving a deferred bare SELECT.
     if (e.button == Button::SELECT && m.r && !m.l && !m.a && !m.b) {
         ms.selectPressedAlone = false;
+        ms.clear_phrase_keys();
         d.on_select_r();
+        return;
+    }
+
+    if (m.select && !m.a && !m.b && !m.l && !m.r) {
+        if (horizontal && d.on_phrase_overview(e.button)) {
+            ms.selectPressedAlone = false;
+            ms.lastAPress = 0;
+            ms.phraseSelectHeld |= horizontal;
+            return;
+        }
+        const bool reclaim = e.button == Button::SELECT && ms.phraseFirstArrow != Button::COUNT;
+        const Button arrow = reclaim ? ms.phraseFirstArrow : e.button;
+        if ((reclaim || (vertical && !repeatedVertical)) && d.on_phrase_history(arrow, reclaim)) {
+            ms.selectPressedAlone = false;
+            ms.lastAPress = 0;
+            ms.phraseFirstArrow = Button::COUNT;
+            ms.phraseSelectHeld |= arrow == Button::DPAD_UP ? 1u : 2u;
+            return;
+        }
+        if (e.button == Button::SELECT && ms.phraseVerticalHeld && d.phrase_editor_context()) {
+            ms.selectPressedAlone = false;
+            return;
+        }
+    }
+
+    if (m.select && !m.l && !m.r &&
+        ((e.button == Button::A && !m.b) || (e.button == Button::B && !m.a)) &&
+        d.arm_phrase_rotation()) {
+        ms.aPressedAlone = ms.bPressedAlone = false;
+        ms.lastAPress = 0;
+        ms.phraseRotationKey = e.button;
+        ms.phraseRotationArmed = true;
         return;
     }
 
@@ -142,7 +259,7 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
         switch (e.button) {
             case Button::A:       d.on_select_a(); return;   // rename     (opens the keyboard)
             case Button::B:       d.on_select_b(); return;   // delete     (arms the confirm)
-            case Button::R_SHIFT: d.on_r_combo_press(); d.on_select_r(); return; // Studio / browser new folder
+            case Button::R_SHIFT: ms.clear_phrase_keys(); d.on_r_combo_press(); d.on_select_r(); return; // Studio / browser new folder
             default: break;
         }
     }
@@ -159,14 +276,16 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
         }
     }
 
-    // ── L+R: leave selection mode ────────────────────────────────────────────────────────────────
+    // ── L+R: leave selection mode on release ────────────────────────────────────────────────────
     if (m.l && m.r) {
         switch (e.button) {
             case Button::SELECT:   // reserved: consumed, not passed down
             case Button::A:
             case Button::B:       return;
             case Button::L_SHIFT:
-            case Button::R_SHIFT: d.on_l_r(); return;
+            case Button::R_SHIFT:
+                ms.shoulderClearPending = !m.a && !m.b && !m.select;
+                return;
             default: break;
         }
     }
@@ -261,6 +380,15 @@ void handle_button(const ButtonEvent& e, Dispatcher& d, MapperState& ms, uint64_
 
     // ── The plain D-pad ──────────────────────────────────────────────────────────────────────────
     if (m.l || m.r || m.a || m.b || m.select) return;
+
+    if (vertical) {
+        ms.phraseFirstArrow = Button::COUNT;
+        // Reclaim one plain move if SELECT arrives next. A repeated move is ordinary scrolling.
+        if (!repeatedVertical && ms.phraseVerticalHeld == vertical && d.on_phrase_history_arrow(e.button)) {
+            ms.phraseFirstArrow = e.button;
+            return;
+        }
+    }
 
     switch (e.button) {
         case Button::DPAD_UP:    d.on_dpad_up();    break;

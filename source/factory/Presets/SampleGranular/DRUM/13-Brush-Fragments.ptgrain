@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Brush Fragments",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 33.0,
+    "freeze": false,
+    "level": 0.47999998927116394,
+    "panSpread": 0.7199999690055847,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.9599999785423279,
+    "position": 0.6600000262260437,
+    "releaseMs": 215.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 27.0,
+    "sprayMs": 0.0,
+    "windowShape": 0.8999999761581421
+  },
+  "version": 1
+}

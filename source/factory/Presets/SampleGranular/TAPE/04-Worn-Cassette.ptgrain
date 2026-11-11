@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Worn Cassette",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 40.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.22500000894069672,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.23999999463558197,
+    "position": 0.2549999952316284,
+    "releaseMs": 150.0,
+    "reverseProbability": 0.08999999612569809,
+    "scanSpeed": 0.5199999809265137,
+    "sizeMs": 39.0,
+    "sprayMs": 66.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

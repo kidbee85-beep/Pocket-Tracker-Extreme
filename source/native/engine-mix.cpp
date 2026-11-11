@@ -181,6 +181,7 @@ void AudioEngine::triggerSamplerNote(const ScheduledNote& note, int frame, int64
 
     // A note with no sample behind it must not touch the track (a preview of an empty slot).
     const bool haveSample = note.sampleId >= 0 && note.sampleId < 256 && samples[note.sampleId];
+    if (!haveSample) resetGranularTrack(note.trackId, frame);
 
     // Mono per track: whatever is playing here fades from the new note's own frame.
     for (int v = 0; haveSample && v < MAX_VOICES; v++) {
@@ -189,9 +190,11 @@ void AudioEngine::triggerSamplerNote(const ScheduledNote& note, int frame, int64
         }
     }
 
+    const int firstSlot=note.trackId==PREVIEW_LANE?SAMPLE_PREVIEW_VOICE:0;
+    const int lastSlot=note.trackId==PREVIEW_LANE?MAX_VOICES:SONG_SAMPLE_VOICES;
     // The slot: a free one first, so the faded voice's tail plays out…
     int targetSlot = -1;
-    for (int v = 0; v < MAX_VOICES; v++) {
+    for (int v = firstSlot; v < lastSlot; v++) {
         if (!voices[v].isActive) {
             targetSlot = v;
             break;
@@ -200,7 +203,7 @@ void AudioEngine::triggerSamplerNote(const ScheduledNote& note, int frame, int64
 
     // …else this track's own fading voice (trackId survives startFadeOut for this)…
     if (targetSlot == -1) {
-        for (int v = 0; v < MAX_VOICES; v++) {
+        for (int v = firstSlot; v < lastSlot; v++) {
             if (voices[v].trackId == note.trackId && voices[v].isFadingOut) {
                 targetSlot = v;
                 break;
@@ -210,7 +213,7 @@ void AudioEngine::triggerSamplerNote(const ScheduledNote& note, int frame, int64
 
     // …else any fading voice: a ~1 ms click beats silence.
     if (targetSlot == -1) {
-        for (int v = 0; v < MAX_VOICES; v++) {
+        for (int v = firstSlot; v < lastSlot; v++) {
             if (voices[v].isFadingOut) {
                 targetSlot = v;
                 LOGT("⚠️ Voice pool tight: preempting fading slot %d for track %d", v, note.trackId);
@@ -258,6 +261,10 @@ void AudioEngine::triggerSamplerNote(const ScheduledNote& note, int frame, int64
             voices[v].setChord(chordSemis, studioVoices[v].active() ? 0 : chordCount, strumWait);
             voices[v].instrId = note.sampleId;
             voices[v].sampleGen = gen;
+            bindGranularNote(note, v, gen);
+            voices[v].granularMode=false;voices[v].granularReleaseAt=-1;
+            granularVoices[v].stop();
+            configureGranularVoice(v,sampleRate);
             voices[v].faderHeld = false;
             if (note.trackId >= 0 && note.trackId < SF_VOICE_COUNT) trackOnsetFrame[note.trackId] = note.targetFrame;
             voices[v].startDelayFrames = frame;
@@ -382,6 +389,7 @@ void AudioEngine::processAudioBlock(float* output, int numFrames, int channelCou
         explicit InBlock(AudioEngine& en) : e(en) { e.audioInBlock.store(true); }
         ~InBlock() {
             e.publishVoiceView();
+            e.publishGranularView();
             e.audioBlocksDone.fetch_add(1);
             e.audioInBlock.store(false);
         }
@@ -502,6 +510,7 @@ void AudioEngine::clearBlockScratch(BlockMix& b) {
 // transport's stop and restart requests, a live key's bytes, and the staged instrument and bus data.
 void AudioEngine::takeQueuedWork(BlockMix& b) {
     noteBatch.clear(); killBatch.clear(); paramBatch.clear();
+    beginGranularStepBlock();
     b.startFrame = globalFrameCounter.load(std::memory_order_relaxed);
     const int64_t blockStartFrame = b.startFrame;
     const int64_t blockEnd = blockStartFrame + b.numFrames - 1;
@@ -551,6 +560,39 @@ void AudioEngine::dispatchEvents(BlockMix& b) {
     // At equal frames: params, kills, notes — a K00 on its own step relies on it.
     const auto dueKill = [&] { return killIdx < killBatch.size() ? killBatch[killIdx].targetFrame : INT64_MAX; };
     const auto dueNote = [&] { return noteIdx < noteBatch.size() ? noteBatch[noteIdx].targetFrame : INT64_MAX; };
+    const auto fireNote = [&](int frame, int64_t currentFrame) {
+        ScheduledNote note = noteBatch[noteIdx++];
+        // The actual instrument is resolved at the hit, after table INS.
+        if (note.instrumentId >= 0 && !resolveScheduledNote(note)) {
+            resetGranularTrack(note.trackId, frame);
+            return;
+        }
+        if (note.isSoundfont) {
+            resetGranularTrack(note.trackId, frame);
+            triggerSoundfontNote(note, frame, currentFrame, b.sampleRate);
+        } else triggerSamplerNote(note, frame, currentFrame, b.sampleRate);
+    };
+
+    // If lookahead arrived late, multiple original timestamps can all land on
+    // frame zero. A Gxx between two of those notes still belongs to the first
+    // source, not to the later note. Merge the overdue records in that case;
+    // ordinary (and legacy) on-time dispatch below remains unchanged.
+    if (!paramBatch.empty() && paramBatch.front().targetFrame < b.startFrame &&
+        std::any_of(paramBatch.begin(), paramBatch.end(), [&](const ScheduledParamUpdate& p) {
+            if (p.targetFrame >= b.startFrame) return false;
+            return p.action == PARAM_UPDATE_GRANULAR_STEP ||
+                (p.action == PARAM_UPDATE_GRANULAR_RESET && p.trackId >= 0 && p.trackId < SONG_SAMPLE_VOICES &&
+                 granularTracks[p.trackId].source.valid());
+        })) {
+        for (;;) {
+            const auto param = paramIdx < paramBatch.size() ? paramBatch[paramIdx].targetFrame : INT64_MAX;
+            const auto kill = dueKill(), note = dueNote();
+            if (std::min({param, kill, note}) >= b.startFrame) break;
+            if (param <= kill && param <= note) applyParamUpdate(paramBatch[paramIdx++], b);
+            else if (kill <= note) applyKill(killBatch[killIdx++], 0);
+            else fireNote(0, b.startFrame);
+        }
+    }
 
     for (int32_t frame = 0; frame < b.numFrames; frame++) {
         int64_t currentFrame = b.startFrame + frame;
@@ -566,16 +608,8 @@ void AudioEngine::dispatchEvents(BlockMix& b) {
             applyKill(killBatch[killIdx++], frame);
         }
 
-        while (noteIdx < noteBatch.size() && noteBatch[noteIdx].targetFrame <= currentFrame) {
-            ScheduledNote note = noteBatch[noteIdx++];
-
-            // ⚠️ The instrument is chosen here, not where the note was queued: a sequencer note
-            // arrives as a number and becomes a sound on this line.
-            if (note.instrumentId >= 0 && !resolveScheduledNote(note)) continue;   // nothing to play
-
-            if (note.isSoundfont) triggerSoundfontNote(note, frame, currentFrame, b.sampleRate);
-            else                  triggerSamplerNote(note, frame, currentFrame, b.sampleRate);
-        }
+        while (noteIdx < noteBatch.size() && noteBatch[noteIdx].targetFrame <= currentFrame)
+            fireNote(frame, currentFrame);
     }
 }
 
@@ -584,6 +618,10 @@ void AudioEngine::dispatchEvents(BlockMix& b) {
 void AudioEngine::applyParamUpdate(const ScheduledParamUpdate& upd, BlockMix& b) {
     const float sampleRate = b.sampleRate;
     switch (upd.action) {
+        case PARAM_UPDATE_GRANULAR_STEP:
+        case PARAM_UPDATE_GRANULAR_RESET:
+            applyGranularStep(upd, b);
+            break;
         case PARAM_UPDATE_PITCH_BEND: {           // PBN on empty step
             if (IAudioVoice* pv = findActiveVoiceForTrack(upd.trackId)) pv->setPitchBendRaw(upd.value);
             break;
@@ -856,7 +894,7 @@ void AudioEngine::prepareSamplerPiece(Voice& voice, int frames, float sampleRate
     }
 
     // A looping voice ends when its volume envelopes have: AHD/DRUM at stage 4, ADSR/TRIG at 5.
-    if (voice.loopMode != 0) {
+    if (voice.loopMode != 0 || voice.granularMode) {
         bool hasVolMod = false, allDone = true;
         for (int m = 0; m < 4; m++) {
             const VoiceModSlot& mod = voice.voiceMods[m];
@@ -891,6 +929,12 @@ void AudioEngine::mixSamplerPieceAs(Voice& voice, const BlockMix& b, int from, i
     }
     if(synth.active())synth.update(studioCodes[voice.instrId].load(std::memory_order_acquire),studioSynthParams[voice.instrId]);
     const bool generated = synth.active();
+    const int granularIndex=int(&voice-voices);
+    const bool granular=configureGranularVoice(granularIndex,b.sampleRate);
+    auto& grain=granularVoices[granularIndex];
+    auto& grainSteps=granularVoiceSteps[granularIndex];
+    const bool stepEvents=grainSteps.cursor<grainSteps.count;
+    if(granular&&!grain.active()){voice.stop();return;}
 
     voice.chain.drive.setDrive(paramWithMod(voice, PARAM_DRIVE, 255));
     voice.chain.crush.setParams(paramWithMod(voice, PARAM_CRUSH, 15), 0);   // the downsample is in the read, below
@@ -947,7 +991,8 @@ void AudioEngine::mixSamplerPieceAs(Voice& voice, const BlockMix& b, int from, i
 
     // ⚠️ After the loop bounds: oscillator mode derives its rate from the loop's length.
     // Generated oscillators use pitch modulation, but not the sampler's loop-length tuning.
-    float modulatedRate = getModulatedPlaybackRate(voice, !generated);
+    float modulatedRate = getModulatedPlaybackRate(voice, !generated && !granular);
+    if(granular)grain.setNoteRate(modulatedRate*double(b.sampleRate)/granularLive[voice.instrId].sourceRate);
 
     // A note dispatched at frame f of the block does not sound before f; an onset beyond this
     // piece waits for the piece that contains it.
@@ -962,7 +1007,7 @@ void AudioEngine::mixSamplerPieceAs(Voice& voice, const BlockMix& b, int from, i
     // the voice, so a field read inside it is reloaded on every sample. What it advances is written
     // back below it — leave it by `break`, never `return`.
     Playhead   ph           = playheadOf(voice, modulatedRate);
-    const bool stereo       = ph.right != nullptr;
+    const bool stereo       = granular || ph.right != nullptr;
     const int  lastReadable = voice.sampleLength - 1;   // the read needs idx + 1
 
     // A chord's other playheads: the voice's own, at their own place and rate.
@@ -1052,11 +1097,11 @@ void AudioEngine::mixSamplerPieceAs(Voice& voice, const BlockMix& b, int from, i
         // In double, then narrowed: (float)idx is inexact past 2^24 frames.
         const float frac = (float)(ph.position - (double)idx);
 
-        if (idx < 0) {   // safety hard-stop
+        if (!granular && idx < 0) {   // safety hard-stop
             isActive = false;
             break;
         }
-        if (idx >= lastReadable) {   // fade rather than stop, so a resonant filter decays
+        if (!granular && idx >= lastReadable) {   // fade rather than stop, so a resonant filter decays
             ph.position = (double)(lastReadable - 1);
             ranOut = true;
             break;
@@ -1082,14 +1127,22 @@ void AudioEngine::mixSamplerPieceAs(Voice& voice, const BlockMix& b, int from, i
         }
         volRouteLast = volRoute;
         const float trackVol  = (faderFrom + faderStep * tBlock) * (gateFrom + gateStep * tBlock);
-        const float antiClick = antiClickGain(fadeIn, ph);
+        const float antiClick = granular ? fadeIn.next() : antiClickGain(fadeIn, ph);
 
-        float procL = generated ? synth.next(voice.baseFrequency * modulatedRate*voice.studioTuneRatio, b.sampleRate)
+        studio::granular::Frame grainFrame;
+        if(granular){
+            if(stepEvents&&grainSteps.applyThrough(i))
+                grain.update(studio::granular::step::effective(granularLive[voice.instrId].params,grainSteps.overlay));
+            if(voice.granularReleaseAt>=0&&i>=voice.granularReleaseAt){grain.release();voice.granularReleaseAt=-1;}
+            grainFrame=grain.nextStereo();
+            if(!grain.active())isActive=false;
+        }
+        float procL = granular ? grainFrame.left : generated ? synth.next(voice.baseFrequency * modulatedRate*voice.studioTuneRatio, b.sampleRate)
                                 : Playhead::read(ph.left, idx, frac, effDownsample);
-        float procR = stereo ? Playhead::read(ph.right, idx, frac, effDownsample) : procL;
+        float procR = granular ? grainFrame.right : stereo ? Playhead::read(ph.right, idx, frac, effDownsample) : procL;
         const bool dsBlend = dsFade.moving();
         float      dsOld   = 0.0f;
-        if (dsBlend && !generated) {   // the downsample changed mid-note: the old read fades out
+        if (dsBlend && !generated && !granular) {   // the downsample changed mid-note: the old read fades out
             dsOld = dsFade.next();
             procL = Playhead::read(ph.left, idx, frac, dsPrev) * dsOld + procL * (1.0f - dsOld);
             if (stereo) procR = Playhead::read(ph.right, idx, frac, dsPrev) * dsOld + procR * (1.0f - dsOld);
@@ -1208,7 +1261,7 @@ void AudioEngine::mixSamplerPieceAs(Voice& voice, const BlockMix& b, int from, i
 
         if (!isActive) break;
         if (ownWaits) continue;
-        if (!generated && !ph.advance()) {
+        if (!generated && !granular && !ph.advance()) {
             ranOut = true;
             break;
         }
@@ -1561,14 +1614,17 @@ void AudioEngine::mixMaster(const BlockMix& b) {
 
     // Master EQ → bus FX → limiter; a stems render takes the limiter only.
     if (stemsMode == 0)
-        masterChain.process(output, numFrames, channelCount);
+        masterChain.process(output, numFrames, channelCount,
+                            b.offlineRender ? nullptr : &pendingLimiterInputMaximum);
     else
         masterChain.limiter.process(output, numFrames, channelCount);
 
     // Capture the actual live post-Punch/master signal, before the practice click.
     // Offline exports never feed back into a live take.
-    if (!b.offlineRender)
+    if (!b.offlineRender) {
         liveResampler.append(output, numFrames, channelCount, static_cast<int>(b.sampleRate));
+        granularDiskTake.append(output, numFrames, channelCount, static_cast<int>(b.sampleRate));
+    }
 
     // ⚠️ After the master chain: a click through the limiter would duck the whole mix on every beat.
     renderMetronome(output, numFrames, channelCount, b.sampleRate, b.startFrame, b.offlineRender);
@@ -1588,6 +1644,7 @@ void AudioEngine::mixMaster(const BlockMix& b) {
 
 void AudioEngine::processLiveBlock(float* output, int numFrames, int channelCount, float sampleRate) {
     const auto blockStart = std::chrono::steady_clock::now();
+    const uint32_t meterEpoch = masterMeterEpoch.load(std::memory_order_relaxed);
 
     setFlushToZeroForCurrentThread();
 
@@ -1608,6 +1665,12 @@ void AudioEngine::processLiveBlock(float* output, int numFrames, int channelCoun
     liveClock_.us         = startUs;
     liveClock_.frame      = getDeviceFrame(startUs);
     liveClock_.sampleRate = static_cast<int>(sampleRate);
+
+    if (meterEpoch != pendingMasterEpoch) {
+        pendingMasterMaximum[0] = pendingMasterMaximum[1] = 0.0f;
+        pendingLimiterInputMaximum = 0.0f;
+        pendingMasterEpoch = meterEpoch;
+    }
 
     // ⚠️ Chunked at PROCESS_SUBBLOCK, as renderOffline is: a device period resolves notes too coarsely.
     int processed = 0;
@@ -1651,7 +1714,17 @@ void AudioEngine::processLiveBlock(float* output, int numFrames, int channelCoun
         }
     }
 
-    // The mixer's meters: each decays, then takes this block's peak if that is higher.
+    // Use the actual device output for both the running meter and the held maximum.
+    float maxL = 0.0f, maxR = 0.0f;
+    const int rightChannel = channelCount > 1 ? 1 : 0;
+    for (int i = 0; i < numFrames; i++) {
+        maxL = peak_hold(maxL, output[i * channelCount]);
+        maxR = peak_hold(maxR, output[i * channelCount + rightChannel]);
+    }
+    pendingMasterMaximum[0] = fmaxf(pendingMasterMaximum[0], maxL);
+    pendingMasterMaximum[1] = fmaxf(pendingMasterMaximum[1], maxR);
+
+    // The mixer's running meters decay and then take this block's peak if higher.
     {
         std::unique_lock<std::mutex> lock(peakMutex, std::try_to_lock);
         if (lock.owns_lock()) {
@@ -1660,13 +1733,16 @@ void AudioEngine::processLiveBlock(float* output, int numFrames, int channelCoun
                 meter(trackPeaksL[t], framePeaksPerTrackL[t]);
                 meter(trackPeaksR[t], framePeaksPerTrackR[t]);
             }
-            float maxL = 0.0f, maxR = 0.0f;
-            for (int i = 0; i < numFrames; i++) {
-                maxL = peak_hold(maxL, output[i * channelCount]);
-                maxR = peak_hold(maxR, output[i * channelCount + 1]);
-            }
             meter(masterPeakL, maxL);
             meter(masterPeakR, maxR);
+            // Clearing while a block is in flight discards that block from the new measurement.
+            if (meterEpoch == masterMeterEpoch.load(std::memory_order_relaxed)) {
+                masterMaximum[0] = fmaxf(masterMaximum[0], pendingMasterMaximum[0]);
+                masterMaximum[1] = fmaxf(masterMaximum[1], pendingMasterMaximum[1]);
+                limiterInputMaximum = fmaxf(limiterInputMaximum, pendingLimiterInputMaximum);
+            }
+            pendingMasterMaximum[0] = pendingMasterMaximum[1] = 0.0f;
+            pendingLimiterInputMaximum = 0.0f;
             meter(sendPeakRevL, frameSendPeakRevL);
             meter(sendPeakRevR, frameSendPeakRevR);
             meter(sendPeakDelL, frameSendPeakDelL);

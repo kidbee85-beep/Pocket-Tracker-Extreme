@@ -87,15 +87,28 @@ internal object WebSourceArchive {
         else -> value.toString().split(';', '|').map { description(it).take(80) }.filter { it.isNotBlank() }
     }.distinct().take(12)
 
-    fun search(query: String, genre: String, cancel: SourceCancel, discover: Boolean = false): List<SourceItem> {
-        val terms = (query.trim() + " " + genre.trim()).trim().take(240).ifEmpty { if (discover) "music" else "" }
-        require(terms.isNotEmpty()) { "Enter a style, artist or recording title" }
+    fun search(query: String, genre: String, cancel: SourceCancel, discover: Boolean = false,
+               collection: String = ""): List<SourceItem> {
+        require(collection.isEmpty() || collection.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Invalid Internet Archive collection" }
+        val terms = (query.trim() + " " + genre.trim()).trim().take(240)
+            .ifEmpty { if (discover && collection.isEmpty()) "music" else "" }
+        require(terms.isNotEmpty() || collection.isNotEmpty()) { "Enter a style, artist or recording title" }
         val safeTerms = terms.split(Regex("\\s+")).filter { it.isNotBlank() }.joinToString(" AND ") {
             "\"" + it.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
         }
-        val formats = if (discover) " AND (format:\"VBR MP3\" OR format:\"MP3\" OR format:\"Ogg Vorbis\" OR format:\"FLAC\" OR format:\"WAVE\")" else ""
-        val q = "mediatype:audio AND ($safeTerms) AND -access-restricted-item:true$formats"
-        val sort = if (discover) "&sort%5B%5D=" + encode(listOf("downloads desc", "addeddate desc", "identifier asc").random()) else ""
+        val formats = if (discover || collection.isNotEmpty()) " AND (format:\"VBR MP3\" OR format:\"MP3\" OR format:\"Ogg Vorbis\" OR format:\"FLAC\" OR format:\"WAVE\")" else ""
+        val q = buildString {
+            append(if (collection == "etree") "(mediatype:audio OR mediatype:etree)" else "mediatype:audio")
+            append(" AND -access-restricted-item:true")
+            if (safeTerms.isNotEmpty()) append(" AND ($safeTerms)")
+            if (collection.isNotEmpty()) append(" AND collection:\"$collection\"")
+            append(formats)
+        }
+        val sort = when {
+            discover -> "&sort%5B%5D=" + encode(listOf("downloads desc", "addeddate desc", "identifier asc").random())
+            collection.isNotEmpty() -> "&sort%5B%5D=" + encode("downloads desc")
+            else -> ""
+        }
         val base = "https://archive.org/advancedsearch.php?q=${encode(q)}&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=description&fl%5B%5D=subject&rows=40&output=json$sort"
         var response = SourceNet.json("$base&page=1", cancel).optJSONObject("response") ?: JSONObject()
         if (discover) {

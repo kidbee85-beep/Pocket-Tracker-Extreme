@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Suspended Dust",
+  "parameters": {
+    "attackMs": 120.0,
+    "densityHz": 16.0,
+    "freeze": true,
+    "level": 0.4399999976158142,
+    "panSpread": 0.7699999809265137,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.11999999731779099,
+    "position": 0.6299999952316284,
+    "releaseMs": 2500.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 559.0,
+    "sprayMs": 25.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

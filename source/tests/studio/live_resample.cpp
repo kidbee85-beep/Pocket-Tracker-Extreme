@@ -143,5 +143,61 @@ void engine_capture(const std::filesystem::path& root){
     assert(f.engine->liveResampler.start(48000,256));f.engine->processLiveBlock(output,256,2,48000);f.engine->liveResampler.stop();
     bool click=false;for(int i=0;i<512;++i){click|=std::abs(output[i])>.001f;assert(std::abs(f.engine->liveResampler.pcm()[i])<=1);}assert(click);
 }
+
+void synth_capture(const std::filesystem::path& root) {
+    for (int model = studio::kOctaveOrbitModel; model < studio::model_count(); ++model) {
+        Fixture f(root / ("synth-" + std::to_string(model)));
+        f.host.stop();
+        float output[512]{};
+        for (int block = 0; block < 128; ++block) f.engine->processLiveBlock(output,256,2,48000);
+        f.state.currentInstrument=4;
+        open_studio_synth(f.state, f.host.project().instruments[4]);
+        f.state.studioModel=model;
+        f.state.studioVariation=0;
+        f.state.resampleView.lengthIndex=1;
+        const auto untouched=songcore::serialize_project(f.host.project());
+        ButtonMods shoulders;shoulders.l=shoulders.r=true;
+        auto event=[&](Button button, ButtonAction action, ButtonMods mods={}) {
+            return studio_button({button,action,mods},f.state,f.host,*f.engine,f.fs);
+        };
+        assert(event(Button::START,ButtonAction::PRESSED,shoulders));
+        assert(f.state.resampleView.active&&f.state.resampleView.ownsSynthRoot&&f.state.studioAuditionHeld);
+        assert(event(Button::L_SHIFT,ButtonAction::RELEASED));
+        double energy=0;
+        guard=true;
+        for(int block=0;block<280;++block){
+            f.engine->processLiveBlock(output,256,2,48000);
+            if(block>35)for(float value:output)energy+=double(value)*value;
+        }
+        guard=false;
+        assert(allocations==0&&energy>0.1&&f.state.studioAuditionHeld);
+        assert(event(Button::START,ButtonAction::PRESSED,shoulders));
+        assert(!f.state.resampleView.active&&!f.state.resampleView.ownsSynthRoot&&!f.state.studioAuditionHeld);
+        wait_save(f.state,*f.engine,f.fs);
+        assert(songcore::serialize_project(f.host.project())==untouched);
+        assert(bytes(f.state.resampleView.path).size()==44+280*256*4);
+        ButtonMods back;back.b=true;
+        assert(event(Button::B,ButtonAction::PRESSED,back));
+        assert(event(Button::DPAD_UP,ButtonAction::PRESSED,back));
+        assert(f.state.pendingSampleEditor&&!f.state.studioOpen&&f.state.currentInstrument==1);
+        assert(event(Button::DPAD_UP,ButtonAction::PRESSED,back));  // A held arrow cannot escape into the editor.
+        assert(event(Button::DPAD_UP,ButtonAction::RELEASED,back));
+        assert(event(Button::B,ButtonAction::RELEASED));
+        assert(f.state.studioInputSuppress==0);
+        const auto& take=f.host.project().instruments[1];
+        assert(take.sampleFilePath&&*take.sampleFilePath==f.state.resampleView.path);
+        assert(f.host.project().instruments[0].sampleFilePath==studio::custom_uri(103,50,80,100));
+        f.host.edit_project().phrases[0].steps[0].instrument=1;
+        f.host.play_song(0);
+        f.host.poll();
+        energy=0;
+        for(int block=0;block<64;++block){
+            f.engine->processLiveBlock(output,256,2,48000);
+            for(float value:output)energy+=double(value)*value;
+        }
+        assert(energy>.01);
+    }
+    std::puts("PASS Octave Orbit and three Gravity instruments: root capture, WAV, safe import and chain playback");
 }
-int main(int argc,char** argv){assert(argc==2);const auto root=std::filesystem::path(argv[1]);std::filesystem::create_directories(root);core();engine_capture(root);std::cout<<"PASS: post-Punch/master PCM, no callback allocation, bounded/rate-safe stereo capture, control/audio handoff, async WAV, transport/data preservation, free-slot import, relaunch and bar length.\n";}
+}
+int main(int argc,char** argv){assert(argc==2);const auto root=std::filesystem::path(argv[1]);std::filesystem::create_directories(root);core();engine_capture(root);synth_capture(root);std::cout<<"PASS: post-Punch/master PCM, no callback allocation, bounded/rate-safe stereo capture, control/audio handoff, async WAV, transport/data preservation, free-slot import, relaunch and bar length.\n";}

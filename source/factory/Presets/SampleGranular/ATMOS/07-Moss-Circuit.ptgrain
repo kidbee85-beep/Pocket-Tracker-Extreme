@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Moss Circuit",
+  "parameters": {
+    "attackMs": 390.0,
+    "densityHz": 16.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.5799999833106995,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.15000000596046448,
+    "position": 0.39000001549720764,
+    "releaseMs": 1080.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.1599999964237213,
+    "sizeMs": 342.0,
+    "sprayMs": 79.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

@@ -37,13 +37,19 @@ void InputDispatcher::on_a_right() {
     selection_or_single(pt::ui::increment);
 }
 
-void InputDispatcher::on_a_released() {
+void InputDispatcher::on_a_released(bool cancelled) {
     // Nothing else starts a preview while A is down, so this silences the one A began.
     if (heldNotePreview_) {
         heldNotePreview_ = false;
         host_.stop_preview(/*cut=*/true);
     }
     insertHeld_ = false;
+    if (cancelled) {
+        s_.fxHelper = {};
+        s_.mapPicker = {};
+        samplePending_.sliceTapPlayhead = -1.0f;
+        return;
+    }
     // Only a layer answers the release — the two pickers commit on it.
     route(Gesture::A_RELEASE);
 }

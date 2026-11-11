@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Short Circuit",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 59.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.75,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 2.200000047683716,
+    "position": 0.6150000095367432,
+    "releaseMs": 168.0,
+    "reverseProbability": 0.75,
+    "scanSpeed": 0.0,
+    "sizeMs": 85.0,
+    "sprayMs": 465.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

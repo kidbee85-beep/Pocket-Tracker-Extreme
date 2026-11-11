@@ -57,12 +57,6 @@ static_assert(POOL_RAM_VALUE_X + InstrumentPoolModule::RAM_MAX_CHARS * CHAR_W - 
 static_assert(SIDE_SPACER + InstrumentPoolModule::RAM_LABEL_X + 3 * CHAR_W <= POOL_RAM_VALUE_X,
               "INST.POOL's RAM label overlaps its value");
 
-// The sample editor's waveform hosts the help panel; neither knows the other.
-static_assert(SampleEditorModule::WAVEFORM_W == HelpPanelModule::WIDTH,
-              "the waveform panel is no longer the width the help panel draws");
-static_assert(SampleEditorModule::WAVEFORM_H >= HelpPanelModule::HEIGHT,
-              "the waveform panel is too short to hold the help panel");
-
 class TrackerLayout {
 public:
     // Not const: the scope and MIXER keep peak-hold state, the EQ editor a curve cache.
@@ -88,7 +82,7 @@ private:
     void draw_selection_clipboard(Canvas& c, const AppState& s) const;
 
     OscilloscopeModule    oscilloscope_;
-    HelpPanelModule       helpPanel_;    // instead of the oscilloscope while help is up
+    HelpPanelModule       helpPanel_;
     HelpOverlayModule     helpOverlay_;
     PhraseEditorModule    phraseEditor_;
     ChainEditorModule     chainEditor_;

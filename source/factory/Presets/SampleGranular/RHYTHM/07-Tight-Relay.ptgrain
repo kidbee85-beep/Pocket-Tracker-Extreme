@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Tight Relay",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 56.0,
+    "freeze": false,
+    "level": 0.5,
+    "panSpread": 0.3400000035762787,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.0,
+    "position": 0.39000001549720764,
+    "releaseMs": 100.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 1.0,
+    "sizeMs": 36.0,
+    "sprayMs": 24.0,
+    "windowShape": 0.6000000238418579
+  },
+  "version": 1
+}

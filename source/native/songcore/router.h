@@ -42,6 +42,7 @@ struct NoteArgs {
     int64_t strumFrames  = 0;   // between one chord note and the next
     int     strumOrder[4] = {}; // what goes on the bus: when each of chordNotes sounds, 0 = first
     int64_t strumStep    = 0;   // …and how far apart; 0 = together
+    studio::granular::step::Delta granular{};
 };
 
 // ─── Consumer interface ─────────────────────────────────────────────────────────────────────────
@@ -138,6 +139,7 @@ struct MidiRouter {
         for (int i = 0; i < a.chordCount && i < 4; ++i) n.chord[i] = static_cast<int8_t>(a.chordNotes[i]);
         n.strumStep = static_cast<uint32_t>(a.strumStep);
         for (int i = 0; i < a.chordCount && i < 4; ++i) n.strumOrder[i] = static_cast<uint8_t>(a.strumOrder[i]);
+        n.granular = a.granular;
         emit(ev);
     }
 
@@ -221,6 +223,13 @@ struct MidiRouter {
     void ext_master_eq_morph(int64_t frame, const ExtEqMorphPayload& bands) {
         Event ev = base(frame, TRACK_GLOBAL, INSTRUMENT_NONE, EV_EXT_MASTER_EQ_MORPH);
         ev.extEqMorph = bands;
+        emit(ev);
+    }
+
+    void ext_granular(int64_t frame, int track, const studio::granular::step::Delta& delta) {
+        if (track < 0 || track >= TRACK_PREVIEW || delta.count == 0) return;
+        Event ev = base(frame, track, INSTRUMENT_NONE, EV_EXT_GRANULAR);
+        ev.extGranular = delta;
         emit(ev);
     }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -22,6 +23,7 @@ struct CaptureView {
     int targetInstrument=-1;
     bool phoneDetected=false,phoneTrusted=false;
     uint64_t nextPoll=0,nextInputsPoll=0;
+    bool internal_source()const{return !inputs.empty()&&inputs[std::clamp(selected,0,int(inputs.size())-1)].kind=="internal-master";}
     bool active()const{return state=="starting"||state=="recording"||state=="stopping";}
     bool receiving()const{return state=="recording"&&frames>0;}
 };

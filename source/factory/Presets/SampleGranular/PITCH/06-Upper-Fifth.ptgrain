@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Upper Fifth",
+  "parameters": {
+    "attackMs": 60.0,
+    "densityHz": 14.0,
+    "freeze": false,
+    "level": 0.3700000047683716,
+    "panSpread": 0.6200000047683716,
+    "pitchSemitones": 19.0,
+    "pitchSpraySemitones": 0.15000000596046448,
+    "position": 0.3449999988079071,
+    "releaseMs": 800.0,
+    "reverseProbability": 0.4000000059604645,
+    "scanSpeed": 0.10000000149011612,
+    "sizeMs": 160.0,
+    "sprayMs": 0.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

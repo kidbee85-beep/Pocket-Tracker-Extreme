@@ -6,7 +6,8 @@
 // ⚠️ The golden .ptp files are pretty-printed by the ORIGINAL implementation; never regenerate them
 // from this emitter.
 // Output: keys in declaration order (model.h); a field equal to its default is omitted, except
-// fixed-size arrays and fields with no default; nulls omitted; enums by NAME; integers only.
+// fixed-size arrays and fields with no default; nulls omitted; enums by NAME. Legacy values
+// remain integers; optional granular settings use round-trip-safe physical-unit float numbers.
 
 #include "midi_map.h"
 #include "model.h"
@@ -17,6 +18,8 @@
 #include <vector>
 #include <optional>
 #include <cstdio>
+#include <cstring>
+#include <limits>
 
 namespace songcore {
 
@@ -44,6 +47,61 @@ inline std::optional<std::string> get_opt_str(const json& j, const char* k) {
     auto it = j.find(k);
     if (it != j.end() && it->is_string()) return it->get<std::string>();
     return std::nullopt;
+}
+
+
+struct GranularField {
+    const char* name;float studio::granular::Parameters::*member;float low,high;
+};
+inline constexpr GranularField granularFields[]={
+    {"position",&studio::granular::Parameters::position,0,1},
+    {"sizeMs",&studio::granular::Parameters::sizeMs,2,1000},
+    {"densityHz",&studio::granular::Parameters::densityHz,0,120},
+    {"sprayMs",&studio::granular::Parameters::sprayMs,0,1000},
+    {"pitchSemitones",&studio::granular::Parameters::pitchSemitones,-48,48},
+    {"pitchSpraySemitones",&studio::granular::Parameters::pitchSpraySemitones,0,24},
+    {"scanSpeed",&studio::granular::Parameters::scanSpeed,-4,4},
+    {"panSpread",&studio::granular::Parameters::panSpread,0,1},
+    {"reverseProbability",&studio::granular::Parameters::reverseProbability,0,1},
+    {"windowShape",&studio::granular::Parameters::windowShape,0,1},
+    {"level",&studio::granular::Parameters::level,0,2},
+    {"attackMs",&studio::granular::Parameters::attackMs,0,5000},
+    {"releaseMs",&studio::granular::Parameters::releaseMs,1,10000}
+};
+inline bool valid_granular_object(const json& j){
+    if(!j.is_object())return false;
+    if(j.contains("version")&&(!j["version"].is_number_integer()||j["version"]!=1))return false;
+    for(const char* key:{"enabled","freeze"})if(j.contains(key)&&!j[key].is_boolean())return false;
+    if(j.contains("seed")&&(!j["seed"].is_number_integer()||j["seed"]<0||j["seed"]>UINT32_MAX))return false;
+    for(const auto& field:granularFields)if(j.contains(field.name)){
+        if(!j[field.name].is_number())return false;
+        const double value=j[field.name].get<double>();uint64_t raw;
+        std::memcpy(&raw,&value,sizeof(raw));const volatile uint64_t bits=raw;
+        if((bits&UINT64_C(0x7ff0000000000000))==UINT64_C(0x7ff0000000000000)||
+           value<field.low||value>field.high)return false;
+    }
+    return true;
+}
+inline bool granular_has_settings(const Instrument& ins){
+    if(ins.granularEnabled||ins.granularSeed!=1)return true;
+    const studio::granular::Parameters defaults;
+    if(ins.granularParams.freeze)return true;
+    for(const auto& field:granularFields)if(ins.granularParams.*(field.member)!=defaults.*(field.member))return true;
+    return false;
+}
+inline void parse_granular(const json& object,Instrument& ins){
+    const auto it=object.find("granular");if(it==object.end()||!valid_granular_object(*it))return;
+    ins.granularEnabled=get_bool(*it,"enabled",false);
+    if(it->contains("seed"))ins.granularSeed=(*it)["seed"].get<uint32_t>();
+    ins.granularParams.freeze=get_bool(*it,"freeze",false);
+    for(const auto& field:granularFields)if(it->contains(field.name))
+        ins.granularParams.*(field.member)=(*it)[field.name].get<float>();
+}
+inline json granular_object(const Instrument& ins){
+    json j={{"version",1},{"enabled",ins.granularEnabled},{"seed",ins.granularSeed},
+            {"freeze",ins.granularParams.freeze}};
+    for(const auto& field:granularFields)j[field.name]=ins.granularParams.*(field.member);
+    return j;
 }
 
 inline Note parse_note(const json& j) {
@@ -216,6 +274,7 @@ inline Instrument parse_instrument(const json& j, int index) {
     i.loopStart      = get_int(j, "loopStart", i.loopStart);
     i.loopEnd        = get_int(j, "loopEnd", i.loopEnd);
     i.sampleFilePath = get_opt_str(j, "sampleFilePath");
+    parse_granular(j,i);
     if (const auto it=j.find("studioSynthParams");it!=j.end()&&it->is_array())
         for(size_t k=0;k<i.studioSynthParams.size()&&k<it->size();++k)
             if((*it)[k].is_number_integer()) {
@@ -682,6 +741,7 @@ inline void emit_instrument(JsonWriter& w, const Instrument& i) {
         for(int v:i.studioSynthParams){w.element();w.value_int(std::clamp(v,-1,255));}
         w.end_array();
     }
+    if(granular_has_settings(i)){w.key("granular");w.out+=granular_object(i).dump();}
     if (i.tableId != -1)    w.field_int("tableId", i.tableId);
     if (i.tableTicRate != 0x06) w.field_int("tableTicRate", i.tableTicRate);
     w.key("modSlots");

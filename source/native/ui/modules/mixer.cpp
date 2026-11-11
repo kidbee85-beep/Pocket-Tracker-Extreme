@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 
 #include "ui/helpers.h"
 #include "ui/mixer_cell_layout.h"
@@ -15,7 +16,7 @@ constexpr int METER_SPACING  = 53;
 constexpr int FIRST_METER_X  = 10;
 
 constexpr int TRACK_METER_TOP = 24;
-constexpr int TRACK_METER_H   = 155;
+constexpr int TRACK_METER_H   = 143;
 
 constexpr int MASTER_METER_H  = 200;   // taller than a track's; same top
 
@@ -33,7 +34,8 @@ constexpr int text_y_above(int meter_top) {
     return meter_top - 1 - METER_TEXT_GAP - ROW_HEIGHT + TEXT_PADDING;
 }
 
-constexpr int TRACK_VOL_Y = text_y_under(TRACK_METER_TOP, TRACK_METER_H);   // 186
+constexpr int TRACK_VOL_Y = text_y_under(TRACK_METER_TOP, TRACK_METER_H);
+constexpr int TRACK_DB_Y  = TRACK_VOL_Y + ROW_HEIGHT - 3;
 
 // The send returns: headers above the meters, wet values below.
 constexpr int SEND_METER_TOP = 234;
@@ -95,6 +97,34 @@ Argb segment_color(int dy_from_bottom, int total_h, const Theme& t) {
 // An unfilled peak array is silence.
 float peak_at(const float* peaks, int index) { return peaks ? peaks[index] : 0.0f; }
 
+std::string peak_db(float level) {
+    if (!(level >= 0.001f)) return level > 0.0f ? "< -60" : "--";
+    if (!std::isfinite(level)) return "OVER";
+    // Reserve 0.0 and positive values for output that actually reached full scale.
+    const float db = 20.0f * std::log10(level);
+    char value[16];
+    std::snprintf(value, sizeof(value), "%+.1f",
+                  static_cast<double>(level < 1.0f ? std::min(db, -0.1f) : db));
+    return value;
+}
+
+std::string fader_db(int value) {
+    const float gain = songcore::hex_to_float(value);
+    return gain > 0.0f ? peak_db(gain) + " dB" : "OFF";
+}
+
+std::string limiter_headroom(float peak) {
+    if (!(peak > 0.0f)) return "PLAY TO MEASURE";
+    if (peak > 1.0f) return "ABOVE FULL SCALE";
+    if (peak == 1.0f) return "AT FULL SCALE";
+    if (peak < 0.001f) return "> 60 dB HEADROOM";
+    const float reserve = -20.0f * std::log10(peak);
+    if (reserve < 0.1f) return "< 0.1 dB HEADROOM";
+    char value[24];
+    std::snprintf(value, sizeof(value), "%.1f dB HEADROOM", static_cast<double>(reserve));
+    return value;
+}
+
 }  // namespace
 
 // ─── Draw ────────────────────────────────────────────────────────────────────────────────────────
@@ -126,8 +156,12 @@ void MixerModule::draw(Canvas& c, int x, int y, const MixerState& s) {
                           peak_at(s.trackPeaks, i * 2 + 1), isSel, /*is_muted=*/!audible,
                           t, i * 2, i * 2 + 1, steps);
 
-        draw_cursor_cell(c, hex2(p.tracks[static_cast<size_t>(i)].volume), mX + 5, y + TRACK_VOL_Y,
-                         isSel, audible ? t.textValue : t.textEmpty, t);
+        const int volume = p.tracks[static_cast<size_t>(i)].volume;
+        const Argb faderInk = audible ? t.textValue : t.textEmpty;
+        draw_cursor_cell(c, hex2(volume), mX + 5, y + TRACK_VOL_Y, isSel, faderInk, t);
+        const auto gain = fader_db(volume);
+        c.draw_label(gain, mX + (BAR_W * 2 + BAR_SEP - Canvas::label_width(gain, 11)) / 2,
+                     y + TRACK_DB_Y, isSel ? faderInk : t.textParam, 11);
     }
 
     // ── The master meter ─────────────────────────────────────────────────────────────────────────
@@ -193,6 +227,41 @@ void MixerModule::draw(Canvas& c, int x, int y, const MixerState& s) {
 
     master_row(depthLabel, MROW2_Y, hex2(depthValue), depthSel);
     master_row("LIM",      MROW3_Y, hex2(p.limiterPreGain), limSel);
+    c.draw_label("MIX " + fader_db(p.masterVolume), x + MSTR_LABEL_X, y + MROW3_Y + ROW_HEIGHT,
+                 mixSel ? t.textValue : t.textParam, 12);
+
+    const int peakX = x + FIRST_METER_X + 2 * METER_SPACING;
+    const int peakY = y + SEND_METER_TOP;
+    const float heldL = peak_at(s.masterMaximum, 0);
+    const float heldR = peak_at(s.masterMaximum, 1);
+    const bool overL = heldL > 1.0f;
+    const bool overR = heldR > 1.0f;
+    const bool fullL = heldL >= 1.0f;
+    const bool fullR = heldR >= 1.0f;
+    c.panel_rect(peakX, peakY, 220, 132, t.rowEvery4th,
+                 with_alpha(mixSel ? t.rowCursor : t.textParam, .45f), 5);
+    c.draw_label("OUTPUT MAX", peakX + 13, peakY + 8, t.textTitle, 14);
+    const std::string outputStatus = overL || overR ? "OVER" : fullL || fullR ? "FULL SCALE" : "dBFS";
+    c.draw_label(outputStatus, peakX + 207 - Canvas::label_width(outputStatus, 12),
+                 peakY + 8, fullL || fullR ? t.meterHigh : t.textParam, 12);
+    const auto rule = with_alpha(t.textParam, .26f);
+    c.fill_rect(peakX + 13, peakY + 31, 194, 1, rule);
+    c.fill_rect(peakX + 110, peakY + 40, 1, 38, rule);
+    c.draw_label("L", peakX + 13, peakY + 40, t.textParam, 12);
+    c.draw_label(peak_db(heldL), peakX + 13, peakY + 56, fullL ? t.meterHigh : t.textValue, 18);
+    c.draw_label("R", peakX + 125, peakY + 40, t.textParam, 12);
+    c.draw_label(peak_db(heldR), peakX + 125, peakY + 56, fullR ? t.meterHigh : t.textValue, 18);
+    c.fill_rect(peakX + 13, peakY + 77, 194, 1, rule);
+    const float limiterPeak = s.limiterInputMaximum;
+    const bool fullInput = limiterPeak >= 1.0f;
+    c.draw_label("LIMITER IN MAX", peakX + 13, peakY + 82, t.textTitle, 11);
+    c.draw_label(peak_db(limiterPeak) + " dBFS", peakX + 13, peakY + 96,
+                 fullInput ? t.meterHigh : t.textValue, 12);
+    const auto headroom = limiter_headroom(limiterPeak);
+    c.draw_label(headroom, peakX + 207 - Canvas::label_width(headroom, 10), peakY + 97,
+                 fullInput ? t.meterHigh : t.textParam, 10);
+    c.draw_label(mixSel ? "A: CLEAR   L+A: TRIM TRACKS" : "MIX + A: CLEAR", peakX + 13, peakY + 114,
+                 mixSel ? t.textTitle : t.textParam, 11);
 }
 
 void MixerModule::draw_stereo_meter(Canvas& c, int x, int y, int h, float level_l, float level_r,

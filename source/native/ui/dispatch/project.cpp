@@ -4,6 +4,8 @@
 
 #include "ui/lifecycle.h"        // the crash-recovery autosave — write / clear / load
 #include "ui/song_pointer.h"
+#include "ui/source_sampler.h"
+#include "ui/sample_granular_ui.h"
 
 #include <algorithm>
 #include <set>
@@ -17,6 +19,15 @@ namespace pt::ui {
  * chain number from the previous song.
  */
 void InputDispatcher::reset_editing_context() {
+    phraseHistory_.clear();
+    phraseArrow_.phraseId = -1;
+    phraseRotation_.phraseId = -1;
+    // NEW/LOAD may reuse the host Project address and reset its edit version to
+    // zero. A pending asynchronous source take belongs to the previous song.
+    if(s_.sourceSampler.openWhenReady||s_.sourceSampler.importRequested)source_sampler_stop(s_.sourceSampler);
+    s_.sampleGranular.cropReturn=false;s_.sampleGranular.cropInstrument=-1;s_.sampleGranular.cropProject=nullptr;
+    sample_granular_close_preset_picker(s_);
+    s_.studioSynthCompare={};
     s_.currentPhrase = s_.currentChain = s_.currentInstrument = 0;
     s_.currentTable  = s_.currentGroove = 0;
     s_.lastEditedPhrase = s_.lastEditedChain = s_.lastEditedTable = 0;

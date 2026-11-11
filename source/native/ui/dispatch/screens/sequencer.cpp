@@ -4,6 +4,7 @@
 #include "ui/dispatch/dispatch_common.h"
 
 #include "songcore/traversal.h"
+#include "ui/helpers.h"
 #include "ui/song_pointer.h"
 
 #include <algorithm>
@@ -146,6 +147,145 @@ GestureResult InputDispatcher::chain_screen(Gesture g) {
         default:
             return grid_clipboard(g, &InputDispatcher::chain_clip, s_.currentChain);
     }
+}
+
+bool InputDispatcher::phrase_editor_context() const {
+    return s_.currentScreen == ScreenType::PHRASE && s_.project && !s_.studioOpen && !top_layer();
+}
+
+bool InputDispatcher::on_phrase_overview(Button direction) {
+    if (!phrase_editor_context()) return false;
+    constexpr int modes = 3;
+    const int delta = direction == Button::DPAD_RIGHT ? 1 : -1;
+    s_.phraseOverview = static_cast<PhraseOverview>((static_cast<int>(s_.phraseOverview) + modes + delta) % modes);
+    return true;
+}
+
+bool InputDispatcher::arm_phrase_rotation() {
+    if (!phrase_editor_context()) return false;
+    phraseRotation_ = {s_.currentPhrase, s_.projectVersion, s_.selection};
+    return true;
+}
+
+void InputDispatcher::on_phrase_rotate(Button action) {
+    const auto anchor = phraseRotation_;
+    phraseRotation_.phraseId = -1;
+    if (!phrase_editor_context() || anchor.phraseId != s_.currentPhrase || anchor.version != s_.projectVersion ||
+        anchor.selection.active != s_.selection.active) return;
+    if (s_.selection.active && (anchor.selection.start != s_.selection.start ||
+                                anchor.selection.end != s_.selection.end)) return;
+    const auto checkpoint = phrase_checkpoint();
+    if (!checkpoint) return;
+
+    auto& phrase = host_.edit_project().phrases[static_cast<size_t>(checkpoint->phraseId)];
+    const int hop = songcore::phrase_certain_hop_row(phrase);
+    int first = 0, last = hop < 0 ? songcore::PHRASE_ROWS - 1 : hop - 1;
+    if (s_.selection.active) {
+        const auto bounds = s_.selection.bounds();
+        constexpr int noteColumn = 1;
+        if (bounds.topLeftColumn > noteColumn || bounds.bottomRightColumn < noteColumn) {
+            set_status(s_, "INCLUDE THE NOTE COLUMN", false);
+            return;
+        }
+        first = std::max(first, bounds.topLeftRow);
+        last = std::min(last, bounds.bottomRightRow);
+    }
+    if (last <= first) {
+        set_status(s_, "NEED TWO ACTIVE NOTE ROWS", false);
+        return;
+    }
+
+    // Wrap the complete note events. Effects, including HOP, stay on their
+    // original rows, even when a note-off or an empty event moves past them.
+    auto shifted = checkpoint->rows;
+    const bool later = action == Button::A;
+    std::rotate(shifted.begin() + first, shifted.begin() + (later ? last : first + 1),
+                shifted.begin() + last + 1);
+    bool changed = false;
+    for (int row = first; row <= last; ++row) {
+        auto& dest = phrase.steps[row];
+        const auto& from = shifted[row];
+        if (dest.note == from.note && dest.instrument == from.instrument && dest.volume == from.volume) continue;
+        dest.note = from.note;
+        dest.instrument = from.instrument;
+        dest.volume = from.volume;
+        changed = true;
+    }
+    if (!changed) {
+        set_status(s_, "NOTES ALREADY MATCH", false);
+        return;
+    }
+    hasInsertPos_ = insertHeld_ = fill_.live = false;
+    mark_modified();
+    record_phrase_edit(checkpoint);
+    set_status(s_, std::string(later ? "NOTES +1 / ROWS " : "NOTES -1 / ROWS ") + hex1(first) + "-" + hex1(last), true);
+}
+
+std::optional<InputDispatcher::PhraseCheckpoint> InputDispatcher::phrase_checkpoint() const {
+    if (s_.currentScreen != ScreenType::PHRASE || !s_.project || s_.currentPhrase < 0)
+        return std::nullopt;
+    const auto& phrases = host_.project().phrases;
+    const auto id = static_cast<size_t>(s_.currentPhrase);
+    if (id >= phrases.size() || phrases[id].id != s_.currentPhrase) return std::nullopt;
+    const auto rows = PhraseEditHistory::snapshot(phrases[id]);
+    if (!rows) return std::nullopt;
+    return PhraseCheckpoint{s_.project, s_.currentPhrase, *rows};
+}
+
+void InputDispatcher::record_phrase_edit(const std::optional<PhraseCheckpoint>& checkpoint) {
+    if (!checkpoint || checkpoint->project != s_.project) return;
+    const auto& phrases = host_.project().phrases;
+    const auto id = static_cast<size_t>(checkpoint->phraseId);
+    if (id < phrases.size() && phrases[id].id == checkpoint->phraseId)
+        phraseHistory_.record(checkpoint->rows, phrases[id]);
+}
+
+bool InputDispatcher::on_phrase_history_arrow(Button direction) {
+    if (!phrase_editor_context()) return false;
+    const int edge = direction == Button::DPAD_UP ? 0 : songcore::PHRASE_ROWS - 1;
+    if (!s_.selection.active && s_.settings.navSongRelative && s_.cursorRow == edge)
+        return false; // At this edge an arrow can change the chain row, not just the cursor.
+    phraseArrow_.phraseId = s_.currentPhrase;
+    phraseArrow_.version = s_.projectVersion;
+    phraseArrow_.before = {s_.cursorRow, s_.cursorColumn};
+    phraseArrow_.selection = s_.selection;
+    if (direction == Button::DPAD_UP) on_dpad_up();
+    else on_dpad_down();
+    phraseArrow_.after = {s_.cursorRow, s_.cursorColumn};
+    phraseArrow_.endAfter = s_.selection.end;
+    return true;
+}
+
+bool InputDispatcher::on_phrase_history(Button direction, bool reclaimArrow) {
+    if (!phrase_editor_context()) return false;
+    if (reclaimArrow) {
+        const auto& arrow = phraseArrow_;
+        if (arrow.phraseId != s_.currentPhrase || arrow.version != s_.projectVersion ||
+            arrow.after != CursorPosition{s_.cursorRow, s_.cursorColumn} ||
+            arrow.selection.active != s_.selection.active || arrow.selection.scope != s_.selection.scope ||
+            arrow.selection.start != s_.selection.start || arrow.endAfter != s_.selection.end)
+            return false;
+        s_.cursorRow = arrow.before.row;
+        s_.cursorColumn = arrow.before.column;
+        s_.selection = arrow.selection;
+    }
+    phraseArrow_.phraseId = -1;
+    const bool redo = direction == Button::DPAD_DOWN;
+    const int id = s_.currentPhrase;
+    auto& phrases = host_.edit_project().phrases;
+    const auto result = id >= 0 && id < static_cast<int>(phrases.size()) && phrases[id].id == id
+        ? phraseHistory_.apply(phrases[id], redo) : PhraseEditHistory::Result::EMPTY;
+    if (result == PhraseEditHistory::Result::DIVERGED)
+        set_status(s_, "PHRASE CHANGED / HISTORY CLEARED", false);
+    else if (result == PhraseEditHistory::Result::EMPTY)
+        set_status(s_, redo ? "NOTHING TO REDO IN THIS PHRASE" : "NOTHING TO UNDO IN THIS PHRASE", false);
+    else {
+        hasInsertPos_ = insertHeld_ = fill_.live = false;
+        mark_modified();
+        const int available = phraseHistory_.available(id, redo);
+        set_status(s_, std::string(redo ? "REDO / " : "UNDO / ") + std::to_string(available) + " LEFT", true);
+    }
+    return true;
 }
 
 GestureResult InputDispatcher::phrase_screen(Gesture g) {

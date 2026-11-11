@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Warm Horizon",
+  "parameters": {
+    "attackMs": 510.0,
+    "densityHz": 14.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.6700000166893005,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.30000001192092896,
+    "position": 0.5250000357627869,
+    "releaseMs": 1320.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.2199999988079071,
+    "sizeMs": 423.0,
+    "sprayMs": 106.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

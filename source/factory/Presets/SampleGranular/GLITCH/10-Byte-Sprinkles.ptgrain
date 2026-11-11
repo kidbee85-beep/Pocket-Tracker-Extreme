@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Byte Sprinkles",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 43.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.6500000357627869,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 1.8000000715255737,
+    "position": 0.5250000357627869,
+    "releaseMs": 152.0,
+    "reverseProbability": 0.6500000357627869,
+    "scanSpeed": -1.0,
+    "sizeMs": 71.0,
+    "sprayMs": 395.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

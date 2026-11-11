@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Reel Shadow",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 45.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.45000001788139343,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.9599999785423279,
+    "position": 0.6600000262260437,
+    "releaseMs": 240.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.8799999952316284,
+    "sizeMs": 84.0,
+    "sprayMs": 174.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

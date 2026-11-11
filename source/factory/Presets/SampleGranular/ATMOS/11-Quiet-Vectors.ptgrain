@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Quiet Vectors",
+  "parameters": {
+    "attackMs": 550.0,
+    "densityHz": 16.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.699999988079071,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.10000000149011612,
+    "position": 0.5699999928474426,
+    "releaseMs": 1400.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.23999999463558197,
+    "sizeMs": 450.0,
+    "sprayMs": 115.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

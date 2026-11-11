@@ -6,15 +6,16 @@
 namespace pt::ui {
 
 // ⚠️ The order is the stack: the first open entry is on top. LOADING is above everything, the confirm
-// included, from the load's first moment. The full HELP opens over the in-place editors only. QWERTY is
+// included, from the load's first moment. Contextual help owns the interactive layers below it. QWERTY is
 // above THEME and SEND, and EQ above SEND: their SAVE and INP EQ raise them without closing.
 const InputDispatcher::Layer InputDispatcher::LAYERS[] = {
     {&InputDispatcher::load_running,       &InputDispatcher::loading_layer},
+    {&InputDispatcher::help_full_open,     &InputDispatcher::help_layer},
     {&InputDispatcher::local_sample_range_open,&InputDispatcher::local_sample_range_layer},
     {&InputDispatcher::confirm_open,       &InputDispatcher::confirm_layer},
     {&InputDispatcher::sample_close_open,  &InputDispatcher::sample_close_layer},
+    {&InputDispatcher::sample_slice_review_open, &InputDispatcher::sample_slice_review_layer},
     {&InputDispatcher::render_dialog_open, &InputDispatcher::render_dialog_layer},
-    {&InputDispatcher::help_full_open,     &InputDispatcher::help_layer},
     {&InputDispatcher::qwerty_open,        &InputDispatcher::qwerty_layer},
     {&InputDispatcher::theme_open,         &InputDispatcher::theme_layer},
     {&InputDispatcher::eq_open,            &InputDispatcher::eq_layer},
@@ -71,10 +72,20 @@ const GridCursor* InputDispatcher::grid() const {
 }
 
 bool InputDispatcher::route(Gesture g) {
-    if (const Layer* top = top_layer())
-        if ((this->*top->handle)(g) == GestureResult::TAKEN) return true;
-    const ScreenHandler* h = screen();
-    return h && (this->*h->handle)(g) == GestureResult::TAKEN;
+    const Layer* top = top_layer();
+    // The FX helper changes a cell on confirmation only. Other layers own their edits.
+    const bool phraseEdit = top ? top->handle == &InputDispatcher::fx_helper_layer && g == Gesture::A_RELEASE
+                                : g == Gesture::A || g == Gesture::A_A || g == Gesture::A_B ||
+                                  g == Gesture::L_A || g == Gesture::L_UP || g == Gesture::L_DOWN ||
+                                  g == Gesture::L_LEFT || g == Gesture::L_RIGHT;
+    const auto checkpoint = phraseEdit ? phrase_checkpoint() : std::nullopt;
+    bool handled = top && (this->*top->handle)(g) == GestureResult::TAKEN;
+    if (!handled) {
+        const ScreenHandler* h = screen();
+        handled = h && (this->*h->handle)(g) == GestureResult::TAKEN;
+    }
+    record_phrase_edit(checkpoint);
+    return handled;
 }
 
 }  // namespace pt::ui

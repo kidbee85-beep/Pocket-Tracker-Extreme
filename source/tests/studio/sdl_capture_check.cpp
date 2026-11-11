@@ -68,7 +68,7 @@ int main() {
             ptshell::SdlSampleRecorder recorder(root.string());
             require(!recorder.start(0, 3, 48000), "invalid channel count accepted");
             require(!recorder.start(0, 1, 12345), "invalid sample rate accepted");
-            const auto inputs = Json::parse(recorder.inputs_json());
+            auto inputs = Json::parse(recorder.inputs_json());
             require(inputs.is_array() && !inputs.empty(), "dummy capture input not found");
             require(!recorder.start(999999, 1, 48000), "unknown input silently used default");
             require(Json::parse(recorder.state_json()).value("message", "").find("no longer connected") != std::string::npos,
@@ -81,7 +81,15 @@ int main() {
             recorder.stop();
             checkWav(waitFor(recorder, [](const Json& s) { return !active(s); }), 1, 48000);
 
-            const int named = inputs.size() > 1 ? inputs.at(1).at("id").get<int>() : 0;
+            // Discovery is intentionally asynchronous; do not silently turn the
+            // named-device integration test into another default-route test.
+            const auto inputsDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+            while (inputs.size() < 2 && std::chrono::steady_clock::now() < inputsDeadline) {
+                inputs = Json::parse(recorder.inputs_json());
+                std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            }
+            require(inputs.size() > 1, "dummy named input was not discovered asynchronously");
+            const int named = inputs.at(1).at("id").get<int>();
             require(recorder.start(named, 2, 44100), "stereo capture refused");
             live = waitFor(recorder, [](const Json& s) { return s.value("frames", uint64_t(0)) >= 2048 || !active(s); });
             require(live.value("state", "") == "recording", "stereo capture did not receive PCM");

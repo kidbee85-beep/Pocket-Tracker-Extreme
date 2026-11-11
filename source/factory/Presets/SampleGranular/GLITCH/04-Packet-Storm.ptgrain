@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Packet Storm",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 59.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.3499999940395355,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.6000000238418579,
+    "position": 0.2549999952316284,
+    "releaseMs": 104.0,
+    "reverseProbability": 0.3499999940395355,
+    "scanSpeed": 0.0,
+    "sizeMs": 29.0,
+    "sprayMs": 185.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

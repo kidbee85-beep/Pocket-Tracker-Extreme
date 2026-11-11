@@ -23,6 +23,8 @@ struct MixerState {
     // The meters as the feed last read them; null is silence.
     const float* trackPeaks  = nullptr;  // 16 — L/R per track
     const float* masterPeaks = nullptr;  // 2
+    const float* masterMaximum = nullptr;  // 2, retained until cleared
+    float limiterInputMaximum = 0.0f;      // louder channel, retained until cleared
     const float* reverbPeaks = nullptr;  // 2
     const float* delayPeaks  = nullptr;  // 2
 

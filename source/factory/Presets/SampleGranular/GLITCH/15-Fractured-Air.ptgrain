@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Fractured Air",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 83.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.9000000357627869,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 2.799999952316284,
+    "position": 0.75,
+    "releaseMs": 192.0,
+    "reverseProbability": 0.9000000357627869,
+    "scanSpeed": 2.0,
+    "sizeMs": 106.0,
+    "sprayMs": 570.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

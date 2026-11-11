@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -34,13 +35,22 @@ extern SoundfontVoice sfVoices[SF_VOICE_COUNT];
 #include "studio/rack.h"
 #include "live-resampler.h"
 #include "common/local_wav_source.h"
+#include "studio/sample_granular.h"
+#include "studio/granular_exchange.h"
+#include "studio/granular_disk_take.h"
 
 class AudioEngine {
 public:
     LiveResampler liveResampler;
+    studio::GranularDiskTake granularDiskTake;
     studio::Rack studioRack;
     std::atomic<int> studioCodes[256];
     studio::Synth studioVoices[MAX_VOICES];
+    void setSampleGranular(int sampleId,bool enabled,const studio::granular::Parameters&,
+                          double sourceRate,uint32_t seed=1);
+    // UI-thread request/read; current metadata is refreshed under the sample edit lock.
+    studio::granular::Snapshot sampleGranularSnapshot(int sampleId,int preferredTrack=-1);
+    void clearGranularMonitor(){granularMonitorId.store(-1,std::memory_order_relaxed);}
     bool setLiveStudioCode(int sampleId,int code);
     void setStudioSynthParams(int sampleId,const studio::SynthParams& params);
     void setStudioVoiceDefaults(int sampleId,int volume,int pan,int detune);
@@ -195,8 +205,13 @@ public:
     void  getSampleWaveformRangeSource(int id, int startFrame, int endFrame, float* out, int numBins, int channel);
     void  getSampleData(int id, float* out);       // left channel copy
     void  getSampleDataRight(int id, float* out);  // right channel copy
+    // Copy the exact loaded PCM range on the editor thread. Either plane may be omitted.
+    bool copySampleRegion(int id, int first, int end, float* left, float* right) const;
     float getSamplePlaybackPosition(int id);  // 0.0-1.0 fraction of active voice, or -1 if silent
-    void normalizeSample(int id, int startFrame, int endFrame);
+    float samplePeak(int id, int startFrame, int endFrame) const;
+    float sampleLevelPeak(int id, int startFrame, int endFrame) const;
+    void applySampleGain(int id, int startFrame, int endFrame, float factor);
+    bool editSampleLevel(int id, int startFrame, int endFrame, float factor);
     void fadeInSample(int id, int startFrame, int endFrame);
     void fadeOutSample(int id, int startFrame, int endFrame);
     void silenceRegion(int id, int startFrame, int endFrame);
@@ -220,6 +235,7 @@ public:
     void pasteRegion(int id, int insertAt);
     // The editor's audition copy of srcId into dstId. mode: 0=L, 1=R, 2=both, 3=avg.
     void prepareSourcePreview(int dstId, int srcId, int mode);
+    bool prepareSourcePreviewRange(int dstId, int srcId, int mode, int first, int end);
     int  getClipboardLength();
     // RATE and BIT: rebuilt from the cached original, decimated by `factor` (1/2/4) and quantised to
     // `bits`. One derive for both, so changing one keeps the other. (1, own depth) restores it.
@@ -234,8 +250,14 @@ public:
     // Nearest zero crossing to `frame`: dir>0 forward only, <0 backward only, 0 either; `frame` if none.
     // One direction keeps marker snapping monotonic. `sourceMode` is the editor's SOURCE.
     int  findZeroCrossing(int id, int frame, int dir = 0, int searchRadius = 512, int sourceMode = 0);
-    // Spectral-flux transients into outMarkers; returns the count. Higher sensitivity, more markers.
-    int  detectTransients(int id, int sensitivity, int* outMarkers, int maxMarkers);
+    struct TransientScan {
+        int first = 0, end = -1, sourceMode = 2;
+        bool snap = false, cancellable = false;
+    };
+    // UI-thread scan of the selected PCM signal. Higher sensitivity admits weaker attacks.
+    int detectTransients(int id, int sensitivity, int sourceRate, const TransientScan& scan,
+                         int* outMarkers, int maxMarkers);
+    uint32_t sampleGeneration(int id) const { return id >= 0 && id < 256 ? sampleGen[id].load() : 0; }
 
     // ===================================
     // CORE AUDIO PROCESSING BLOCK
@@ -331,6 +353,9 @@ public:
     // ── Live per-note and mixer FX, through the sample-accurate param queue ──
     // A per-voice controller (PAN, REV, DEL, CUT, …) by its CC id (songcore/event.h); `value` is 0-1.
     void scheduleVoiceCc(int64_t targetFrame, int trackId, int cc, float value);
+    void scheduleGranularStep(int64_t targetFrame, int trackId, const studio::granular::step::Delta&);
+    void scheduleGranularTrackReset(int64_t targetFrame, int trackId);
+    uint32_t granularStepOverruns() const noexcept { return granularStepDropped.load(std::memory_order_relaxed); }
     void scheduleVoiceReverse(int64_t targetFrame, int trackId, bool reverse, bool restart);  // BCK
     void scheduleVoiceEqSlot(int64_t targetFrame, int trackId, int slot);              // EQN xx
     void scheduleMasterEqSlot(int64_t targetFrame, int slot);                          // EQM xx
@@ -356,7 +381,8 @@ public:
     void getSpectrumMagnitudesForSource(int source, int instrId, int numBins, float* out);
 
     void getTrackPeaks(float* outBuffer);
-    void getMasterPeaks(float* outBuffer);
+    void getMasterPeaks(float* outBuffer, float* maximum = nullptr, float* limiterInputMaximum = nullptr);
+    void clearMasterMaximum();
     // [revL, revR, delL, delR]
     void getSendPeaks(float* outBuffer);
 
@@ -780,6 +806,17 @@ private:
     float*   sampleBackups[256] = {};
     float*   sampleBackupsRight[256] = {}; // null = the backup was mono
     int      sampleBackupLengths[256] = {};
+    struct SampleLevelUndo {
+        std::unique_ptr<float[]> sourceLeft, sourceRight, activeLeft, activeRight;
+        int sourceFirst = 0, sourceCount = 0, sourceLength = 0;
+        int activeFirst = 0, activeCount = 0, activeLength = 0, rate = 1, bits = 0;
+    };
+    struct SampleLevelState {
+        SampleLevelUndo undo;
+        int rate = 1, bits = 0;
+        bool preserveFloat = false;
+    };
+    std::array<SampleLevelState, 256> sampleLevel{};
     float* fxPreviewBackup      = nullptr;
     float* fxPreviewBackupRight = nullptr; // null = mono
     int    fxPreviewBackupLen   = 0;
@@ -794,6 +831,9 @@ private:
     uint8_t  sampleBitDepth[256];
     bool     sampleIsFloat[256] = {};
     void     freeRateCache(int id);
+    std::pair<int, int> sampleLevelSourceRange(int id, int first, int end) const;
+    float    rateCacheValue(int id, bool right, int frame) const;
+    void     undoSampleLevel(int id);
     // Wherever a new file replaces a slot: its depth, and no RATE/BIT original left over.
     void     setSampleSourceFormat(int id, int bits, bool isFloat);
     std::mutex sampleEditMutex;       // held during buffer swap; try-locked in voice mix loop
@@ -860,6 +900,37 @@ private:
     // the audio thread takes it in syncInstrumentData. An unpublished edit is never heard.
     StagedTable<InstrumentParams, 256>                        instrumentParams;
     StagedTable<studio::SynthParams, 256> studioSynthParams;
+    struct GranularControl {
+        bool enabled=false;
+        studio::granular::Parameters params{};
+        double sourceRate=48000.;
+        uint32_t seed=1;
+        uint32_t modeEpoch=0;
+    };
+    GranularControl granularStaged[256]{},granularLive[256]{};
+    studio::granular::Exchange32<GranularControl> granularControls[256];
+    uint32_t granularSeen[256]{};
+    studio::granular::Voice granularVoices[MAX_VOICES];
+    // Audio-thread ownership. Track values and per-voice frame timelines are
+    // separate from each instrument's live/persisted GranularControl.
+    studio::granular::step::TrackOverlay granularTracks[SONG_SAMPLE_VOICES];
+    studio::granular::step::VoiceOverlay granularVoiceSteps[MAX_VOICES];
+    std::atomic<uint32_t> granularResetRequest{0}, granularStepDropped{0};
+    uint32_t granularResetSeen = 0;
+    studio::granular::Exchange32<studio::granular::Snapshot> granularSnapshotPublisher;
+    studio::granular::Snapshot granularSnapshotCache{};
+    uint32_t granularSnapshotSeen=0;
+    std::atomic<int> granularMonitorId{-1},granularMonitorTrack{-1};
+    int granularLastMonitor=-1;
+    int64_t granularPublishedFrame=-1;
+    void publishGranularView();
+    void syncGranular(int id);
+    bool configureGranularVoice(int index,float outputRate);
+    void beginGranularStepBlock();
+    void bindGranularNote(const ScheduledNote& note, int slot, uint32_t sampleGeneration);
+    void applyGranularStep(const ScheduledParamUpdate& update, const BlockMix& block);
+    void resetGranularTrack(int track, int frame);
+    bool granularStepSourceCurrent(const studio::granular::step::SourceKey& key);
     StagedTable<std::array<InstrumentModSlot, 4>, 256>        instrumentModSlots;   // [sampleId][slot]
     // Keyed by instrument id, not sampleId (two instruments can share a sample).
     struct ProgramRow {
@@ -978,6 +1049,13 @@ private:
     float trackPeaksR[8] = {0};
     float masterPeakL = 0.0f;
     float masterPeakR = 0.0f;
+    float masterMaximum[2] = {};
+    float limiterInputMaximum = 0.0f;
+    // Callback-owned peaks wait here if the UI has the meter lock.
+    float pendingMasterMaximum[2] = {};
+    float pendingLimiterInputMaximum = 0.0f;
+    uint32_t pendingMasterEpoch = 0;
+    std::atomic<uint32_t> masterMeterEpoch{0};
     float sendPeakRevL = 0.0f, sendPeakRevR = 0.0f;
     float sendPeakDelL = 0.0f, sendPeakDelR = 0.0f;
     std::mutex peakMutex;

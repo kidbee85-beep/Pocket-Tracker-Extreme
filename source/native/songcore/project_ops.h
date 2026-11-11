@@ -2,6 +2,7 @@
 // The PROJECT screen's NEW and the two COMPACTs, on the document alone; telling the engine is the
 // host's job (SongcoreHost::new_project / clean_inst).
 
+#include <algorithm>
 #include <cstddef>
 #include <deque>
 #include <set>
@@ -157,11 +158,25 @@ inline void delay_apply_bank(Project& p, int index) {
     p.delayPreset     = d.name;
 }
 
-// NEW: a fresh document. ⚠️ `version = 1`, not the struct's 0 — a 0 would load as a legacy file.
-// It opens on the first built-in reverb and delay; the struct defaults stay what older files play with.
+inline constexpr int NEW_TRACK_FADER = 0x80;   // -6.0 dB
+inline constexpr int NEW_MASTER_FADER = 0xB5;  // -3.0 dB
+
+// Lower the authored track faders together, preserving their balance to the byte's precision.
+inline bool leave_track_headroom(Project& project) {
+    int loudest = 0;
+    for (const auto& track : project.tracks) loudest = std::max(loudest, track.volume & 0xFF);
+    if (loudest <= NEW_TRACK_FADER) return false;
+    for (auto& track : project.tracks)
+        track.volume = ((track.volume & 0xFF) * NEW_TRACK_FADER + loudest / 2) / loudest;
+    return true;
+}
+
+// NEW: a fresh document. The file defaults still describe how older projects play.
 inline void new_project(Project& project) {
     project         = make_default_project();
     project.version = 1;
+    for (auto& track : project.tracks) track.volume = NEW_TRACK_FADER;
+    project.masterVolume = NEW_MASTER_FADER;
     reverb_apply_bank(project, 0);
     delay_apply_bank(project, 0);
 }

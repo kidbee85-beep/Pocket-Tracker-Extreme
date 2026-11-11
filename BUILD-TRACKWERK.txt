@@ -1,0 +1,58 @@
+TrackWerk 1.0.0 corresponding source
+
+This is the corresponding source for the TrackWerk 1.0.0 release. source/ is the exact common Linux and Android baseline.
+SOURCE-SNAPSHOT.json records the 8,183 frozen files. SOURCE-FILES.json
+records the contents of this archive. The application and its components
+carry their licenses and notices in source/LICENSE, source/CREDITS.md and
+source/docs/licenses/.
+
+Android
+
+Follow android-overlay/BUILD-ANDROID.txt. The helper applies the ten exact
+Android-specific sources to a verified copy of source/ and reconstructs
+the 8,184-file source tree used to build the public signed APK. The release builds
+used JDK 21, Gradle 8.14.3 and Android SDK/NDK/CMake versions specified by
+the project. Use your own signing configuration when distributing APKs.
+
+Linux handhelds
+
+The CMake application target is pockettracker-sdl under source/shell.
+See source/shell/README.md for dependencies and build entry points. The
+Trimui Brick release build used ARM64 Cortex-A53, Zig 0.14.1 targeting
+glibc 2.31 and the matching Trimui SDL SDK. Use PT_HANDHELD=ON and
+CMAKE_SKIP_RPATH=ON. The updater and existing launcher paths preserve the
+established user-data directories.
+
+Miyoo Mini and Mini Plus use ARMv7 hard float for Cortex-A7 and the
+matching SDL from the adjacent SDL2-mmiyoo-f6319cf9-source.tar.gz archive.
+The source archive's SHA-256 is
+b4c2416b244ad5d9c208fa5939e865331880df9fb8f9e8fca3a5d2d5017af549.
+Build the Mini profile with PT_MIYOO_OFFLINE=ON and PT_MIYOO_PLUS_ARCHIVE=OFF.
+Build the Mini Plus Online profile with PT_MIYOO_OFFLINE=OFF and
+PT_MIYOO_PLUS_ARCHIVE=ON. These builds used PT_HANDHELD=OFF and
+CMAKE_SKIP_RPATH=ON. The earlier public portable build-tools/ scripts
+document the matching Zig/SDK setup and take --source, --zig, --cmake,
+--sdl-source, --app-zip and --work arguments. Use a new working directory
+and the matching device package.
+
+The RGB20S AmberELEC port uses ARM64 Cortex-A35 and the SDL runtime in the
+supported AmberELEC system. Use the launcher and controller mapping from
+the matching port package. System firmware and its updates are distributed
+by the respective operating-system projects.
+
+Editable project assets
+
+The font-authoring/ and brand-authoring/ directories carry the publicly
+released preferred editable inputs and generators for the built-in font
+and logo assets. Keep these alongside source/. Their generated native
+font and Brick screenshot inputs match the earlier public source.
+Python 3 and Pillow are used by the art generators. The release-tools/
+directory retains the previously published packaging helpers. Use the
+current program updater at source/tools/release/update_brick.py.
+
+Samples and signing
+
+The package carries the app, factory presets, and bundled third-party
+software and test inputs. The developer's personal music projects and
+sample library, signing credentials, and card-specific device setup are
+kept separately.

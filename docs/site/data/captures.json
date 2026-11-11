@@ -1,32 +1,4 @@
 {
-  "archive-search": {
-    "ready": true,
-    "file": "assets/images/source-search.png",
-    "alt": "TrackWerk Source Sampler showing archive search results and metadata",
-    "sha256": "0ca7b01ea721e9a011796c55dcaf46ada8860b7bcc91b814cb1a2f044c0244e9",
-    "caption": "Actual TrackWerk 0.9 native renderer capture from a genuine Internet Archive session. Selected source: Modern Jazz Samba, Kevin MacLeod, CC BY4.0."
-  },
-  "archive-preview": {
-    "ready": true,
-    "file": "assets/images/source-preview.png",
-    "alt": "TrackWerk Source Sampler previewing a selected archive track",
-    "sha256": "45c1793167df02620eb7f782eb3d5de6dd95792167f5edc72acab54fa4898753",
-    "caption": "Actual TrackWerk 0.9 native renderer capture from a genuine Internet Archive session. Selected source: Modern Jazz Samba, Kevin MacLeod, CC BY4.0."
-  },
-  "archive-region": {
-    "ready": true,
-    "file": "assets/images/source-region.png",
-    "alt": "TrackWerk Source Sampler with IN and OUT markers around a selected audio region",
-    "sha256": "51d1a1440b0455a3ae45b3dfca96cb7ed1a6a43555c3a9862895c9ef2daf08bc",
-    "caption": "Actual TrackWerk 0.9 native renderer capture from a genuine Internet Archive session. Selected source: Modern Jazz Samba, Kevin MacLeod, CC BY4.0. IN 00:11.334 / OUT 00:33.922; complete 22.588-second phrase."
-  },
-  "sample-editor": {
-    "ready": true,
-    "file": "assets/images/sample-editor.png",
-    "alt": "TrackWerk sample editor showing the imported archive excerpt waveform and editing controls",
-    "sha256": "add97101ed1a596491af24a42ead6fb9668165979bfd356e29033c4cc8da2947",
-    "caption": "The actual 22.588-second archive excerpt in the native editor, before selecting a slice mode. The BPM readout follows the chosen DURATION value; it is not automatic beat detection. Desktop-rendered 0.9 screen."
-  },
   "effects": {
     "ready": true,
     "file": "assets/images/effects.png",
@@ -54,5 +26,33 @@
     "alt": "TrackWerk categorized preset browser",
     "sha256": "bf4bffb76bf26bf99d501a664101c1f0bb7fc9b0e1f59f3a6f2730c9b5e564fc",
     "caption": "Native TrackWerk 0.9 renderer capture; physical device acceptance is separate."
+  },
+  "sample-load": {
+    "ready": true,
+    "file": "assets/images/v1-revision-2-sample-load.png",
+    "sha256": "38931be0ed6d3278cca62b21c33a393ed3b866bd4e392fca0c74fa0a123ce012",
+    "alt": "TrackWerk browser showing the Violet Afterhours soul keys WAV",
+    "caption": "Native TrackWerk Dev.13 capture of the local sample browser."
+  },
+  "sample-editor": {
+    "ready": true,
+    "file": "assets/images/v1-revision-2-sample-editor.png",
+    "sha256": "a59b3069a8c885925af677d2a791221c2fbb8d64eab1d504d62e0566ec5f3258",
+    "alt": "Violet Afterhours waveform in the TrackWerk Sample Editor",
+    "caption": "Native Sample Editor capture. A five-second crop contains two bars at 96 BPM."
+  },
+  "sample-chop": {
+    "ready": true,
+    "file": "assets/images/v1-revision-2-sample-chop.png",
+    "sha256": "066501d56f4a4862bc944ce5257926f3c07f7b548c03fd6045e2eb9cdf8f3764",
+    "alt": "TrackWerk CHOP preview with a highlighted slice",
+    "caption": "Native audition of the chopped Soul Keys phrase."
+  },
+  "song-pattern": {
+    "ready": true,
+    "file": "assets/images/v1-revision-2-song-pattern.png",
+    "sha256": "3d4a2bcc3a86a6ad546fb38cdc92accbc31ece15dd78e28085fbdb8ec5f49cc6",
+    "alt": "Native Phrase editor playing Violet Afterhours",
+    "caption": "Dev.13 sequence playback at 96 BPM."
   }
 }

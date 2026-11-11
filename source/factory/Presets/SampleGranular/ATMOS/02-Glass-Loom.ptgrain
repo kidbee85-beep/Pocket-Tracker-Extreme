@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Glass Loom",
+  "parameters": {
+    "attackMs": 190.0,
+    "densityHz": 14.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.4300000071525574,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.15000000596046448,
+    "position": 0.16499999165534973,
+    "releaseMs": 680.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.05999999865889549,
+    "sizeMs": 207.0,
+    "sprayMs": 34.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

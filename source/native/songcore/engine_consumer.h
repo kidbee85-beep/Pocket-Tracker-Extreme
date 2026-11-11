@@ -187,6 +187,13 @@ class EngineConsumer : public IMidiConsumer {
     void consume(const Event& ev) override {
         if (!engine_ || !project_) return;
 
+        // The engine resolves the actually sounding source (including Table
+        // INS), not the authored instrument column or the lookahead track map.
+        if (ev.type == EV_EXT_GRANULAR) {
+            engine_->scheduleGranularStep(ev.frame, ev.track, ev.extGranular);
+            return;
+        }
+
         // The routing gate: an EXTERNAL instrument raises no voice here, cable or not.
         // ⚠️ Both consumers decide through the same two functions, or an event plays twice or never.
         const int16_t prev  = tracks_.current(ev.track);
@@ -194,8 +201,10 @@ class EngineConsumer : public IMidiConsumer {
         if (is_external(instr)) {
             // ⚠️ A track flipping from an internal instrument to an external one would leave its
             // voice with nothing to stop it — later events route away — so the flip ends it.
-            if (ev.type == EV_NOTE_ON && prev >= 0 && !is_external(prev))
+            if (ev.type == EV_NOTE_ON && prev >= 0 && !is_external(prev)) {
                 engine_->scheduleKill(ev.frame, ev.track);
+                engine_->scheduleGranularTrackReset(ev.frame, ev.track);
+            }
             return;
         }
 

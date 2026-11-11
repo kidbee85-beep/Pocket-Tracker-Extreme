@@ -8,6 +8,8 @@
 #include "ui/helpers.h"
 #include "ui/lifecycle.h"
 #include "ui/song_pointer.h"
+#include "ui/sample_granular_ui.h"
+#include "ui/sample_granular_presets.h"
 #include "common/load_progress.h"
 
 #include <algorithm>
@@ -21,6 +23,75 @@ namespace pt::ui {
 void InputDispatcher::set_now(long long now_ms) {
     now_ms_ = now_ms;
     poll_local_sample_range();
+    auto& grain=s_.sampleGranular;
+    if(grain.request!=SampleGranularRequest::NONE){
+        const auto request=grain.request;grain.request=SampleGranularRequest::NONE;
+        if(s_.studioOpen&&sample_granular_studio(s_)){
+            if(request==SampleGranularRequest::USE_RECORDED_TAKE){
+                const auto path = std::move(grain.recording.requestedPath);
+                grain.recording.requestedPath.clear();
+                auto& instruments = host_.project().instruments;
+                const auto free = std::find_if(instruments.begin(), instruments.end(), songcore::instrument_is_free);
+                if (s_.currentScreen == ScreenType::SAMPLE_EDITOR && s_.sampleEditor.isModified) {
+                    s_.studioMessage = "Save your sample edits first. The take is saved.";
+                } else if (host_.is_playing()) {
+                    s_.studioMessage = "Stop playback before opening the saved take";
+                } else if (free == instruments.end()) {
+                    s_.studioMessage = "No free instrument slot. The take is saved in Samples / Resampled / Granular.";
+                } else if (path.empty() || !fs_.file_exists(path)) {
+                    s_.studioMessage = "The saved take is no longer at its original path";
+                } else {
+                    const int target = int(free - instruments.begin());
+                    const auto title = path_stem(path);
+                    auto openRange = [&](bool onlyIfNeeded) {
+                        if (!open_large_sample(path, title, false, onlyIfNeeded)) return false;
+                        auto& range = s_.localSampleRange;
+                        if (range.isOpen) {
+                            range.targetInstrument = target;
+                            range.takeProject = s_.project;
+                            range.fromGranularTake = true;
+                            range.previousAutoName.clear();
+                        } else {
+                            s_.studioMessage = s_.fileBrowser.statusMessage;
+                        }
+                        return true;
+                    };
+                    if (!openRange(true)) {
+                        bool loaded;
+                        {
+                            const LoadScope loading(*this, now_ms_, "Opening recorded Granular take");
+                            loaded = host_.load_sample(target, path);
+                        }
+                        if (loaded) {
+                            host_.set_instrument_type(target, songcore::InstrumentType::SAMPLER);
+                            host_.edit_project().instruments[target].name = Canvas::clip_text(title, 32);
+                            s_.currentInstrument = target;
+                            s_.studioOpen = false;
+                            mark_modified();
+                            open_sample_editor();
+                        } else if (!host_.last_load_ran_out_of_memory() || !openRange(false)) {
+                            s_.studioMessage = "Could not open the take. The original WAV is saved.";
+                        }
+                    }
+                }
+            }else if(request==SampleGranularRequest::CROP_SOURCE){
+                s_.studioOpen=false;open_sample_editor(true);
+                if(s_.currentScreen!=ScreenType::SAMPLE_EDITOR){grain.cropReturn=false;s_.studioOpen=true;s_.studioMessage="Crop needs a loaded sampler source";}
+            }else{
+                const bool source=request==SampleGranularRequest::LOAD_SOURCE;
+                auto folder=source?browser_dir(BrowserDir::SAMPLES):fs_.make_app_folder("Presets/SampleGranular");
+                if(!source&&!grain.presetDirectory.empty()&&fs_.is_directory(grain.presetDirectory))folder=grain.presetDirectory;
+                if(folder.empty())s_.studioMessage="Choose a writable home folder first";
+                else{
+                    grain.browserReturn=true;grain.browserInstrument=s_.currentInstrument;s_.studioOpen=false;
+                    grain.browserFromEditor=s_.currentScreen==ScreenType::SAMPLE_EDITOR;
+                    if(grain.browserFromEditor)grain.browserEditorReturn=s_.previousScreen;
+                    open_file_browser(source?AppState::BrowserPurpose::LOAD_GRANULAR_SAMPLE:AppState::BrowserPurpose::LOAD_GRANULAR_PRESET,
+                                      folder,source?sample_extensions():std::vector<std::string>{kSampleGranularPresetExtension},source);
+                }
+            }
+        }
+    }
     if (s_.pendingStudioPresetBrowser) {
         s_.pendingStudioPresetBrowser = false;
         const bool effect = s_.studioTab == 1;
@@ -244,7 +315,10 @@ bool InputDispatcher::apply_edit(const InputAction& action) {
 void InputDispatcher::mark_dirty_and_arm_autosave() {
     // ⚠️ "The document changed" and nothing else — never bump it to force a redraw.
     s_.projectVersion++;
+    arm_studio_autosave();
+}
 
+void InputDispatcher::arm_studio_autosave() {
     autosavePending_ = true;   // re-armed: it writes 3 s after the last edit
     autosaveDueAtMs_ = now_ms_ + AUTOSAVE_DEBOUNCE_MS;
 }
@@ -365,7 +439,11 @@ void InputDispatcher::preview_held_note() {
 void InputDispatcher::generic_input(InputAction (*fn)(const CursorContext&)) {
     const InputAction action = fn(cursor_context());
     if (action.type == ActionType::NONE) return;
-    if (apply_edit(action)) mark_modified();
+    const auto checkpoint = phrase_checkpoint();
+    if (apply_edit(action)) {
+        record_phrase_edit(checkpoint);
+        mark_modified();
+    }
 }
 
 void InputDispatcher::selection_or_single(InputAction (*fn)(const CursorContext&)) {
@@ -379,6 +457,7 @@ void InputDispatcher::selection_or_single(InputAction (*fn)(const CursorContext&
     int&                  row      = s_.*g->row;
     const int             savedRow = row;
     bool                  any      = false;
+    const auto checkpoint = phrase_checkpoint();
 
     for (int r = b.topLeftRow; r <= b.bottomRightRow; ++r) {
         row = r;
@@ -386,7 +465,10 @@ void InputDispatcher::selection_or_single(InputAction (*fn)(const CursorContext&
         if (action.type != ActionType::NONE && apply_edit(action)) any = true;
     }
     row = savedRow;
-    if (any) mark_modified();
+    if (any) {
+        record_phrase_edit(checkpoint);
+        mark_modified();
+    }
 }
 
 void InputDispatcher::dpad_nav(NavDir direction) {

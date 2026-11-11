@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Faded Print",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 55.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.30000001192092896,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.47999998927116394,
+    "position": 0.39000001549720764,
+    "releaseMs": 180.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.6399999856948853,
+    "sizeMs": 54.0,
+    "sprayMs": 102.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

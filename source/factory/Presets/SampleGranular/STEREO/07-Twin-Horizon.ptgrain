@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Twin Horizon",
+  "parameters": {
+    "attackMs": 80.0,
+    "densityHz": 12.0,
+    "freeze": false,
+    "level": 0.36000001430511475,
+    "panSpread": 0.8199999928474426,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.4399999976158142,
+    "position": 0.39000001549720764,
+    "releaseMs": 700.0,
+    "reverseProbability": 0.10000000149011612,
+    "scanSpeed": -0.08999999612569809,
+    "sizeMs": 284.0,
+    "sprayMs": 57.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

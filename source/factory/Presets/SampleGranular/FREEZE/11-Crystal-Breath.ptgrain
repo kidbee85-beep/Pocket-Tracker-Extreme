@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Crystal Breath",
+  "parameters": {
+    "attackMs": 120.0,
+    "densityHz": 14.0,
+    "freeze": true,
+    "level": 0.4399999976158142,
+    "panSpread": 0.75,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.07999999821186066,
+    "position": 0.5799999833106995,
+    "releaseMs": 2400.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.0,
+    "sizeMs": 530.0,
+    "sprayMs": 23.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

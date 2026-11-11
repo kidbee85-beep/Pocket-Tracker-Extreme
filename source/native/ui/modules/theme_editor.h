@@ -1,8 +1,6 @@
 #pragma once
 
-// The theme editor: a THEME row (built-in cycle, SAVE, LOAD), a RANDOMIZE row (scheme, ROLL), then
-// one R/G/B row per colour with a swatch. No CursorContext on purpose: a value here is a channel of
-// a colour, not a document cell; the edit is the free functions below.
+// The theme editor: palette, step-grid choices, randomizer, then one R/G/B row per colour.
 
 #include <cstdint>
 #include <string>
@@ -16,10 +14,9 @@ namespace pt::ui {
 struct ThemeEditorState {
     bool isOpen = false;
 
-    // 0 = THEME, 1 = RANDOMIZE, 2.. = a colour row (`theme_color_index`).
     int cursorRow = 0;
 
-    // THEME: 0 name, 1 SAVE, 2 LOAD. RANDOMIZE: 0 scheme, 1 ROLL. A colour: R, G, B.
+    // THEME: name, SAVE, LOAD. Grid: one value. RANDOMIZE: scheme, ROLL. Colour: R, G, B.
     // ⚠️ Rows differ in channel count — `theme_channel_count`.
     int cursorChannel = 0;
 
@@ -35,11 +32,17 @@ struct ThemeEditorState {
     std::string message;
 };
 
-// ⚠️ Nothing may compute `cursorRow - 2` itself: every site goes through `theme_color_index`.
-
 inline constexpr int THEME_ROW_THEME  = 0;   ///< the name, SAVE and LOAD
-inline constexpr int THEME_ROW_RANDOM = 1;   ///< the scheme and ROLL
-inline constexpr int THEME_FIRST_COLOR_ROW = 2;
+inline constexpr int THEME_ROW_CHAIN_GRID = 1;
+inline constexpr int THEME_ROW_PHRASE_GRID = 2;
+inline constexpr int THEME_ROW_RANDOM = 3;   ///< the scheme and ROLL
+inline constexpr int THEME_FIRST_COLOR_ROW = 4;
+
+inline StepGridStyle Theme::* theme_grid_field(int row) {
+    if (row == THEME_ROW_CHAIN_GRID) return &Theme::chainGrid;
+    if (row == THEME_ROW_PHRASE_GRID) return &Theme::phraseGrid;
+    return nullptr;
+}
 
 // The colour a cursor row is on, or −1 on a header row.
 inline int theme_color_index(int cursorRow) {
@@ -47,7 +50,10 @@ inline int theme_color_index(int cursorRow) {
     return (index >= 0 && index < static_cast<int>(theme_color_rows().size())) ? index : -1;
 }
 
-inline int theme_channel_count(int cursorRow) { return cursorRow == THEME_ROW_RANDOM ? 2 : 3; }
+inline int theme_channel_count(int cursorRow) {
+    if (theme_grid_field(cursorRow)) return 1;
+    return cursorRow == THEME_ROW_RANDOM ? 2 : 3;
+}
 
 struct ThemeState {
     Theme            theme = theme_classic();
@@ -83,7 +89,7 @@ inline void theme_adjust_color(Theme& theme, int row, int channel, int delta) {
 }
 
 // Step the built-in palette by `delta` (±1). ⚠️ Replaces the whole theme; SAVE keeps dialled colours.
-// A theme that is not a built-in enters the ring at an end. The visualizer is kept.
+// A custom theme enters the ring at an end. Keep the visualizer and step-grid choices.
 inline void theme_cycle_builtin(Theme& theme, int delta) {
     const std::vector<Theme> builtins = theme_builtins();
     const int size = static_cast<int>(builtins.size());
@@ -96,9 +102,13 @@ inline void theme_cycle_builtin(Theme& theme, int delta) {
     if (delta >= 0) target = (idx >= 0) ? (idx + 1) % size : 0;          // next
     else            target = (idx > 0)  ? idx - 1          : size - 1;   // prev
 
-    const VisualizerType keep = theme.visualizerType;
+    const VisualizerType visualizer = theme.visualizerType;
+    const StepGridStyle chainGrid = theme.chainGrid;
+    const StepGridStyle phraseGrid = theme.phraseGrid;
     theme = builtins[static_cast<size_t>(target)];
-    theme.visualizerType = keep;
+    theme.visualizerType = visualizer;
+    theme.chainGrid = chainGrid;
+    theme.phraseGrid = phraseGrid;
 }
 
 // ─── The module ──────────────────────────────────────────────────────────────────────────────────
@@ -108,7 +118,7 @@ public:
     static constexpr int WIDTH  = 510;
     static constexpr int HEIGHT = 392;
 
-    // One row per colour after the two headers; derived from `theme_color_rows()`. The cursor wraps.
+    // One row per colour after the fixed controls. The cursor wraps.
     static int max_row() {
         return THEME_FIRST_COLOR_ROW + static_cast<int>(theme_color_rows().size()) - 1;
     }

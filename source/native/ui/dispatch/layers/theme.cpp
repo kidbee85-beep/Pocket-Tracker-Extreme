@@ -24,7 +24,7 @@ GestureResult InputDispatcher::theme_layer(Gesture g) {
         case Gesture::A_LEFT:  theme_dpad_edit(-1, -0x01); break;
         case Gesture::A_RIGHT: theme_dpad_edit(+1, +0x01); break;
 
-        // A means something only on the action rows (SAVE, LOAD, ROLL); colours are A+DPAD.
+        // A cycles a grid or activates SAVE, LOAD or ROLL. Colours use A+DPAD.
         case Gesture::A:
             if (theme_color_index(es.cursorRow) < 0) theme_row_action();
             break;
@@ -73,6 +73,14 @@ void InputDispatcher::theme_move_cursor(int d_row, int d_channel) {
  *  style. */
 void InputDispatcher::theme_dpad_edit(int cycleDelta, int nudge) {
     ThemeEditorState& es = s_.themeEditor;
+
+    if (const auto field = theme_grid_field(es.cursorRow)) {
+        const int index = static_cast<int>(s_.theme.*field);
+        const int next = (index + cycleDelta + STEP_GRID_STYLE_COUNT) % STEP_GRID_STYLE_COUNT;
+        s_.theme.*field = static_cast<StepGridStyle>(next);
+        theme_refresh_message();
+        return;
+    }
 
     const int color = theme_color_index(es.cursorRow);
     if (color >= 0) {
@@ -125,6 +133,10 @@ void InputDispatcher::theme_roll_palette(bool rowOnly) {
 }
 
 void InputDispatcher::theme_row_action() {
+    if (theme_grid_field(s_.themeEditor.cursorRow)) {
+        theme_dpad_edit(+1, 0);
+        return;
+    }
     if (s_.themeEditor.cursorRow == THEME_ROW_RANDOM) {
         // ROLL — a whole palette, in the scheme the cell beside it is showing.
         if (s_.themeEditor.cursorChannel == 1) theme_roll_palette(/*rowOnly=*/false);

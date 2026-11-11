@@ -27,6 +27,12 @@ constexpr int STATUS_MAX_CHARS = 34;   // one line
 bool editor_overlay_up(const AppState& s) {
     return s.eq.isOpen || s.themeEditor.isOpen;
 }
+
+bool phrase_overview_visible(const AppState& s) {
+    return s.project && s.currentScreen == ScreenType::PHRASE && !editor_overlay_up(s) &&
+           s.phraseOverview != PhraseOverview::AUDIO && s.currentPhrase >= 0 &&
+           static_cast<size_t>(s.currentPhrase) < s.project->phrases.size();
+}
 }  // namespace
 
 void TrackerLayout::draw(Canvas& c, const AppState& s) {
@@ -34,11 +40,17 @@ void TrackerLayout::draw(Canvas& c, const AppState& s) {
     c.set_font_style(s.settings.fontStyle);
     if(s.splashProgress>=0){draw_extreme_splash(c,s.theme,s.splashProgress);return;}
     if(s.localSampleRange.isOpen){draw_local_sample_range(c,s.localSampleRange,s.theme);draw_loading_strip(c,s.loading,s.theme);return;}
-    if(s.studioOpen){draw_studio(c,s);if(s.qwerty.isOpen)qwerty_.draw(c,s.qwerty,s.theme);draw_live_resample_indicator(c,s);return;}
-    draw_frame(c, s);
+    if (s.studioOpen) {
+        draw_studio(c, s);
+        if (s.qwerty.isOpen) qwerty_.draw(c, s.qwerty, s.theme);
+    } else {
+        draw_frame(c, s);
+    }
 
-    // These two are outside `draw_frame`, which the full-screen modules return from early.
-    if (s.helpFull && s.project) helpOverlay_.draw(c, help_topic(s), s.theme);
+    if (s.project) {
+        if (s.helpFull) helpOverlay_.draw(c, help_topic(s), s.theme);
+        else if (s.helpOpen) helpPanel_.draw(c, help_topic(s), s.theme);
+    }
     draw_loading_strip(c, s.loading, s.theme);
     draw_live_resample_indicator(c,s);
 }
@@ -65,37 +77,37 @@ void TrackerLayout::draw_frame(Canvas& c, const AppState& s) {
 
     if (s.currentScreen != ScreenType::SETTINGS) draw_right_bar(c, s);
 
-    // Over the scope strip, unless help has it.
-    if (!s.helpOpen) {
-        draw_status_line(c, s);
-        draw_selection_clipboard(c, s);
-    }
+    draw_status_line(c, s);
+    draw_selection_clipboard(c, s);
 
     draw_overlays(c, s);
 }
 
 // ─── The file browser and sample editor: full screen, no furniture ───────────────────────────────
-// The sample editor's help goes in the waveform's place.
 void TrackerLayout::draw_full_screen(Canvas& c, const AppState& s) {
     const Theme& t = s.theme;
     if (s.currentScreen == ScreenType::FILE_BROWSER) {
         fileBrowser_.draw(c, 0, 0, s.fileBrowser, t);
     } else {
         sampleEditor_.draw(c, 0, 0, s.sampleEditor, t);
-        // The TSTRETCH box dims the frame, so help is drawn after it.
         if (s.project) draw_stretch_editor(c, s.sampleEditor, s.project->tempo, t);
-        if (s.helpOpen)
-            helpPanel_.draw(c, SIDE_SPACER, SampleEditorModule::WAVEFORM_Y, help_topic(s), t,
-                            SampleEditorModule::WAVEFORM_H);
     }
     if (s.qwerty.isOpen) qwerty_.draw(c, s.qwerty, t);
 }
 
-// ─── The oscilloscope strip, or the help panel in its place ──────────────────────────────────────
+// ─── The oscilloscope or Phrase overview ──────────────────────────────────────────────────────────
 void TrackerLayout::draw_scope_strip(Canvas& c, const AppState& s) {
     const Theme& t = s.theme;
-    if (s.helpOpen) {
-        helpPanel_.draw(c, SIDE_SPACER, SCREEN_SPACER, help_topic(s), t);
+
+    if (phrase_overview_visible(s)) {
+        PhraseOverviewState view{s.project->phrases[static_cast<size_t>(s.currentPhrase)],
+                                 s.playheads, t, s.phraseOverview, s.cursorRow};
+        if (s.selection.active) {
+            const auto bounds = s.selection.bounds();
+            view.selectedFirst = bounds.topLeftRow;
+            view.selectedLast = bounds.bottomRightRow;
+        }
+        phraseEditor_.draw_overview(c, SIDE_SPACER, SCREEN_SPACER, view);
         return;
     }
 
@@ -257,6 +269,8 @@ MixerState mixer_state(const AppState& s) {
     xs.mixerMasterRow = s.mixerMasterRow;
     xs.trackPeaks     = s.trackPeaks;
     xs.masterPeaks    = s.masterPeaks;
+    xs.masterMaximum  = s.masterMaximum;
+    xs.limiterInputMaximum = s.limiterInputMaximum;
     xs.reverbPeaks    = &s.sendPeaks[0];
     xs.delayPeaks     = &s.sendPeaks[2];
     xs.peaksVersion   = s.peaksVersion;
@@ -389,11 +403,7 @@ void TrackerLayout::draw_overlays(Canvas& c, const AppState& s) {
     const Theme& t = s.theme;
     draw_fx_helper(c, s.fxHelper, t);
     draw_map_picker(c, s.mapPicker, t);
-    if (send_editor_drawn(s)) {
-        draw_send_editor(c, s.sendEditor, *s.project, t);
-        // Its cells have help; the panel goes over the strip the backdrop just dimmed.
-        if (s.helpOpen) helpPanel_.draw(c, SIDE_SPACER, SCREEN_SPACER, help_topic(s), t);
-    }
+    if (send_editor_drawn(s)) draw_send_editor(c, s.sendEditor, *s.project, t);
     draw_render_dialog(c, s.renderDialog, *s.project, s.isRendering, s.renderProgress, t);
     if (s.qwerty.isOpen) qwerty_.draw(c, s.qwerty, t);
     draw_confirm_dialog(c, s.confirm, t);
@@ -417,13 +427,17 @@ bool TrackerLayout::has_falling_meters(const AppState& s) const {
     // The SPECTRUM bars, likewise only while drawn.
     const VisualizerType vt = s.theme.visualizerType;
     if (vt != VisualizerType::SPECTRUM && vt != VisualizerType::SPECTRUM_PEAKS) return false;
-    return !full_screen_module(s) && !s.helpOpen && !oscilloscope_.bars_at_rest();
+    return !full_screen_module(s) && !s.helpOpen && !s.helpFull && !phrase_overview_visible(s) && !oscilloscope_.bars_at_rest();
 }
 
 // ─── The status line, top-left of the scope strip ────────────────────────────────────────────────
 void TrackerLayout::draw_status_line(Canvas& c, const AppState& s) const {
     if (draw_chord_hint(c, s)) return;
-    if (s.statusMessage.empty()) return;
+    if (s.statusMessage.empty()) {
+        if (s.settings.helpMode != static_cast<int>(HelpMode::OFF))
+            c.draw_label("SELECT HELP", SIDE_SPACER + 10, SCREEN_SPACER + 10, s.theme.textParam, 12);
+        return;
+    }
 
     const std::string text = Canvas::clip_text(s.statusMessage, STATUS_MAX_CHARS);
     const Argb        color = s.statusSuccess ? s.theme.vizWave : 0xFFFF0000;

@@ -1,11 +1,14 @@
 #include "ui/studio.h"
 #include "ui/std_filesystem.h"
+#include "ui/live_resample.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <limits>
 
 namespace pt::ui {
 namespace {
+CaptureInput internal_master(){return {std::numeric_limits<int>::min(),"Internal master / resample","internal-master","Records tracker output after FX and Master, including Punch. Start plays the song; no USB input is required.",true};}
 int free_capture_slot(const AppState& s){
  if(!s.project)return -1;
  const int count=static_cast<int>(s.project->instruments.size());
@@ -20,26 +23,57 @@ void open_studio_capture(AppState& s){
  s.studioConfirm=false;s.studioAUsed=false;s.studioBUsed=false;s.studioMessage.clear();
  if(s.capture.targetInstrument<0||!s.project||s.capture.targetInstrument>=int(s.project->instruments.size())||
     !songcore::instrument_is_free(s.project->instruments[s.capture.targetInstrument]))s.capture.targetInstrument=free_capture_slot(s);
- studio_capture_refresh(s);s.capture.nextPoll=0;studio_poll_capture(s,0);
+ // Opening a recorder must not wait for external audio hardware. Keep an
+ // explicitly chosen source on re-entry; the first visit offers internal mix.
+ studio_capture_refresh(s,false);s.capture.nextPoll=0;studio_poll_capture(s,0);
 }
 void studio_capture_edit(AppState& s,int direction){
- auto& v=s.capture;if(v.active())return;
- if(s.studioRow==0)v.selected=std::clamp(v.selected+direction,0,std::max(0,int(v.inputs.size())-1));
- if(s.studioRow==1)v.channels=std::clamp(v.channels+direction,1,2);
- if(s.studioRow==2)v.rate=direction>0?48000:44100;
- if(s.studioRow==3){if(v.targetInstrument<0)v.targetInstrument=free_capture_slot(s);else v.targetInstrument=std::clamp(v.targetInstrument+direction,0,127);}
+ auto& v=s.capture;if(s.resampleView.active||s.resampleView.saving)return;
+ if(v.active()&&!v.internal_source()){
+  // An unresponsive external driver must not lock the independent master
+  // recorder out. Source Left explicitly requests stop and returns to mix.
+  if(s.studioRow==0&&direction<0)studio_capture_select_internal(s);
+  return;
+ }
+ if(s.studioRow==0){
+  if(v.internal_source()&&direction>0)studio_capture_refresh(s);
+  v.selected=std::clamp(v.selected+direction,0,std::max(0,int(v.inputs.size())-1));
+ }
+ if(s.studioRow==1){if(v.internal_source())live_resample_cycle_length(s,direction);else v.channels=std::clamp(v.channels+direction,1,2);}
+ if(s.studioRow==2&&!v.internal_source())v.rate=direction>0?48000:44100;
+ if(s.studioRow==3){
+  if(v.targetInstrument<0)v.targetInstrument=free_capture_slot(s);else v.targetInstrument=std::clamp(v.targetInstrument+direction,0,127);
+  s.studioMessage.clear();
+  if(v.internal_source()&&s.resampleView.frames>0)s.resampleView.message="Take ready. Stop playback, then Use Take loads the selected empty slot.";
+ }
+}
+void studio_capture_select_internal(AppState& s){
+ const bool stopExternal=s.capture.active()&&!s.capture.internal_source();
+ studio_capture_refresh(s,false);
+ for(size_t i=0;i<s.capture.inputs.size();++i)if(s.capture.inputs[i].kind=="internal-master"){s.capture.selected=int(i);break;}
+ if(stopExternal&&s.captureBackend){
+  try{s.captureBackend->stop();}catch(...){/* Internal mix never depends on this external driver. */}
+  s.studioMessage="Input stop requested. Internal master remains available.";
+ }
 }
 std::string studio_capture_status(const CaptureView& v){
+ if(v.internal_source())return "Internal master / resample";
  if(v.receiving())return "REC - receiving audio";
  if(v.state=="starting"||v.state=="recording")return "Waiting for audio";
  if(v.state=="stopping")return "Saving take...";
  if(v.state=="ready"&&v.frames>0)return "Take ready to edit";
  if(v.state=="permission")return "Allow microphone access";
  if(v.state=="error")return "No audio / input error";
+ if(!v.inputError.empty())return "Refresh inputs";
+ if(!v.inputs.empty()){
+  const auto& input=v.inputs[std::clamp(v.selected,0,int(v.inputs.size())-1)];
+  if(!input.connected&&input.kind!="iphone-action")return "Selected input disconnected";
+ }
  return v.inputs.empty()?"No input detected":"Ready to record";
 }
 bool studio_poll_capture(AppState& s,uint64_t now){
  auto& v=s.capture;
+ if(v.internal_source())return false;
  if(!s.captureBackend||now<v.nextPoll||(!v.active()&&!(s.studioOpen&&s.studioTab==4)))return false;
  v.nextPoll=now+100;
  try{
@@ -61,30 +95,57 @@ bool studio_poll_capture(AppState& s,uint64_t now){
  }catch(...){v.message="Input status unavailable";}
  return true;
 }
-void studio_capture_refresh(AppState& s){
- if(!s.captureBackend){s.capture.inputs.clear();s.capture.inputError="Recording unavailable on this platform";return;}
+void studio_capture_refresh(AppState& s,bool scanExternal){
+ const auto master=internal_master();
+ if(s.capture.inputs.empty()){s.capture.inputs.push_back(master);s.capture.selected=0;}
+ if(!scanExternal)return;
+ const bool hadSelection=!s.capture.inputs.empty();
+ const CaptureInput previous=hadSelection?s.capture.inputs[std::clamp(s.capture.selected,0,int(s.capture.inputs.size())-1)]:CaptureInput{};
  try{
-  auto data=songcore::json::parse(s.captureBackend->inputs_json());
+  auto data=s.captureBackend?songcore::json::parse(s.captureBackend->inputs_json()):songcore::json::array();
   if(!data.is_array())throw std::runtime_error("Invalid input list");
-  const int old=s.capture.inputs.empty()?0:s.capture.inputs[std::clamp(s.capture.selected,0,int(s.capture.inputs.size())-1)].id;
-  std::vector<CaptureInput> inputs;
+  std::vector<CaptureInput> inputs{master};
   for(const auto& entry:data)if(entry.is_object()&&entry.contains("id")&&entry.contains("name"))
-   inputs.push_back({entry.at("id").get<int>(),entry.at("name").get<std::string>(),entry.value("kind",std::string("input")),entry.value("detail",std::string()),entry.value("connected",true)});
-  s.capture.inputs=std::move(inputs);s.capture.selected=0;s.capture.inputError.clear();
-  for(size_t i=0;i<s.capture.inputs.size();++i)if(s.capture.inputs[i].id==old)s.capture.selected=static_cast<int>(i);
- }catch(...){s.capture.inputs.clear();s.capture.inputError="Input list unavailable - refresh and retry";}
+   if(entry.at("id").get<int>()!=master.id)inputs.push_back({entry.at("id").get<int>(),entry.at("name").get<std::string>(),entry.value("kind",std::string("input")),entry.value("detail",std::string()),entry.value("connected",true)});
+  int selected=0;bool found=false;
+  for(size_t i=0;i<inputs.size();++i)if(hadSelection&&inputs[i].id==previous.id){selected=static_cast<int>(i);found=true;break;}
+  // A refreshed list must never turn a vanished USB input into the first
+  // microphone/default row. Keep the missing selection until it reconnects or
+  // the user deliberately chooses another source.
+  if(hadSelection&&!found){
+   auto missing=previous;missing.kind="missing";missing.connected=false;
+   missing.detail="Selected input disconnected. Reconnect it or choose another source; recording has not started.";
+   selected=static_cast<int>(inputs.size());inputs.push_back(std::move(missing));
+  }
+  s.capture.inputs=std::move(inputs);s.capture.selected=selected;s.capture.inputError.clear();
+ }catch(...){
+  // Preserve the selected identity when enumeration fails; stale rows cannot
+  // start recording until a subsequent successful refresh validates them.
+  s.capture.inputError="Input list unavailable - refresh and retry";
+ }
 }
 void studio_capture_action(AppState& s,songcore::SongcoreHost& host,AudioEngine& engine,FileSystem& fs){
  auto& v=s.capture;
- if(!s.captureBackend){s.studioMessage="Recording is unavailable on this platform";return;}
- if(s.studioRow==6){studio_capture_refresh(s);return;}
+ if(s.studioRow==6||s.studioRow==0){studio_capture_refresh(s);return;}
+ if(v.internal_source()){
+  if(s.studioRow==4)live_resample_toggle(s,host,engine,fs);
+  if(s.studioRow==5)live_resample_use(s,host,engine,fs,v.targetInstrument);
+  return;
+ }
+ if(!s.captureBackend){s.studioMessage="External recording is unavailable; choose Internal master / resample";return;}
  if(s.studioRow==4){
   if(v.active())s.captureBackend->stop();
   else{
    studio_capture_refresh(s);
+    if(!v.inputError.empty()){s.studioMessage=v.inputError;return;}
    if(v.inputs.empty()){s.studioMessage=v.inputError.empty()?"No input. USB charging alone is not an audio connection.":v.inputError;return;}
-   host.stop_preview();engine.studioRack.punch.store(0);
    const auto& selected=v.inputs[std::clamp(v.selected,0,int(v.inputs.size())-1)];
+    // The manual iPhone discovery action is intentionally selectable before
+    // a phone is detected. A vanished explicit device is not that action.
+    if(!selected.connected&&selected.kind!="iphone-action"){
+     s.studioMessage="Selected input disconnected. Reconnect it or choose another source; recording has not started.";return;
+    }
+    host.stop_preview();engine.studioRack.punch.store(0);
    bool accepted=false;
    try{accepted=s.captureBackend->start(selected.id,v.channels,v.rate);}catch(...){v.state="error";v.message="Audio input could not start";}
    if(accepted)v.importedPath.clear();

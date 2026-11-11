@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Xeno Mosaic",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 83.0,
+    "freeze": false,
+    "level": 0.3799999952316284,
+    "panSpread": 0.5,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 1.2000000476837158,
+    "position": 0.39000001549720764,
+    "releaseMs": 128.0,
+    "reverseProbability": 0.5,
+    "scanSpeed": 2.0,
+    "sizeMs": 50.0,
+    "sprayMs": 290.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

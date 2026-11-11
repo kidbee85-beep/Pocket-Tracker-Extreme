@@ -64,9 +64,9 @@ constexpr PadDefault PAD_DEFAULTS[] = {
     // per CFW.
 };
 
-// One config section onto a live map: a listed button loses its own entries, then takes each input it
-// lists from whoever holds it. One input listed under two buttons goes to the later in enum order, and
-// is reported. Returns how many buttons the section listed.
+// Resolve each listed button before replacing its bindings. An empty list explicitly unbinds it;
+// an unrecognized list can come from another device and keeps the existing bindings. Valid inputs
+// are assigned in enum order, with later bindings winning and conflicts reported.
 template <typename Code, typename Resolve>
 int apply_bindings(std::vector<std::pair<Code, Button>>& map, const ButtonBindings& cfg,
                    const char* section, const char* what, Resolve resolve, int& skipped) {
@@ -76,9 +76,6 @@ int apply_bindings(std::vector<std::pair<Code, Button>>& map, const ButtonBindin
         const Button b = static_cast<Button>(i);
         if (!cfg[b]) continue;
         ++listed;
-        map.erase(std::remove_if(map.begin(), map.end(),
-                                 [b](const std::pair<Code, Button>& e) { return e.second == b; }),
-                  map.end());
         for (const std::string& name : *cfg[b]) {
             Code c{};
             if (!resolve(name, c)) {
@@ -88,6 +85,11 @@ int apply_bindings(std::vector<std::pair<Code, Button>>& map, const ButtonBindin
                 continue;
             }
             codes[i].emplace_back(c, &name);
+        }
+        if (cfg[b]->empty() || !codes[i].empty()) {
+            map.erase(std::remove_if(map.begin(), map.end(),
+                                     [b](const std::pair<Code, Button>& e) { return e.second == b; }),
+                      map.end());
         }
     }
 
@@ -291,11 +293,11 @@ void SdlInput::press(Button b, uint64_t now_ms) {
     }
 }
 
-void SdlInput::release(Button b) {
+void SdlInput::release(Button b, bool cancelled) {
     const size_t i = static_cast<size_t>(b);
     if (!held_[i]) return;
     held_[i] = false;
-    queue_.push_back({b, ButtonAction::RELEASED, mods_now()});
+    queue_.push_back({b, ButtonAction::RELEASED, mods_now(), cancelled});
 
     // Releasing the repeating button, or A or B (the modifiers that gave it its meaning), cancels it.
     if (repeatActive_ && (b == repeatButton_ || b == Button::A || b == Button::B)) {
@@ -428,11 +430,11 @@ bool SdlInput::poll(ButtonEvent& out) {
 }
 
 void SdlInput::reset() {
-    // ⚠️ Held buttons are released, not forgotten: consumers act on releases (the FX helper closes on
-    // A's). Through `release()`, so it looks exactly like the lost key-up.
+    // Release held modifiers so the UI can clean up. Studio must distinguish this from accepting
+    // a selection with a physical key-up.
     queue_.clear();   // presses for a window that no longer has focus
     for (size_t i = 0; i < static_cast<size_t>(Button::COUNT); ++i)
-        if (held_[i]) release(static_cast<Button>(i));
+        if (held_[i]) release(static_cast<Button>(i), true);
     repeatActive_   = false;
     triggerHeld_[0] = triggerHeld_[1] = false;
 }

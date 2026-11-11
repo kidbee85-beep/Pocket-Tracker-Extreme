@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Bent Shellac",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 30.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.17500001192092896,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.07999999821186066,
+    "position": 0.16499999165534973,
+    "releaseMs": 130.0,
+    "reverseProbability": 0.029999999329447746,
+    "scanSpeed": 0.4399999976158142,
+    "sizeMs": 29.0,
+    "sprayMs": 42.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

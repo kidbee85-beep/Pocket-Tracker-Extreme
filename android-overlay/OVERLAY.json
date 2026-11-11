@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "version": "1.0.0",
+  "version_code": 90510,
+  "shared_source_manifest_sha256": "f54c4a8921225f29cf4cd16f90843ffce779409f613c6483ea94494a5200f49a",
+  "shared_source_files": 8183,
+  "android_source_manifest_sha256": "bfd46717ddcdcec7099bc1b0e0c6a7d18022fa6d41c368bfe459dad68d128b90",
+  "android_source_files": 8184,
+  "entries": [
+    {
+      "source": {
+        "path": "app/src/main/java/com/conanizer/pockettracker/AndroidLiveRadio.kt",
+        "bytes": 17322,
+        "sha256": "0990ee59e4187d00b66da9abb7f40551adbd26b8ff4ec4a6ba914dec1efbfdbc"
+      },
+      "overlay": {
+        "path": "app/src/main/java/com/conanizer/pockettracker/AndroidLiveRadio.kt",
+        "bytes": 19132,
+        "sha256": "54181d717b9818514905f2b300fdf296732e3456ffc712734b1c703e7fd2d831"
+      }
+    },
+    {
+      "source": null,
+      "overlay": {
+        "path": "app/src/main/java/com/conanizer/pockettracker/AndroidRadioHistory.kt",
+        "bytes": 8254,
+        "sha256": "2ce0ae70009c94748eb64c2f9ebe522af54a26242bc3ebaa5aad72f6e704bacd"
+      }
+    },
+    {
+      "source": {
+        "path": "app/src/main/java/com/conanizer/pockettracker/SourceSampler.kt",
+        "bytes": 28663,
+        "sha256": "0a7cfd656fca03a5fd3629700c3435202071f84e0c479f5fada420c29d89cd7d"
+      },
+      "overlay": {
+        "path": "app/src/main/java/com/conanizer/pockettracker/SourceSampler.kt",
+        "bytes": 35714,
+        "sha256": "29c4fbab5277c9680297042fe0c89b612ff91f9a589196e25cad0d2c433b62eb"
+      }
+    },
+    {
+      "source": {
+        "path": "native/ui/dispatch/screens/file_browser.cpp",
+        "bytes": 39089,
+        "sha256": "d5b278657745330f9015b640e9f75367da5eba096ac56d32b3ccc6a9f48cfb63"
+      },
+      "overlay": {
+        "path": "native/ui/dispatch/screens/file_browser.cpp",
+        "bytes": 39320,
+        "sha256": "da38ff5dcfdb0953b4dcc4966f133f3cd0677f8433340662d4c8bc717f60e556"
+      }
+    },
+    {
+      "source": {
+        "path": "native/ui/filesystem.h",
+        "bytes": 8188,
+        "sha256": "d87dec6d866327405fe16d18ed6e2f5ab23388f8b41f8c523ee453cf6405f599"
+      },
+      "overlay": {
+        "path": "native/ui/filesystem.h",
+        "bytes": 8743,
+        "sha256": "fe9c1ee8b5cdf406a7549343efecf92dfcc54a2fade81d9f752ba73a06c876bb"
+      }
+    },
+    {
+      "source": {
+        "path": "native/ui/modules/file_browser.cpp",
+        "bytes": 23357,
+        "sha256": "062f3e927c5abc9d1bb43d2f4649734a9f95bdb5a8f5b4eca883a4a11d508876"
+      },
+      "overlay": {
+        "path": "native/ui/modules/file_browser.cpp",
+        "bytes": 23502,
+        "sha256": "89226fce3fcd4f7dafc09e87d44d5368056e343a4054d6b43b6e878583a6cddd"
+      }
+    },
+    {
+      "source": {
+        "path": "native/ui/modules/file_browser.h",
+        "bytes": 7890,
+        "sha256": "4ff8af854b2cfe4bca4d7fa954ed24b9e1461247c9c74cc5a0acd797ec196cbe"
+      },
+      "overlay": {
+        "path": "native/ui/modules/file_browser.h",
+        "bytes": 7939,
+        "sha256": "145d2672477cc1db1a8d75c1f9ef10645b5033fbf67793497bcd9372faa09c34"
+      }
+    },
+    {
+      "source": {
+        "path": "native/ui/sample_granular_recording.cpp",
+        "bytes": 9134,
+        "sha256": "67c93cba2325484fe44bea9d5814136fb7f7d9f0c7c0995f0ed64f66fc611885"
+      },
+      "overlay": {
+        "path": "native/ui/sample_granular_recording.cpp",
+        "bytes": 9119,
+        "sha256": "9da4fcbd3c564aa53dfc92766bf1cbdb1d31afadaf47c999c648168a8021e1c0"
+      }
+    },
+    {
+      "source": {
+        "path": "shell/android/saf-filesystem.cpp",
+        "bytes": 35833,
+        "sha256": "ed883295f499736cfa3c58c418bfcb18636f47ca6cac1fdef6566890cbc1a567"
+      },
+      "overlay": {
+        "path": "shell/android/saf-filesystem.cpp",
+        "bytes": 37728,
+        "sha256": "25faa8c80932ea1eedb7e092741b2b85ea3abc57e2c8e5104772fdce4f2fa932"
+      }
+    },
+    {
+      "source": {
+        "path": "shell/android/saf-filesystem.h",
+        "bytes": 9895,
+        "sha256": "a12b8a1884afd5e1243e2878e846107acf2f7846b4c3ecd15fa1f7449799e3b6"
+      },
+      "overlay": {
+        "path": "shell/android/saf-filesystem.h",
+        "bytes": 10175,
+        "sha256": "dfe8d3d0c1fde14383439ebb9063891dccbfa47b5b75941e3fef939bc413f6ee"
+      }
+    }
+  ]
+}

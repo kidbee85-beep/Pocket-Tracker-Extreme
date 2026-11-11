@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Warm Dropout",
+  "parameters": {
+    "attackMs": 3.0,
+    "densityHz": 25.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.3500000238418579,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.6399999856948853,
+    "position": 0.48000001907348633,
+    "releaseMs": 200.0,
+    "reverseProbability": 0.05999999865889549,
+    "scanSpeed": 0.7200000286102295,
+    "sizeMs": 64.0,
+    "sprayMs": 126.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Backward Rain",
+  "parameters": {
+    "attackMs": 1.0,
+    "densityHz": 51.0,
+    "freeze": true,
+    "level": 0.3799999952316284,
+    "panSpread": 0.699999988079071,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 2.0,
+    "position": 0.5699999928474426,
+    "releaseMs": 160.0,
+    "reverseProbability": 0.699999988079071,
+    "scanSpeed": -0.5,
+    "sizeMs": 78.0,
+    "sprayMs": 430.0,
+    "windowShape": 1.0
+  },
+  "version": 1
+}

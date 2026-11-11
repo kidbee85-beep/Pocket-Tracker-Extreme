@@ -23,22 +23,29 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
     private val main = Handler(Looper.getMainLooper())
     private val work = ThreadPoolExecutor(2, 2, 0L, TimeUnit.MILLISECONDS, ArrayBlockingQueue(4),
         { task -> Thread(task, "PocketSourceSampler") })
+    private val radioWork = ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, ArrayBlockingQueue(1),
+        { task -> Thread(task, "TrackWerkLiveRadio") })
+    private val radioAvailable by lazy { runCatching { AndroidRadioCatalog.stations.isNotEmpty() }.getOrDefault(false) }
     private var token = SourceCancel()
     private var generation = 0
     @Volatile private var closed = false
     @Volatile private var cached = "{\"status\":\"idle\",\"clip_ready\":false,\"busy\":false}"
-    private var provider = "archive"; private var genre = "Jazz"; private var query = ""
+    private var provider = "archive"; private var genre = "Jazz"; private var query = ""; private var collection = ""
     private var status = "idle"; private var message = "Choose a genre or search for music"; private var error = ""
     private var results = emptyList<SourceItem>(); private var tracks = emptyList<SourceTrack>()
     private var sourceResults = emptyList<SourceItem>(); private var sourceTracks = emptyList<SourceTrack>()
     private var sortTitle = false
     private var selected = -1; private var trackIndex = -1; private var activeTrack: SourceTrack? = null
     private var player: MediaPlayer? = null
+    private var liveSession: AndroidLiveRadio? = null
+    private var liveSeconds = 30
     private var prepared = false; private var playing = false; private var recording = false
     private var autoPlayRequested = false
     private var pendingSeek: Long? = null
     private var duration = 0L; private var position = 0L; private var inMs = 0L; private var outMs = 0L
     private var clip: RenderedSourceClip? = null; private var progress = 0f
+    private var clipRequest = 0L
+    private var recordRequest = 0L
     private val ticker = object : Runnable {
         override fun run() {
             if (closed || !playing) return
@@ -63,15 +70,19 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
     private fun trackJson(track: SourceTrack): JSONObject = JSONObject().put("id",track.id).put("title",track.title)
         .put("creator",track.creator).put("url",track.itemUrl).put("license",track.licenseUrl).put("duration_ms",track.durationMs)
         .put("description",track.description).put("tags",JSONArray(track.tags)).put("instruments",JSONArray(track.instruments))
+        .put("kind", if (track.live) "LIVE MP3" else "audio")
     private fun publish() {
         val current = activeTrack
         val item = results.getOrNull(selected)
         cached = JSONObject().apply {
-            put("status", status); put("provider", provider); put("genre", genre); put("query", query)
-            put("busy", status in listOf("searching", "loading", "rendering")); put("message", message); put("error", error)
+            put("status", status); put("provider", provider); put("genre", genre); put("query", query); put("collection", collection)
+            put("capabilities", JSONObject().put("live_mp3", radioAvailable).put("preview_gain", false)
+                .put("favorites", false).put("take_request_id", true))
+            put("busy", status in listOf("searching", "loading", "connecting", "rendering")); put("message", message); put("error", error)
             put("providers", JSONArray().put(JSONObject().put("id", "archive").put("name", "Internet Archive").put("available", true))
                 .put(JSONObject().put("id", "commons").put("name", "Wikimedia Commons").put("available", true))
-                .put(JSONObject().put("id", "youtube").put("name", "YouTube").put("available", true)))
+                .put(JSONObject().put("id", "youtube").put("name", "YouTube").put("available", true))
+                .put(JSONObject().put("id", "radio_browser").put("name", "Curated radio").put("available", radioAvailable)))
             put("results", JSONArray(results.map { itemJson(it) })); put("selected_index", selected)
             put("tracks", JSONArray(tracks.map { trackJson(it) })); put("sort_order",if(sortTitle) "title" else "source")
             put("track_index", trackIndex); put("title", current?.title ?: item?.title.orEmpty())
@@ -81,13 +92,15 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
             put("tags",JSONArray(current?.tags ?: item?.tags.orEmpty()))
             put("instruments",JSONArray(current?.instruments ?: item?.instruments.orEmpty()))
             put("position_ms", position); put("duration_ms", duration); put("in_ms", inMs); put("out_ms", outMs)
+            put("live", current?.live == true); put("live_capture_seconds", liveSeconds)
             put("playing", playing); put("recording", recording); put("rendering", status == "rendering")
             put("clip_path", clip?.file?.absolutePath.orEmpty()); put("clip_ready", clip != null)
             put("clip_frames", clip?.frames ?: 0); put("clip_rate", clip?.rate ?: 0); put("clip_channels", clip?.channels ?: 0)
+            put("clip_request_id", clipRequest)
             put("progress", progress.toDouble())
         }.toString()
     }
-    private fun clearClip() { clip = null; progress = 0f }
+    private fun clearClip() { clip = null; progress = 0f; clipRequest = 0L }
     private fun failure(problem: Throwable) {
         releasePlayer()
         status = "error"; error = problem.message?.take(400) ?: "Source operation failed"; message = error; playing = false; recording = false
@@ -95,8 +108,14 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
     }
     private fun releasePlayer() {
         main.removeCallbacks(ticker); playing = false; prepared = false; recording = false; autoPlayRequested = false; pendingSeek = null
+        releaseLive()
         val old = player; player = null
         try { old?.release() } catch (_: Exception) {}
+    }
+    private fun releaseLive() {
+        liveSession?.cancel()
+        liveSession = null
+        radioWork.queue.clear()
     }
     private fun newJob(): Pair<Int, SourceCancel> {
         token.cancel(); work.queue.clear(); token = SourceCancel(); ++generation
@@ -122,23 +141,37 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
     }
     private fun search(args: JSONObject, discover: Boolean = false) {
         val nextProvider = args.optString("provider", provider)
-        require(nextProvider in listOf("archive", "youtube", "commons")) { "Unknown source provider" }
+        val radio = nextProvider == "radio_browser"
+        require(nextProvider in listOf("archive", "youtube", "commons") || (radio && radioAvailable)) { "Unknown source provider" }
+        val selectedCollection = when {
+            nextProvider == "archive" -> args.optString("collection").take(60)
+            radio && args.optString("collection") == "stations" -> "stations"
+            else -> ""
+        }
+        collection = selectedCollection
         provider = nextProvider; query = if(discover) "" else args.optString("query", query).take(240)
-        genre = args.optString("genre", genre).take(80).ifBlank { if(discover) "music" else "" }
-        require(query.isNotBlank() || genre.isNotBlank()) { "Enter a search or select a genre" }
+        genre = args.optString("genre", genre).take(80).ifBlank { if (discover && !radio) "music" else "" }
+        require(radio || query.isNotBlank() || genre.isNotBlank() || selectedCollection.isNotBlank()) { "Enter a search or select a genre" }
         releasePlayer(); clearClip(); activeTrack = null; results = emptyList(); tracks = emptyList()
         sourceResults=emptyList();sourceTracks=emptyList();if(discover) sortTitle=false
         selected = -1; trackIndex = -1; position = 0; duration = 0; inMs = 0; outMs = 0
         val term = if(discover&&genre.equals("library",true)) "library music" else genre
         val text = (query + " " + term).trim(); val selectedProvider = provider
-        message = "Searching ${if (provider == "archive") "Internet Archive" else if (provider == "commons") "Wikimedia Commons" else "YouTube"}"
+        message = "Searching " + when (selectedProvider) {
+            "archive" -> "Internet Archive"
+            "commons" -> "Wikimedia Commons"
+            "radio_browser" -> "curated radio"
+            else -> "YouTube"
+        }
         background("searching", { cancel -> when (selectedProvider) {
             "youtube" -> YouTubeFacade.search(text)
             "commons" -> CommonsSource.search(text)
-            else -> WebSourceArchive.search(query, term, cancel, discover)
-        }.let { if(discover&&selectedProvider!="archive") it.shuffled() else it } }) { found ->
+            "radio_browser" -> AndroidRadioCatalog.search(query, genre, discover)
+            else -> WebSourceArchive.search(query, term, cancel, discover, selectedCollection)
+        }.let { if (discover && selectedProvider in listOf("youtube", "commons")) it.shuffled() else it } }) { found ->
             sourceResults=found.take(60);results=sourceResults;reorder(sortTitle)
-            status = "results"; message = if (results.isEmpty()) "No matching public audio found" else
+            status = "results"; message = if (radio) "${results.size} curated MP3 stations; open a result to listen" else
+                if (results.isEmpty()) "No matching public audio found" else
                 if(discover) "${results.size} random ${genre} finds; Right enters the list, A opens a result"
                 else "${results.size} results; open an item to list its tracks"
         }
@@ -160,6 +193,7 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
         background("loading", { cancel -> when (selectedProvider) {
             "youtube" -> YouTubeFacade.open(item)
             "commons" -> CommonsSource.open(item.id)
+            "radio_browser" -> listOf(AndroidRadioCatalog.stations.first { it.id == item.id }.track())
             else -> WebSourceArchive.open(item, cancel)
         } }) { found -> sourceTracks=found.take(150);tracks=sourceTracks;reorder(sortTitle)
             status = "tracks"; message = "${tracks.size} tracks; Right enters the list, Up / Down browses" }
@@ -168,6 +202,15 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
         val track = tracks.getOrNull(index) ?: throw IllegalArgumentException("Choose a track")
         releasePlayer(); clearClip(); activeTrack = null; trackIndex = index; autoPlayRequested = autoPlay
         position = 0; duration = 0; inMs = 0; outMs = 0; message = "Preparing audio preview"
+        if (track.live) {
+            newJob()
+            activeTrack = track
+            status = "ready"
+            error = ""
+            message = "LIVE MP3 station. Play or Record to connect."
+            if (autoPlay) startLive()
+            return
+        }
         val selectedProvider = provider
         background("loading", { _ -> when (selectedProvider) {
             "youtube" -> YouTubeFacade.resolve(track)
@@ -213,7 +256,83 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
         media.prepareAsync()
     }
     private fun currentPosition(): Long = pendingSeek ?: try { if (prepared) player?.currentPosition?.toLong() ?: position else position } catch (_: Exception) { position }
+    private fun startLive() {
+        if (liveSession != null) return
+        val track = checkNotNull(activeTrack)
+        val station = AndroidRadioCatalog.stations.first { it.id == track.id }
+        beforePlay()
+        status = "connecting"; error = ""; message = "Connecting to LIVE MP3"
+        position = 0; prepared = false; playing = false
+        lateinit var session: AndroidLiveRadio
+        session = AndroidLiveRadio(station, File(activity.filesDir, "SourceSamples"), RadioEvents(
+            ready = {
+                main.post {
+                    if (!closed && liveSession === session) {
+                        prepared = true; playing = true
+                        if (!recording && status != "rendering") {
+                            status = "live"; message = "LIVE MP3. Choose a take length and Record."
+                        }
+                        publish()
+                    }
+                }
+            },
+            progress = { at, ratio ->
+                main.post {
+                    if (!closed && liveSession === session) {
+                        position = at
+                        if (recording) progress = ratio
+                        publish()
+                    }
+                }
+            },
+            complete = { take, detail ->
+                main.post {
+                    if (!closed && liveSession === session) {
+                        clip = take?.clip; clipRequest = take?.requestId ?: 0L
+                        recording = false; progress = if (take == null) 0f else 1f
+                        status = if (take == null) "error" else "clip_ready"
+                        error = if (take == null) detail else ""
+                        message = detail
+                        publish()
+                    } else if (take != null) {
+                        take.clip.file.delete()
+                        File(take.clip.file.path + ".source.json").delete()
+                    }
+                }
+            },
+            ended = { detail ->
+                main.post {
+                    if (!closed && liveSession === session) {
+                        liveSession = null; playing = false; recording = false; prepared = false
+                        status = if (clip == null) "error" else "clip_ready"
+                        error = if (clip == null) detail else ""
+                        message = detail
+                        publish()
+                    }
+                }
+            }
+        ))
+        liveSession = session
+        radioWork.execute { session.run() }
+    }
+    private fun recordLive(args: JSONObject) {
+        val enabled = if (args.has("enabled")) args.optBoolean("enabled") else !recording
+        if (enabled) {
+            startLive()
+            if (liveSession?.startTake(liveSeconds, args.optLong("request_id", 0)) != true) {
+                message = "A live take is already running or the station has ended"
+                return
+            }
+            clearClip()
+            recording = true; status = "recording"; message = "Recording up to ${liveSeconds}s of live audio"
+        } else {
+            if (!recording) return
+            liveSession?.finishTake()
+            recording = false; status = "rendering"; message = "Finishing the live WAV"
+        }
+    }
     private fun play() {
+        if (activeTrack?.live == true) { startLive(); return }
         if (!prepared || player == null) {
             check(trackIndex in tracks.indices) { "Select an audio track first" }
             chooseTrack(trackIndex, true); return
@@ -223,16 +342,27 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
         main.removeCallbacks(ticker); main.post(ticker)
     }
     private fun pause() {
+        if (activeTrack?.live == true) {
+            if (recording || status == "rendering") {
+                message = "Finish the live take with Record, or cancel it with Stop"
+                return
+            }
+            releaseLive(); playing = false; prepared = false
+            status = if (clip == null) "ready" else "clip_ready"
+            message = "Live preview stopped. Play reconnects to the station."
+            return
+        }
         position = currentPosition(); if (playing) player?.pause(); playing = false; main.removeCallbacks(ticker)
         status = if (clip != null) "clip_ready" else "ready"
     }
     private fun range(start: Long, end: Long) {
-        check(prepared) { "Select a prepared audio track first" }
+        check(prepared && activeTrack?.live != true) { "Mark IN / OUT on a finite audio track" }
         clearClip(); inMs = start.coerceIn(0, maxOf(0, duration - 1)); outMs = end.coerceIn(inMs + 1, minOf(duration, inMs + 180000))
         message = "Selected ${(outMs - inMs) / 1000.0} seconds"
     }
-    private fun render() {
+    private fun render(requestId: Long = recordRequest) {
         val track = activeTrack ?: throw IllegalStateException("Select an audio track first")
+        check(!track.live) { "Use Record to capture a timed live take" }
         if (recording) { recording = false; outMs = minOf(currentPosition(), inMs + 180000) }
         pause(); check(outMs > inMs && outMs - inMs <= 180000) { "Mark a region of up to 180 seconds" }
         clearClip(); val from = inMs; val until = outMs; val selectedProvider = provider
@@ -257,7 +387,8 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
                 sidecar.writeText(credits.toString(2)); cancel.check()
                 main.post {
                     if (generation == id && !closed) {
-                        clip = output; progress = 1f; status = "clip_ready"; message = "Clip rendered; Import loads it into the selected instrument"; publish()
+                        clip = output; clipRequest = requestId; progress = 1f; status = "clip_ready"
+                        message = "Clip rendered; Import loads it into the selected instrument"; publish()
                     } else { output.file.delete(); sidecar.delete() }
                 }
             } catch (e: Exception) {
@@ -291,9 +422,12 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
                 else chooseTrack(index,true)
             }
             "play" -> play()
-            "pause" -> { if (recording) { outMs = minOf(currentPosition(), inMs + 180000); recording = false }; pause() }
+            "pause" -> {
+                if (recording && activeTrack?.live != true) { outMs = minOf(currentPosition(), inMs + 180000); recording = false }
+                pause()
+            }
             "seek" -> {
-                check(prepared) { "Select audio before seeking" }; recording = false
+                check(prepared && activeTrack?.live != true) { "Select finite audio before seeking" }; recording = false
                 position = args.optLong("position_ms", position).coerceIn(0, duration)
                 pendingSeek = position
                 player?.seekTo(position, MediaPlayer.SEEK_CLOSEST)
@@ -302,12 +436,27 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
             "mark_out" -> { val end = args.optLong("position_ms", currentPosition()); check(end > inMs) { "OUT must be after IN" }; range(inMs, end) }
             "set_region" -> range(args.optLong("in_ms", inMs), args.optLong("out_ms", outMs))
             "record" -> {
+                if (activeTrack?.live == true) {
+                    recordLive(args)
+                    return
+                }
                 check(prepared) { "Select audio before marking a range" }; clearClip()
                 val enabled = if (args.has("enabled")) args.optBoolean("enabled") else !recording
+                recordRequest = args.optLong("request_id", recordRequest)
                 if (enabled) { inMs = currentPosition().coerceAtMost(maxOf(0, duration - 1)); outMs = inMs; recording = true; if (!playing) play() }
-                else { outMs = minOf(currentPosition(), inMs + 180000); recording = false; pause(); render() }
+                else { outMs = minOf(currentPosition(), inMs + 180000); recording = false; pause(); render(recordRequest) }
             }
-            "render" -> render()
+            "render" -> render(args.optLong("request_id", 0))
+            "live_length" -> {
+                val seconds = args.optInt("seconds", 30)
+                require(seconds in liveRadioTakeLengths) { "Choose a live take of 10, 20, 30, 40, 45 or 60 seconds" }
+                if (recording || status == "rendering") {
+                    message = "Finish the current live take before changing its length"
+                } else {
+                    liveSeconds = seconds
+                    message = "Live take length ${seconds}s"
+                }
+            }
             "info" -> {
                 val item = results.getOrNull(selected)
                 val urls = (listOf(activeTrack?.itemUrl.orEmpty(), activeTrack?.licenseUrl.orEmpty(), item?.itemUrl.orEmpty(), item?.licenseUrl.orEmpty()) +
@@ -324,10 +473,10 @@ internal class SourceSampler(private val activity: Activity, private val beforeP
         }
     }
     fun close() {
-        closed = true; token.cancel(); work.shutdownNow()
+        closed = true; token.cancel(); work.shutdownNow(); radioWork.shutdownNow()
         if (Looper.myLooper() == Looper.getMainLooper()) releasePlayer() else main.post { releasePlayer() }
     }
     companion object {
-        private val ACTIONS = setOf("search", "discover", "sort", "listen", "query_dialog", "open", "track", "play", "pause", "seek", "mark_in", "mark_out", "set_region", "record", "render", "cancel", "stop", "info")
+        private val ACTIONS = setOf("search", "discover", "sort", "listen", "query_dialog", "open", "track", "play", "pause", "seek", "mark_in", "mark_out", "set_region", "record", "render", "live_length", "cancel", "stop", "info")
     }
 }

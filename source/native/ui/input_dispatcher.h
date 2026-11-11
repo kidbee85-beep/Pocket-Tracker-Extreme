@@ -42,6 +42,7 @@
 #include "ui/project_actions.h"
 
 #include <functional>
+#include <optional>
 
 #include <string>
 #include <utility>
@@ -70,6 +71,8 @@ class InputDispatcher {
     // The frame's clock, once per frame before the events. Runs what is due: the sample editor's
     // audition restore, the autosave, the status lines' auto-dismiss.
     void set_now(long long now_ms);
+    // Studio's raw handler already marks the document version. It shares this debounce.
+    void arm_studio_autosave();
     void open_imported_sample_editor() {open_sample_editor();}
     // Long WAV browser entry. Public for native workflow checks and alternative frontends.
     bool open_large_sample(const std::string& path,const std::string& title,bool autoPlay=false,bool onlyIfNeeded=false);
@@ -128,7 +131,7 @@ class InputDispatcher {
     void on_a_a();
 
     // Release of A: commits the FX helper's highlighted effect.
-    void on_a_released();
+    void on_a_released(bool cancelled = false);
 
     // A went down or up, whatever it then does.
     void on_a_held(bool down) { s_.aHeld = down; }
@@ -193,6 +196,13 @@ class InputDispatcher {
     // R+SELECT: open Studio on musical screens; SELECT+R creates a folder in the browser.
     void on_select_r();
     void on_select_l();
+    // Phrase SELECT chords are local to the editor, with no modal open.
+    bool phrase_editor_context() const;
+    bool on_phrase_history(Button direction, bool reclaimArrow);
+    bool on_phrase_history_arrow(Button direction);
+    bool on_phrase_overview(Button direction);
+    bool arm_phrase_rotation();
+    void on_phrase_rotate(Button action);
 
     // ── The plain buttons ────────────────────────────────────────────────────────────────────────
     // B inside a selection copies it and exits.
@@ -204,8 +214,9 @@ class InputDispatcher {
 
     // A button went down: put help away (the compact panel on any press but SELECT, the overlay on any).
     void on_help_dismiss();
+    void on_help_button(Button button);
 
-    bool help_full_open() const { return s_.helpFull; }
+    bool help_full_open() const { return s_.helpOpen || s_.helpFull; }
     bool punch_open() const { return s_.studioOpen&&s_.studioTab==3; }
     // The mapper closes the overlay on any press and consumes it, so nothing reaches this.
     GestureResult help_layer(Gesture) { return GestureResult::TAKEN; }
@@ -457,6 +468,26 @@ class InputDispatcher {
     FillMemory    fill_{};
     songcore::Rng fillRng_{};
     void phrase_fill(Gesture g);
+
+    struct PhraseCheckpoint {
+        const songcore::Project* project;
+        int phraseId;
+        PhraseEditHistory::Rows rows;
+    };
+    struct PhraseArrow {
+        int phraseId = -1, version = 0;
+        CursorPosition before{}, after{}, endAfter{};
+        Selection selection{};
+    };
+    struct PhraseRotation {
+        int phraseId = -1, version = 0;
+        Selection selection{};
+    };
+    PhraseEditHistory phraseHistory_{};
+    PhraseArrow phraseArrow_{};
+    PhraseRotation phraseRotation_{};
+    std::optional<PhraseCheckpoint> phrase_checkpoint() const;
+    void record_phrase_edit(const std::optional<PhraseCheckpoint>&);
 
     // Where the first A of an A,A landed; it counts only if the cursor did not move.
     bool         hasInsertPos_ = false;
@@ -759,8 +790,9 @@ class InputDispatcher {
     // SELECT+R: create a folder here.
     void browser_new_folder();
     // Back to the screen it was opened from, dropping the audition.
-    void close_file_browser();
+    void close_file_browser(bool viaBack=false);
     void remember_sample_browser();
+    void resume_sample_granular_from_editor(bool viaBack=false);
     void open_sample_browser_folder(const std::string& fallback);
     // Re-list the current directory in place.
     void refresh_browser();
@@ -967,10 +999,21 @@ class InputDispatcher {
     // "ARE YOU SURE?" on B over a modified sample: A discards and leaves, B stays.
     bool sample_close_open() const { return on_sample_editor() && s_.sampleEditor.showConfirmClose; }
     GestureResult sample_close_layer(Gesture g);
+    bool sample_slice_review_open() const {
+        return on_sample_editor() && (s_.sampleEditor.hitReview.open ||
+                                      s_.sampleEditor.chopReview.open() ||
+                                      s_.sampleEditor.levelEdit.open());
+    }
+    GestureResult sample_slice_review_layer(Gesture g);
+    GestureResult sample_hit_review_layer(Gesture g);
+    GestureResult sample_chop_review_layer(Gesture g);
+    GestureResult sample_level_layer(Gesture g);
+    bool apply_sample_level(int first, int end, float factor, bool normalize, bool limited);
+    void stop_sample_editor_preview();
 
     // START toggles the audition of the selection, with the FX row's effect on it (SYNC included).
     // The one audition a plain press does not silence.
-    void sample_editor_audition();
+    void sample_editor_audition(int64_t first = -1, int64_t end = -1);
 
     // Rows 3..8: the D-pad drags the selection instead of moving a cursor.
     bool on_sample_selection_row() const {
@@ -978,9 +1021,9 @@ class InputDispatcher {
     }
 
     // INSTRUMENT's EDIT button. Samplers only.
-    void open_sample_editor();
+    void open_sample_editor(bool fromGranularCrop=false);
     // B on an unmodified sample: free the undo, drop the scratch slots, go back.
-    void close_sample_editor();
+    void close_sample_editor(bool viaBack=false);
 
     // Build the editor's session from the sample the engine holds; separate because the editor's LOAD
     // re-enters on different audio. ⚠️ Must not touch `previousScreen` (the editor's return target).
@@ -1053,6 +1096,9 @@ class InputDispatcher {
 
     // CHOP: every slice to `Samples/Chops/<name>/` as its own WAV.
     void sample_editor_chop();
+    void export_sample_chops();
+    void sample_editor_to_instrument();
+    void sample_editor_find_hits();
 
     // The slice (start, end) pairs the current method defines.
     std::vector<std::pair<int64_t, int64_t>> current_slices() const;

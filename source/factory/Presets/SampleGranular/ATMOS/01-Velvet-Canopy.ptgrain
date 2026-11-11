@@ -1,0 +1,21 @@
+{
+  "kind": "sample-granular",
+  "name": "Velvet Canopy",
+  "parameters": {
+    "attackMs": 150.0,
+    "densityHz": 12.0,
+    "freeze": false,
+    "level": 0.41999998688697815,
+    "panSpread": 0.4000000059604645,
+    "pitchSemitones": 0.0,
+    "pitchSpraySemitones": 0.10000000149011612,
+    "position": 0.11999999731779099,
+    "releaseMs": 600.0,
+    "reverseProbability": 0.0,
+    "scanSpeed": 0.03999999910593033,
+    "sizeMs": 180.0,
+    "sprayMs": 25.0,
+    "windowShape": 0.0
+  },
+  "version": 1
+}

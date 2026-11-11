@@ -1,0 +1,25 @@
+TrackWerk 1.0.0 Android corresponding source
+
+The Linux handhelds use the shared source/ tree in this archive. The Android
+APKs use that tree with the ten files under android-overlay/files/ applied.
+The Android overlay preserves the tested radio and Android folder access code.
+
+From the root of the extracted source package, create a new Android build tree.
+
+    python3 android-overlay/apply_android_overlay.py source android-source
+
+The helper checks the shared source and every overlay file and verifies the
+result. The expected source digests are recorded in OVERLAY.json.
+
+Use the Gradle wrapper from android-source/ and the Android SDK, NDK, CMake and
+JDK versions supported by the project. From android-source/ run
+
+    ./gradlew :app:assembleRelease
+
+The normal TrackWerk package is com.kidbunka.trackwerk. Builds for the existing
+private test identity use -PptLegacyPrivateUpdate=true and the matching local
+signing configuration. APK signing keys and credentials are separate from the
+software source. Android accepts updates to an installed app only when its
+application identity and signing certificate match the installed app.
+
+The GPL and component notices are in the shared source tree.

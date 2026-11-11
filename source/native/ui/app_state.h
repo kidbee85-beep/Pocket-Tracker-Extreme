@@ -12,6 +12,9 @@
 #include "live_resample_state.h"
 #include "drumlab.h"
 #include "source_sampler.h"
+#include "sample_granular_state.h"
+#include "studio_synth_picker.h"
+#include "studio_workspace.h"
 #include "ui/folder_config.h"
 #include "ui/fx_helper.h"
 #include "ui/map_picker.h"
@@ -19,6 +22,7 @@
 #include "ui/modules/effects_editor.h"
 #include "ui/modules/eq_editor.h"
 #include "ui/modules/file_browser.h"
+#include "ui/modules/phrase_editor.h"
 #include "ui/modules/qwerty_keyboard.h"
 #include "ui/modules/render_dialog.h"
 #include "ui/modules/sample_editor.h"
@@ -34,6 +38,7 @@
 #include "songcore/midi_out.h"   // IMidiOut
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -41,12 +46,29 @@ namespace pt::ui {
 
 class Clipboard;   // only pointed at, for the readout
 
+struct StudioSynthSound {
+    songcore::Instrument draft;
+    int model;
+    int variation;
+    int harmonics;
+    int timbre;
+    int morph;
+    bool custom;
+};
+
+struct StudioSynthCompare {
+    std::optional<StudioSynthSound> alternate;
+    bool focused = false;
+    bool listeningToA = false;
+};
+
 struct AppState {
     CaptureBackend* captureBackend=nullptr;
     CaptureView capture;
     LiveResampleView resampleView;
     DrumLabState drumLab;
     SourceSamplerState sourceSampler;
+    SampleGranularUIState sampleGranular;
     LocalSampleRangeState localSampleRange;
     std::string sourceImportedFor, sourceImportedPath;
     bool pendingSampleEditor=false;
@@ -60,14 +82,22 @@ struct AppState {
     int studioHelpTopic=0, studioHelpPage=0;
     uint16_t studioHelpHeldButtons=0;  // Consume releases of buttons used under modal help.
     int studioTab=0, studioRow=0, studioModel=0, studioVariation=0, studioEffectPreset=0, studioMasterPreset=0, studioPunch=1;
+    uint16_t studioTabNavHeld=0;  // One global tab move per held B+horizontal gesture.
+    bool studioAppearanceSettings=false;
+    int studioAppearanceReturnTab=0;
     int studioFxUserSlot=0, studioMasterUserSlot=0;
     int studioHarmonics=89, studioTimbre=107, studioMorph=128;
     bool studioSynthCustom=false;
     bool studioConfirm=false, studioAUsed=false, studioBUsed=false;
     bool studioShortcutRelease=false, studioAuditionHeld=false, studioLiveBound=false;
+    StudioWorkspaceState studioWorkspace;
+    uint16_t studioInputSuppress = 0;  // Held buttons consumed by a Studio modal or screen transition.
+    uint16_t studioPunchBankHeld = 0;  // A single shoulder tap changes bank on release.
     int studioSynthPage=0, studioSynthInstrument=-1, studioSynthColumn=0;
     std::string studioBoundUri;
     songcore::Instrument studioDraft;
+    StudioSynthPickerState studioSynthPicker;
+    StudioSynthCompare studioSynthCompare;
     // ⚠️ The one Project the host owns, edited in place (`host.edit_project()`) — never a copy.
     songcore::Project* project = nullptr;
 
@@ -142,6 +172,7 @@ struct AppState {
 
     // Which slot of each pool is being edited.
     int currentPhrase     = 0;
+    PhraseOverview phraseOverview = PhraseOverview::AUDIO;
     int currentChain      = 0;
     int currentInstrument = 0;
     int currentTable      = 0;
@@ -188,6 +219,8 @@ struct AppState {
     // The peak hold counts `peaksVersion`, not frames.
     float    trackPeaks[16] = {};   // L/R per track
     float    masterPeaks[2] = {};
+    float    masterMaximum[2] = {};  // post-master output since clearing
+    float    limiterInputMaximum = 0.0f;
     float    sendPeaks[4]   = {};   // revL, revR, delL, delR
     unsigned peaksVersion   = 0;
 
@@ -222,7 +255,9 @@ struct AppState {
         LOAD_REVERB,        // a .ptr into EFFECTS' reverb section
         LOAD_DELAY,         // a .ptd into EFFECTS' delay section
         LOAD_STUDIO_FX,     // a .ptfx into the independent Studio FX group
-        LOAD_STUDIO_MASTER  // a .ptmaster into the independent mastering group
+        LOAD_STUDIO_MASTER, // a .ptmaster into the independent mastering group
+        LOAD_GRANULAR_SAMPLE, // audio, with existing long-WAV Crop support
+        LOAD_GRANULAR_PRESET  // .ptgrain settings or explicit relative sample patch
     };
     BrowserPurpose browserPurpose = BrowserPurpose::LOAD_SOURCE;
 
@@ -352,12 +387,8 @@ struct AppState {
     std::string statusMessage{};
     bool        statusSuccess = true;
 
-    // The compact help panel (HELP = SHORT): covers only the strip and swallows no button, so the text
-    // follows the cursor.
+    // Quick actions and the detailed guide are two views of the same contextual modal.
     bool helpOpen = false;
-
-    // The full help overlay (HELP = FULL): a layer, dims the frame, consumes its closing press. Never
-    // both flags at once.
     bool helpFull = false;
 
     // EXPORT renders synchronously with the audio paused; the frame is repainted from the progress.
@@ -406,7 +437,7 @@ inline bool stretch_editor_up(const AppState& s) {
 inline bool modal_backdrop_active(const AppState& s) {
     // A load is not here: its strip dims nothing.
     return s.qwerty.isOpen || s.confirm.is_open() || s.fxHelper.isOpen || s.mapPicker.isOpen ||
-           s.helpFull || s.renderDialog.isOpen || send_editor_drawn(s) || stretch_editor_up(s);
+           s.helpOpen || s.helpFull || s.renderDialog.isOpen || send_editor_drawn(s) || stretch_editor_up(s);
 }
 
 // Does a full-screen module own the frame (no furniture)? ⚠️ `draw` and `has_falling_meters` both ask

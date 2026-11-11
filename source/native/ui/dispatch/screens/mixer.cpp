@@ -2,20 +2,37 @@
 
 #include "ui/dispatch/dispatch_common.h"
 
+#include "songcore/project_ops.h"
 #include "ui/fx_preset_bank.h"
 #include "ui/fx_preset_io.h"     // .ptr / .ptd
+#include "ui/mixer_cell_layout.h"
 
 #include <algorithm>
 #include <string>
 
 namespace pt::ui {
 
-// A opens the EQ editor from the master EQ cell and the send editor from the two returns, on the
-// release; nothing else here answers a bare A.
+// A clears the output maximum on MIX, or opens the editor on EQ and the two returns.
 GestureResult InputDispatcher::mixer_screen(Gesture g) {
     switch (g) {
         case Gesture::A:
-            open_sub_screen_at_cursor(/*peek=*/false);
+            if (mixer_cell_at(s_.mixerMasterRow, s_.mixerCursorColumn) == MixerCell::MASTER_VOL) {
+                host_.clear_master_maximum();
+                s_.masterMaximum[0] = s_.masterMaximum[1] = 0.0f;
+                s_.limiterInputMaximum = 0.0f;
+            } else {
+                open_sub_screen_at_cursor(/*peek=*/false);
+            }
+            return GestureResult::TAKEN;
+        case Gesture::L_A:
+            if (mixer_cell_at(s_.mixerMasterRow, s_.mixerCursorColumn) != MixerCell::MASTER_VOL)
+                return GestureResult::PASS;
+            if (songcore::leave_track_headroom(host_.edit_project())) {
+                mark_modified();
+                set_status(s_, "TRACKS TRIMMED TO -6 DB", true);
+            } else {
+                set_status(s_, "TRACKS ALREADY AT -6 DB OR LOWER", true);
+            }
             return GestureResult::TAKEN;
         default:
             return GestureResult::PASS;

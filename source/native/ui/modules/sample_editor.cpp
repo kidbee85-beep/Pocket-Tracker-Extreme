@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "common/sample_level.h"
 #include "ui/helpers.h"
 #include "ui/modules/confirm_dialog.h"
 
@@ -70,11 +71,11 @@ const std::vector<std::string>& SampleEditorModule::ops_row1() {
     return v;
 }
 const std::vector<std::string>& SampleEditorModule::ops_row2() {
-    static const std::vector<std::string> v{"NORM", "FADE+", "FADE-", "SLNC", "REV", "UNDO"};
+    static const std::vector<std::string> v{"NORM -1", "FADE+", "FADE-", "SLNC", "REV", "UNDO"};
     return v;
 }
 const std::vector<std::string>& SampleEditorModule::ops_row3() {
-    static const std::vector<std::string> v{"DC FIX", "INVERT", "DECLICK"};
+    static const std::vector<std::string> v{"DC FIX", "INVERT", "DECLICK", "GAIN dB"};
     return v;
 }
 
@@ -127,11 +128,11 @@ int SampleEditorModule::max_col_for_row(int row, int slice_method) {
     if (row == 1 || row == 2) return 2;
     if (row >= 3 && row <= 8) return 1;          // the selection's two edges (START / END)
     if (row == 9) return 4;                     // FIT SEL / FIT SLICE / ALL / SNAP / GAIN
-    if (row == 10) return slice_has_parameter(slice_method) ? 1 : 0;
+    if (row == 10) return 1;
     if (row == 11) return 1;
-    if (row == 12) return 3;
+    if (row == TO_INST_ROW) return FIND_HITS_COL;
     if (row == 13 || row == 14) return 5;        // six ops per row
-    if (row == 15) return 2;
+    if (row == LEVEL_ROW) return LEVEL_COL;
     if (row == 16) return 2;                     // TYPE / VALUE / APPLY
     if (row == 18) return 0;                     // NAME — the whole row is one cell
     if (row == 19) return (slice_method == SLICE_OFF) ? 3 : 4;   // RECORD after the existing file actions
@@ -408,6 +409,47 @@ void draw_ops_row(Canvas& c, int x, int y, const std::vector<std::string>& ops, 
     }
 }
 
+std::string level_label(float gain, const char* unit) {
+    char value[32];
+    std::snprintf(value, sizeof(value), "%+.1f %s", sample_level::db(gain), unit);
+    return value;
+}
+
+void draw_sample_level(Canvas& c, int x, int y, const SampleEditorState::LevelEdit& level,
+                       const Theme& t) {
+    constexpr int panelW = 496, panelH = 204;
+    const int left = x + (SampleEditorModule::WIDTH - panelW) / 2;
+    const int top = y + 240;
+    c.panel_rect(left, top, panelW, panelH, t.background, t.rowCursor, 8);
+    c.fill_rect(left + 1, top + 34, panelW - 2, 1, with_alpha(t.textParam, .20f));
+    c.draw_label("SAMPLE LEVEL", left + 16, top + 8, t.textTitle, 18);
+    const int valueDb = level.normalize ? sample_level::normalize_targets[level.target] : level.gainDb;
+    const auto plan = sample_level::plan(level.peak, level.normalize, valueDb);
+    const auto value = (valueDb > 0 ? "+" : "") + std::to_string(valueDb) +
+                       (level.normalize ? " dBFS" : " dB");
+    sample_button(c, left + 16, top + 47, 139, "CLEAN GAIN", !level.normalize, t);
+    sample_button(c, left + 160, top + 47, 145, "PEAK NORMALIZE", level.normalize, t);
+    sample_button(c, left + 312, top + 47, 168, "<   " + value + "   >", true, t);
+
+    const auto meter = [&](int row, const char* name, float peak) {
+        const int yy = top + row;
+        c.draw_label(name, left + 17, yy, t.textParam, 12);
+        c.fill_rect(left + 118, yy + 2, 244, 10, t.meterBackground);
+        const float db = peak > 0.f ? sample_level::db(peak) : -60.f;
+        const int fill = static_cast<int>(244.f * std::clamp((db + 60.f) / 60.f, 0.f, 1.f));
+        if (fill > 0) c.fill_rect(left + 118, yy + 2, fill, 10, db >= 0.f ? t.meterHigh : t.meterLow);
+        c.draw_label(peak > 0.f ? level_label(peak, "dBFS") : "SILENT",
+                     left + 378, yy, t.textValue, 12);
+    };
+    meter(82, "INPUT PEAK", level.peak);
+    meter(105, "OUTPUT PEAK", level.peak * plan.factor);
+    std::string status = "GAIN TO APPLY  " + level_label(plan.factor, "dB");
+    if (plan.limited) status += "  /  PEAK LIMIT";
+    c.draw_label(status, left + 17, top + 132, plan.limited ? t.meterMid : t.textTitle, 12);
+    c.draw_label("UP / DOWN: MODE     LEFT / RIGHT: VALUE", left + 17, top + 160, t.textParam, 12);
+    c.draw_label("START: AUDITION     A: APPLY     B: CANCEL", left + 17, top + 180, t.textValue, 12);
+}
+
 }  // namespace
 
 void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& s,
@@ -416,9 +458,15 @@ void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& 
     c.surface_rect(x, y, WIDTH, HEIGHT, t.background);
 
     // A quiet title and file statistics, followed by two three-column parameter rows.
-    c.draw_label("Sample Editor", x + 12, y + 5, t.textTitle, 18);
+    constexpr const char* title = "Sample Editor";
+    constexpr const char* helpHint = "SELECT HELP";
+    c.draw_label(title, x + 12, y + 5, t.textTitle, 18);
     const std::string stats = s.bpm_display() + "  /  " + std::to_string(s.sampleRate) + "Hz  /  " + s.duration_display();
-    c.draw_text(stats, x + 628 - Canvas::text_width(stats, 1, 2), y + 10, t.textParam, 1, 2);
+    const int statsX = x + 628 - Canvas::text_width(stats, 1, 2);
+    const int helpX = x + 28 + Canvas::label_width(title, 18);
+    if (helpX + Canvas::label_width(helpHint, 12) + 12 <= statsX)
+        c.draw_label(helpHint, helpX, y + 9, t.textParam, 12);
+    c.draw_text(stats, statsX, y + 10, t.textParam, 1, 2);
     const int fieldX[] = {10, 219, 428};
     const std::string source = s.hasStereoData ? at(source_values(), s.sourceMode) : "MONO";
     const std::string pitch = (s.pitchSemitones >= 0 ? "+" : "") + std::to_string(s.pitchSemitones);
@@ -439,7 +487,7 @@ void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& 
     sample_field(c, x + 352, y + content_y(8), 269, "END f", std::to_string(s.selectionEnd),
                  s.cursorRow == 8 && s.cursorCol == 1, t, 2);
     const std::string tools[] = {"FIT SEL", "FIT SL", "ALL", s.snapEnabled ? "SNAP ON" : "SNAP OFF",
-                                 "GAIN " + std::to_string(1 << std::clamp(s.waveformGain, 0, 3)) + "X"};
+                                 "WAVE " + std::to_string(1 << std::clamp(s.waveformGain, 0, 3)) + "X"};
     for (int i = 0; i < 5; ++i)
         sample_button(c, x + 85 + i * 108, y + content_y(9), 104, tools[i],
                       s.cursorRow == 9 && s.cursorCol == i, t, 2);
@@ -447,16 +495,20 @@ void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& 
     sample_group(c, x, y + content_y(10), 65, "SLICE", s.cursorRow >= 10 && s.cursorRow <= 12, t);
     sample_field(c, x + 85, y + content_y(10), 319, "MODE", at(slice_methods(), s.sliceMethod),
                  s.cursorRow == 10 && s.cursorCol == 0, t);
-    if (slice_has_parameter(s.sliceMethod)) {
-        const std::string label = s.sliceMethod == SLICE_TRANSIENT ? "SENS" : "BY";
-        const std::string value = hex2(s.sliceMethod == SLICE_TRANSIENT ? s.sliceSensitivity : s.sliceDivisions);
-        sample_field(c, x + 408, y + content_y(10), 213, label, value,
-                     s.cursorRow == 10 && s.cursorCol == 1, t);
-    } else {
-        c.draw_text(s.sliceMethod == SLICE_OFF ? "SLICING DISABLED" : "MANUAL MARKERS", x + 420,
-                    y + content_y(10) + 5, t.textEmpty, 1, 2);
-    }
-    if (s.sliceMethod != SLICE_OFF) {
+    const bool divide = s.sliceMethod == SLICE_DIVIDE;
+    sample_field(c, x + 408, y + content_y(10), 213, divide ? "BY" : "SENS",
+                 hex2(divide ? s.sliceDivisions : s.sliceSensitivity), s.cursorRow == 10 && s.cursorCol == 1, t);
+    if (s.chopReview.open()) {
+        const auto& review = s.chopReview;
+        const auto slice = std::to_string(review.selected + 1) + " / " + std::to_string(review.slices.size());
+        sample_field(c, x + 85, y + content_y(11), 263, "SLICE PREVIEW", slice, false, t);
+        c.draw_label("LEFT / RIGHT: SLICE    START: PLAY", x + 360, y + content_y(11) + 3, t.textParam, 12);
+    } else if (s.hitReview.open) {
+        const auto& review = s.hitReview;
+        const auto slice = std::to_string(review.auditionSlice + 1) + " / " + std::to_string(review.hits.size() + 1);
+        sample_field(c, x + 85, y + content_y(11), 263, "PREVIEW", slice, false, t);
+        c.draw_label("L/R ARROWS: SLICE    START: PLAY", x + 360, y + content_y(11) + 3, t.textParam, 12);
+    } else if (s.sliceMethod != SLICE_OFF) {
         std::string index = std::to_string(s.sliceIndex);
         if (s.sliceMethod == SLICE_TRANSIENT || s.sliceMethod == SLICE_MANUAL)
             index += " / " + std::to_string(s.slice_index_ceiling() + 1);
@@ -465,10 +517,12 @@ void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& 
         sample_field(c, x + 352, y + content_y(11), 269, "START f", std::to_string(s.effective_slice_position()),
                      s.cursorRow == 11 && s.cursorCol == 1, t, 2);
     } else {
-        c.draw_text("Choose a slice mode to place markers", x + 94, y + content_y(11) + 5, t.textEmpty, 1, 2);
+        c.draw_text("FIND HITS scans the selection", x + 94, y + content_y(11) + 5, t.textEmpty, 1, 2);
     }
-    static const std::vector<std::string> sliceTools{"ADD @S", "REMOVE", "SEL SL", "SEL ALL"};
-    draw_ops_row(c, x, y + content_y(12), sliceTools, s.cursorRow == 12, s.cursorCol, t);
+    static const std::vector<std::string> sliceTools{"ADD @S", "REMOVE", "SEL SL", "SEL ALL", "TO INST", "FIND HITS"};
+    static const std::vector<std::string> reviewTools{"ADD @S", "REMOVE", "SEL SL", "SEL ALL", "TO INST", "APPLY HITS"};
+    draw_ops_row(c, x, y + content_y(12), s.hitReview.open ? reviewTools : sliceTools,
+                 s.cursorRow == 12, s.cursorCol, t);
 
     sample_group(c, x, y + content_y(13), 65, "EDIT", s.cursorRow >= 13 && s.cursorRow <= 15, t);
     draw_ops_row(c, x, y + content_y(13), ops_row1(), s.cursorRow == 13, s.cursorCol, t);
@@ -491,7 +545,8 @@ void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& 
                 s.cursorRow == 18 ? cursor_cell_ink(t) : t.textValue, 1, 2);
     if (s.isModified) c.draw_text("*", x + 607, y + content_y(18) + 3, s.cursorRow == 18 ? cursor_cell_ink(t) : t.rowCursor, 1, 2);
     const int count = s.sliceMethod == SLICE_OFF ? 4 : 5;
-    const std::string fileOps[] = {"LOAD", "SAVE", "OVERWRITE", s.sliceMethod == SLICE_OFF ? "RECORD" : "CHOP", "RECORD"};
+    const std::string chopLabel = s.chopReview.open() ? (s.chopReview.single ? "EXPORT ONE" : "EXPORT ALL") : "CHOP";
+    const std::string fileOps[] = {"LOAD", "SAVE", "OVERWRITE", s.sliceMethod == SLICE_OFF ? "RECORD" : chopLabel, "RECORD"};
     for (int i = 0; i < count; ++i) {
         const int left = 85 + i * 540 / count;
         const int right = 85 + (i + 1) * 540 / count;
@@ -499,6 +554,7 @@ void SampleEditorModule::draw(Canvas& c, int x, int y, const SampleEditorState& 
                      s.cursorRow == 19 && s.cursorCol == i, t, 2);
     }
 
+    if (s.levelEdit.open()) draw_sample_level(c, x, y, s.levelEdit, t);
     if (s.showConfirmClose) draw_confirm_dialog(c, x, y, t);
 }
 
@@ -557,8 +613,13 @@ void SampleEditorModule::draw_waveform(Canvas& c, int x, int y, const SampleEdit
     std::snprintf(detail,sizeof(detail),"LEN %lldf / %.3fms   STEP %lldf",static_cast<long long>(selected),
                   s.sampleRate>0?1000.0*selected/s.sampleRate:0.0,static_cast<long long>(s.fine_step()));
     c.fill_rect(wfLeft + 1, y + WAVEFORM_H - 18, WAVEFORM_W - 2, 1, with_alpha(t.textParam, .13f));
-    c.draw_text(Canvas::clip_text(s.toolMessage.empty()?std::string(detail):s.toolMessage,54),
-                wfLeft + 7, y + WAVEFORM_H - 13, s.toolMessage.empty()?t.textParam:t.textTitle, 1, 2);
+    std::string message = s.toolMessage.empty() ? detail : s.toolMessage;
+    if (s.toolMessage.empty() && s.hitReview.open)
+        message = std::to_string(s.hitReview.hits.size()) + " SUGGESTED CUTS / A APPLY / B CANCEL";
+    if (s.toolMessage.empty() && s.chopReview.open())
+        message = "UP: ALL  DOWN: ONE  A: EXPORT  B: BACK";
+    c.draw_text(Canvas::clip_text(message,54), wfLeft + 7, y + WAVEFORM_H - 13,
+                (s.hitReview.open || s.chopReview.open()) ? 0xffffc166 : s.toolMessage.empty() ? t.textParam : t.textTitle, 1, 2);
 
 
     // ── The wave itself: one vertical rule per bin, from its min to its max ──────────────────────
@@ -665,6 +726,29 @@ void SampleEditorModule::draw_waveform(Canvas& c, int x, int y, const SampleEdit
         }
     }
 
+    if (s.hitReview.open) {
+        const auto& review = s.hitReview;
+        highlight_slice(review.audition_start(), review.audition_end());
+        for (const int frame : review.hits) {
+            const double pos = frame_x(frame);
+            if (pos < wfLeft || pos > wfRight) continue;
+            const int mx = std::min(static_cast<int>(pos), wfLast);
+            c.fill_rect(std::max(wfLeft, mx - 2), waveTop, 5, 3, 0xffffc166);
+            for (int dy = 3; dy < waveH; dy += 8)
+                v_line(c, mx, waveTop + dy, std::min(5, waveH - dy), 0xffffc166);
+        }
+    }
+
+    if (s.chopReview.open()) {
+        const auto [first, end] = s.chopReview.slices[s.chopReview.selected];
+        const auto l = static_cast<int>(std::clamp(frame_x(first), double(wfLeft), double(wfRight)));
+        const auto r = static_cast<int>(std::clamp(frame_x(end), double(wfLeft), double(wfRight)));
+        if (r > l) {
+            c.fill_rect(l, waveTop, r - l, waveH, with_alpha(0xffffc166, .12f));
+            c.stroke_rect(l, waveTop, r - l, waveH, 0xffffc166);
+        }
+    }
+
     // ── The playhead ────────────────────────────────────────────────────────────────────────────
     if (s.playbackPosition >= 0.0f) {
         const float playFrame = s.playbackPosition * static_cast<float>(s.totalFrames);
@@ -686,7 +770,7 @@ void SampleEditorModule::draw_confirm_dialog(Canvas& c, int x, int y, const Them
 
 CursorContext SampleEditorModule::cursor_context(const SampleEditorState& s) const {
     // The confirm dialog owns every button while it is up.
-    if (s.showConfirmClose) return cc::none();
+    if (s.showConfirmClose || s.hitReview.open || s.chopReview.open() || s.levelEdit.open()) return cc::none();
 
     switch (s.cursorRow) {
         case 0: return cc::read_only();   // the title bar
@@ -725,9 +809,8 @@ CursorContext SampleEditorModule::cursor_context(const SampleEditorState& s) con
             switch (s.cursorCol) {
                 case 0: return cc::toggle_ternary(at(slice_methods(), s.sliceMethod), slice_methods());
                 case 1:
-                    if (s.sliceMethod == SLICE_TRANSIENT) return cc::hex_byte(s.sliceSensitivity, 0, 255);
                     if (s.sliceMethod == SLICE_DIVIDE)    return cc::hex_byte(s.sliceDivisions, 0, 255);
-                    return cc::none();   // OFF has no parameter
+                    return cc::hex_byte(s.sliceSensitivity, 0, 255);
                 default: return cc::none();
             }
 
@@ -779,7 +862,14 @@ SampleEditorInputResult SampleEditorModule::handle_input(SampleEditorState& s,
         case 1:
             switch (s.cursorCol) {
                 case 0: s.set_zoom(v); r.modified = true; break;
-                case 1: s.sourceMode = v;                   r.modified = true; break;
+                case 1:
+                    if (s.sourceMode != v) {
+                        s.sourceMode = v;
+                        s.transientMarkers.clear();
+                        s.transientScanReady = false;
+                    }
+                    r.modified = true;
+                    break;
                 case 2:
                     // Destructive: the module reports it, the dispatcher makes the engine calls.
                     if (v != s.rateMode) r.rateModeChanged = true;
@@ -810,14 +900,17 @@ SampleEditorInputResult SampleEditorModule::handle_input(SampleEditorState& s,
             switch (s.cursorCol) {
                 case 0:
                     s.sliceMethod = v;
-                    // Clearing the detector's list makes the feed re-run it.
-                    if (v == SLICE_TRANSIENT) s.transientMarkers.clear();
+                    if (v == SLICE_TRANSIENT) {
+                        s.transientMarkers.clear();
+                        s.transientScanReady = false;
+                    }
                     r.modified = true;
                     break;
                 case 1:
-                    if (s.sliceMethod == SLICE_TRANSIENT) {
+                    if (s.sliceMethod != SLICE_DIVIDE) {
                         s.sliceSensitivity = v;
-                        s.transientMarkers.clear();   // re-detect at the new threshold
+                        s.transientMarkers.clear();
+                        s.transientScanReady = false;
                     } else {
                         s.sliceDivisions = v;
                     }

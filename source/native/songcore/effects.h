@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include "model.h"
+#include "../studio/granular_step.h"
 
 namespace songcore {
 
@@ -164,6 +165,7 @@ inline int fx_cc_slot(int code) {
 
 // Effect code → 3-letter display name, or "---". (RPT is FX_REPEAT; DEL/REV are the sends.)
 inline std::string effect_name(int code) {
+    if (studio::granular::step::isFx(code)) return studio::granular::step::command(code).name;
     switch (code) {
         case FX_ARC: return "ARC"; case FX_CHA: return "CHA"; case FX_LAT: return "LAT";
         case FX_GRV: return "GRV"; case FX_HOP: return "HOP"; case FX_TIC: return "TIC";
@@ -192,6 +194,8 @@ inline std::string effect_name(int code) {
 
 // Max parameter byte: pool refs and MPG 0x7F, SCA/SCG 0xBF, the rest 0xFF.
 inline constexpr int effect_value_max(int effect_type) {
+    if (studio::granular::step::isFx(effect_type))
+        return studio::granular::step::command(effect_type).maxByte;
     if (effect_type == FX_SCA || effect_type == FX_SCG) return 0xBF;
     return (effect_type == FX_TBL || effect_type == FX_GRV ||
             effect_type == FX_EQN || effect_type == FX_EQM ||
@@ -232,6 +236,13 @@ inline constexpr int EFFECT_TYPES[] = {
     FX_MPG, FX_MPB, FX_CCA, FX_CCB, FX_CCC, FX_CCD,
 };
 inline constexpr int EFFECT_TYPE_COUNT = static_cast<int>(sizeof(EFFECT_TYPES) / sizeof(int));
+
+inline constexpr bool granular_effect_ids_unused() {
+    for (const int legacy : EFFECT_TYPES)
+        if (studio::granular::step::isFx(legacy)) return false;
+    return !studio::granular::step::isFx(0x36); // retired, not in the list
+}
+static_assert(granular_effect_ids_unused(), "a granular command collides with a legacy FX ID");
 
 // ⚠️ A build without MIDI (platform_caps.h `midi`) shows only the first EFFECT_TYPE_COUNT_NO_MIDI
 // entries. That is safe only because the six are a TAIL: every remaining index keeps its meaning.
@@ -345,6 +356,7 @@ struct ResolvedStepParams {
     std::optional<int> midiProgram;                    // MPG
     std::optional<int> midiBend;                       // MPB (authored byte, not the 14-bit value)
     std::optional<int> ccSlotValue[MIDI_CC_SLOTS];     // CCA-CCD
+    studio::granular::step::Delta granular{};         // ordered Gxx operations; GCL is an operation
 };
 
 // Fold a step's three FX slots into the bundle. `default_volume` (the instrument volume) seeds
@@ -418,7 +430,7 @@ inline ResolvedStepParams resolve_step_params(const PhraseStep& step,
                 p.ccSlotValue[fx_cc_slot(type)] = value;
                 break;
             // ARP / CHA / RND / RNL / TIC and unknown codes: nothing to resolve.
-            default: break;
+            default: studio::granular::step::append(p.granular, type, value); break;
         }
     }
     return p;

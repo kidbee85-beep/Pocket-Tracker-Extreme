@@ -1,51 +1,54 @@
 #include "ui/modules/help_panel.h"
 
 #include "ui/helpers.h"
-#include "ui/mascot_sprite.h"
+
+#include <array>
+#include <string>
 
 namespace pt::ui {
 
-namespace {
-
-// The sprite as horizontal runs: one `fill_rect` per pixel would be ~1460 calls a frame.
-void draw_mascot(Canvas& c, int x, int y, const MascotInk& ink) {
-    // ⚠️ One fill for the patch, before the runs — per row would leave a seam.
-    if (ink.inverted) c.fill_rect(x, y, MASCOT_W, MASCOT_H, ink.backdrop);
-    const Argb color = ink.figure;
-
-    for (int row = 0; row < MASCOT_H; ++row) {
-        int runStart = -1;
-        // ⚠️ Inclusive, so a run reaching the right edge closes.
-        for (int col = 0; col <= MASCOT_W; ++col) {
-            const bool lit = (col < MASCOT_W) && mascot_pixel(MASCOT_NEUTRAL, col, row);
-            if (lit && runStart < 0) {
-                runStart = col;
-            } else if (!lit && runStart >= 0) {
-                c.fill_rect(x + runStart, y + row, col - runStart, 1, color);
-                runStart = -1;
-            }
-        }
+void HelpPanelModule::draw(Canvas& c, HelpTopic topic, const Theme& t) const {
+    const auto& entry = help_entry(topic);
+    std::array<const char*, 5> actions{};
+    int count = 0;
+    for (const char* key : entry.keys) {
+        if (!key || !*key) continue;
+        actions[count++] = key;
+        if (count == static_cast<int>(actions.size())) break;
     }
+    if (!count) {
+        if (*entry.line2) actions[count++] = entry.line2;
+        if (*entry.line3) actions[count++] = entry.line3;
+    }
+
+    const auto titleLength = help_title_length(entry.line1);
+    const std::string title(entry.line1, titleLength);
+    const char* description = entry.line1 + titleLength;
+    if (*description == ':') ++description;
+    while (*description == ' ') ++description;
+
+    constexpr int width = 548, rowHeight = 28, inset = 21;
+    const int x = (DESIGN_W - width) / 2;
+    const int height = 124 + count * rowHeight;
+    const int y = (DESIGN_H - height) / 2;
+    const int left = x + inset;
+    const int inner = width - inset * 2;
+    c.reset_clip();
+    draw_modal_backdrop(c);
+    draw_modal_box(c, x, y, width, height, t);
+    c.draw_label("QUICK HELP", left, y + 14, t.rowCursor, 12);
+    c.draw_label(Canvas::clip_label(title, inner, 22), left, y + 33, t.textValue, 22);
+    if (*description) c.draw_label(Canvas::clip_label(description, inner, 15), left, y + 62, t.textParam, 15);
+    c.fill_rect(left, y + 85, inner, 1, with_alpha(t.rowCursor, .52f));
+    for (int i = 0; i < count; ++i) {
+        const int row = y + 92 + i * rowHeight;
+        c.panel_rect(left, row, inner, rowHeight - 4, t.rowEvery4th, with_alpha(t.textParam, .18f), 3);
+        c.draw_label(Canvas::clip_label(actions[i], inner - 22, 16), left + 11, row + 4, t.textValue, 16);
+    }
+    const int footer = y + height - 24;
+    c.draw_label("A  Details", left, footer, t.rowCursor, 15);
+    constexpr const char* back = "B / SELECT  Back";
+    c.draw_label(back, x + width - inset - Canvas::label_width(back, 15), footer, t.textParam, 15);
 }
 
-}  // namespace
-
-void HelpPanelModule::draw(Canvas& c, int x, int y, HelpTopic topic, const Theme& t,
-                           int box_height) const {
-    c.fill_rect(x, y, WIDTH, box_height, t.vizBackground);
-
-    // A taller box gets the surplus as air; clamped so a shorter one cannot push the mascot off.
-    const int top = y + (box_height > HEIGHT ? (box_height - HEIGHT) / 2 : 0);
-
-    draw_mascot(c, x + MASCOT_MARGIN, top + MASCOT_MARGIN, mascot_ink(t, t.vizBackground));
-
-    const HelpEntry& e     = help_entry(topic);
-    const char*      lines[3] = {e.line1, e.line2, e.line3};
-    for (int i = 0; i < 3; ++i) {
-        if (lines[i][0] == '\0') continue;
-        c.draw_text(lines[i], x + TEXT_X, top + TEXT_TOP + i * ROW_HEIGHT, t.vizWave, CHAR_SPACING,
-                    FONT_SCALE);
-    }
-}
-
-}  // namespace pt::ui
+} // namespace pt::ui

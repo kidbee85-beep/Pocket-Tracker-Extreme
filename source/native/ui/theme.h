@@ -13,6 +13,20 @@ using Argb = uint32_t;  // 0xAARRGGBB
 
 enum class VisualizerType { SCOPE, FLAT, OCTA, OCTA_FULL, SPECTRUM, SPECTRUM_PEAKS };
 
+enum class StepGridStyle { OFF, BEATS, GRID, DOTS };
+
+inline constexpr int STEP_GRID_STYLE_COUNT = 4;
+
+inline const char* step_grid_style_name(StepGridStyle style) {
+    switch (style) {
+        case StepGridStyle::OFF:   return "OFF";
+        case StepGridStyle::BEATS: return "BEATS";
+        case StepGridStyle::GRID:  return "GRID";
+        case StepGridStyle::DOTS:  return "DOTS";
+    }
+    return "OFF";
+}
+
 struct Theme {
     std::string name = "CLASSIC";
 
@@ -63,6 +77,8 @@ struct Theme {
     // ── Visualizer mode ──────────────────────────────────────────────────────────────────────────
     VisualizerType visualizerType = VisualizerType::SCOPE;
     int surfaceStyle = 0;
+    StepGridStyle chainGrid = StepGridStyle::OFF;
+    StepGridStyle phraseGrid = StepGridStyle::GRID;
 };
 
 // Append only: the integer is persisted by .ptt files and settings.json.
